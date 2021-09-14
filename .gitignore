@@ -1,0 +1,10 @@
+# files that are common outputs from the benroywillis/TraceAtlas git repository
+*.bc
+*.ll
+*.bin
+*.native
+*.elf
+BlockInfo_*
+kernel_*
+Instance_*
+*.dot
