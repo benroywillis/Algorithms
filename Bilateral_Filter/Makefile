@@ -4,22 +4,18 @@ CXX?=clang++-9
 OPT?=opt-9
 LDFLAGS?=-c -emit-llvm -g3 -O0
 
-SOURCE=example
+SOURCE=BilateralFilter
 D_LINKS=-lm
-
+DEBUG=-DDEBUG
 TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas/build2/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build2/
-RBF_ROOT=recursive-bf/
-SRC_ROOT=$(RBF_ROOT)example/
-INCLUDE=\
--I$(RFB_ROOT)/include/\
--I$(SRC_ROOT)
+INCLUDE=
 SIGMA_S=0.03
 SIGMA_R=0.1
 
 all: Instance_$(SOURCE).json
 
-$(SOURCE).bc :$(SRC_ROOT)$(SOURCE).cpp
+$(SOURCE).bc : $(SOURCE).c
 	$(CC) $(LDFLAGS) $(INCLUDE) $< -o $@
 
 $(SOURCE).markov.bc: $(SOURCE).bc
@@ -35,17 +31,17 @@ $(SOURCE).instance.native : $(SOURCE).instance.bc
 	$(CXX) -fuse-ld=lld-9 $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
-	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(SRC_ROOT)output.image $(SRC_ROOT)john.ppm $(SIGMA_S) $(SIGMA_R)
+	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< output.image john.ppm $(SIGMA_S) $(SIGMA_R)
 
 kernel_$(SOURCE).json : $(SOURCE).bin
 	$(TRACEATLAS_ROOT)/bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -o $@
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
-	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(SRC_ROOT)output.image $(SRC_ROOT)john.ppm $(SIGMA_S) $(SIGMA_R)
+	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< output.image john.ppm $(SIGMA_S) $(SIGMA_R)
 
 # just builds the source code into elf form
-elf : $(SOURCE).cpp
-	$(CC) $(D_LINKS) -g3 -O0 $< -o $(SOURCE).elf
+elf : $(SOURCE).c
+	$(CC) $(D_LINKS) -g3 -O0 $(DEBUG) $< -o $(SOURCE).elf
 
 clean:
 	rm -rf *.bc *.ll *.tr* *.bin *.json *.exec *.elf *.native *.dot
