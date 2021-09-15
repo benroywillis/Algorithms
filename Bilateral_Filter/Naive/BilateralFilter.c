@@ -216,17 +216,17 @@ PRECISION Intensity(struct Pixel* a)
 // computes the spacial component
 PRECISION f(PRECISION diff)
 {
-	// this distribution is N( 0, sigma_s )
+	// this distribution is N( 0, s_2)
 	PRECISION s_2 = sigma_s * sigma_s;
-	return ( 1 / (2*M_PI * s_2) )*exp( (-1/2) * (diff*diff / 2*s_2) );
+	return ( 1 / pow((2.0f*M_PI * s_2), 0.5) )*exp( (-1/2) * (diff*diff / 2*s_2) );
 }
 
 // computes the range component
 PRECISION g(PRECISION diff)
 {
-	// this distribution is N( 0, sigma_r)
+	// this distribution is N( 0, r_2)
 	PRECISION r_2 = sigma_r * sigma_r;
-	return ( 1 / (2*M_PI * r_2) )*exp( (-1/2) * ((diff)*(diff) / 2*r_2) );
+	return ( 1 / pow((2.0*M_PI * r_2), 0.5) )*exp( (-1/2) * ((diff)*(diff) / 2*r_2) );
 }
 
 void BilateralFilter(struct Pixel* in, PRECISION* out)
