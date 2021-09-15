@@ -108,7 +108,7 @@ struct Pixel* readImage(char* file)
 			(in + i*image_height + j)->b = newPixel[2];
 		}
 		// read "end-of-line" mark between each line
-		fread(&buffer, sizeof(uint8_t), 1, f);
+		fread(&buffer, sizeof(uint8_t), image_width % 4, f);
 	}
 #ifdef DEBUG
 	for( unsigned int i = 0; i < height; i++ )
@@ -120,6 +120,7 @@ struct Pixel* readImage(char* file)
 		printf("\n");
 	}
 #endif
+	fclose(f);
 	return in;
 }
 
@@ -138,8 +139,9 @@ void writeImage(struct Pixel* out, char* file)
 	uint16_t reserve1;
 	// filesize is the header plus data
 	// this will just be the size of the data plus 54 bytes for the header and file into (14+40)
-	uint32_t fileSize = sizeof(uint8_t)*image_width*image_height + 40;
-	// just 54
+	uint32_t fileSize = (sizeof(struct Pixel)*image_width + image_width % 4) *image_height + 54;
+	printf("Written file size is %d\n", fileSize);
+	// 14 + 40
 	uint32_t offset = 54;
 	// first two numbers are 66 and 77
 	buffer[0] = 66;
@@ -158,7 +160,7 @@ void writeImage(struct Pixel* out, char* file)
 	// write offset
 	memset(&buffer, 0, 4*sizeof(uint8_t));
 	buffer[0] = (uint8_t)offset;
-	fwrite(&buffer, sizeof(uint8_t), 4, f);
+	fwrite(&buffer[0], sizeof(uint8_t), 4, f);
 	// 2. write image information
 	//    4 bytes: Header size, in bytes (should be 40)
 	//    4 bytes: Image width, in pixels
@@ -175,10 +177,10 @@ void writeImage(struct Pixel* out, char* file)
 	uint16_t colorPlanes = 1;
 	uint16_t bitsPerPixel = 24;
 	uint32_t compression = 0;
-	uint32_t imageSize = fileSize - offset;
+	uint32_t imageSize = 0;
 	uint32_t XResolution = 0;
 	uint32_t YResolution = 0;
-	uint32_t importantColors = 3;
+	uint32_t importantColors = 0;
 	fwrite(&headerSize, sizeof(uint32_t), 1, f);
 	fwrite(&width, sizeof(uint32_t), 1, f);
 	fwrite(&height, sizeof(uint32_t), 1, f);
@@ -200,15 +202,18 @@ void writeImage(struct Pixel* out, char* file)
 			newPixel.r = (out + i*image_height + j)->r;
 			newPixel.g = (out + i*image_height + j)->g;
 			newPixel.b = (out + i*image_height + j)->b;
-			fwrite(&newPixel, sizeof(struct Pixel), 1, f);
+			fwrite(&newPixel.r, sizeof(uint8_t), 1, f);
+			fwrite(&newPixel.g, sizeof(uint8_t), 1, f);
+			fwrite(&newPixel.b, sizeof(uint8_t), 1, f);
 		}
 		// write "end-of-line" mark between each line
 		newPixel.r = 10; // newline character
-		fwrite(&newPixel, sizeof(uint8_t), 1, f);
+		newPixel.g = 10; // newline character
+		newPixel.b = 10; // newline character
+		fwrite(&newPixel.r, sizeof(uint8_t), image_width % 4, f);
 	}
+	fclose(f);
 }
-
-
 
 PRECISION norm_space(struct Pixel* p, int x0, int y0, struct Pixel* q, int x1, int y1)
 {
@@ -328,5 +333,7 @@ int main(int argc, char** argv)
 		writeImage(input, "output.bmp");
 	}
 
+	free(input);
+	free(output);
 	return 0;
 }
