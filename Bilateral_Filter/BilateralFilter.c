@@ -26,6 +26,7 @@ struct Pixel
 struct Pixel* readImage(char* file)
 {
 	// reference: instesre.org/howto/BW_image/ReadingBitmaps.htm
+	// reference2: github.com/marc-q/libbmp
 	// reading in bmp files requires 4 parts
 	// 1. read header: basic file information 14 bytes long
  	//    2 bytes: BM, represented in ASCII code 66 and 77
@@ -97,6 +98,7 @@ struct Pixel* readImage(char* file)
 	//output = (PRECISION*)malloc( width*height*sizeof(PRECISION) );
 	// 3. read image data
 	// it is all encoded in 3-word rgb data
+	fseek(f, (long)offset+1, SEEK_SET);
 	uint8_t newPixel[3];
 	for( unsigned int i = 0; i < image_height; i++ )
 	{
@@ -106,20 +108,14 @@ struct Pixel* readImage(char* file)
 			(in + i*image_height + j)->r = newPixel[0];
 			(in + i*image_height + j)->g = newPixel[1];
 			(in + i*image_height + j)->b = newPixel[2];
+			if( bitsPerPixel > 24 ) 
+			{
+				fread(&buffer[0], sizeof(uint8_t), (bitsPerPixel-24)/8, f);
+			}
 		}
 		// read "end-of-line" mark between each line
 		fread(&buffer, sizeof(uint8_t), image_width % 4, f);
 	}
-#ifdef DEBUG
-	for( unsigned int i = 0; i < height; i++ )
-	{
-		for( unsigned int j = 0; j < width; j++ )
-		{
-			printf("%d, %d, %d | ", (in + i*image_height+ j)->r, (in + i*image_height+ j)->g, (in + i*image_height+ j)->b);
-		}
-		printf("\n");
-	}
-#endif
 	fclose(f);
 	return in;
 }
@@ -127,12 +123,8 @@ struct Pixel* readImage(char* file)
 void writeImage(struct Pixel* out, char* file)
 {
 	// reference: instesre.org/howto/BW_image/ReadingBitmaps.htm
-	// reading in bmp files requires 4 parts
-	// 1. read header: basic file information 14 bytes long
- 	//    2 bytes: BM, represented in ASCII code 66 and 77
-	//    4 bytes: file size in bytes
-	//    4 bytes: two two-byte "reserved values" that are not needed
-	//    4 bytes: offset to the beginning of image data, in bytes
+	// reference2: github.com/marc-q/libbmp
+	// for notes on what all these operations mean see the read function
 	FILE* f = fopen(file, "wb");
 	uint8_t buffer[4];
 	uint16_t reserve0;
@@ -140,15 +132,14 @@ void writeImage(struct Pixel* out, char* file)
 	// filesize is the header plus data
 	// this will just be the size of the data plus 54 bytes for the header and file into (14+40)
 	uint32_t fileSize = (sizeof(struct Pixel)*image_width + image_width % 4) *image_height + 54;
-	printf("Written file size is %d\n", fileSize);
-	// 14 + 40
+	// header:14, image info:40
 	uint32_t offset = 54;
-	// first two numbers are 66 and 77
+	// first two numbers are 66 and 77: "BM" in ASCII
 	buffer[0] = 66;
 	fwrite(&buffer, sizeof(uint8_t), 1, f);
 	buffer[0] = 77;
 	fwrite(&buffer, sizeof(uint8_t), 1, f);
-	// write fileSize
+	// write fileSize from lsbyte to msbyte, left to right
 	buffer[0] = (uint8_t)(fileSize & 0xFF);
 	buffer[1] = (uint8_t)(fileSize & 0xFF00);
 	buffer[2] = (uint8_t)(fileSize & 0xFF0000);
@@ -161,16 +152,6 @@ void writeImage(struct Pixel* out, char* file)
 	memset(&buffer, 0, 4*sizeof(uint8_t));
 	buffer[0] = (uint8_t)offset;
 	fwrite(&buffer[0], sizeof(uint8_t), 4, f);
-	// 2. write image information
-	//    4 bytes: Header size, in bytes (should be 40)
-	//    4 bytes: Image width, in pixels
-	//    4 bytes: Image height, in pixels
-	//    2 bytes: Number of color planes
-	//    2 bytes: Bits per pixel, 1 to 24
-	//    4 bytes: Compression, bytes (I assume it is 0)
-	//    4 bytes: Image size, bytes
-	//    4 bytes each: X-resolution and y-resolution, pixels per meter
-	//    4 bytes each: Number of colors and "important colors"
 	uint32_t headerSize = 40;
 	uint32_t width  = image_width;
 	uint32_t height = image_height;
@@ -193,7 +174,6 @@ void writeImage(struct Pixel* out, char* file)
 	fwrite(&importantColors, sizeof(uint32_t), 1, f);
 	fwrite(&importantColors, sizeof(uint32_t), 1, f);
 
-	// 3. write image data
 	struct Pixel newPixel;
 	for( unsigned int i = 0; i < image_height; i++ )
 	{
@@ -300,7 +280,7 @@ int main(int argc, char** argv)
 		input = readImage("john.bmp");
 	}
 	output = (PRECISION*)calloc(image_width*image_height, sizeof(PRECISION));
-
+	
 	struct timespec start;
 	struct timespec end;
 	while(clock_gettime(CLOCK_MONOTONIC, &start));
