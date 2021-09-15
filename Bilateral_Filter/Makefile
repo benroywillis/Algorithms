@@ -6,7 +6,7 @@ LDFLAGS?=-c -emit-llvm -g3 -O0
 
 SOURCE=BilateralFilter
 D_LINKS=-lm
-DEBUG=-DDEBUG
+DEBUG=
 TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas/build2/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build2/
 INCLUDE=

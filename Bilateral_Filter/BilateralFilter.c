@@ -6,13 +6,15 @@
 #include <time.h>
 
 #define PRECISION 	double
-#define SIZE 		512
 #define K			5
 #define L			5
 #define SIGMA_S		1.0
 #define SIGMA_R		1.0
 #define R			2 * SIGMA_R * SIGMA_R
 #define S 			2 * SIGMA_S * SIGMA_S
+
+uint32_t image_width  = 0;
+uint32_t image_height = 0;
 
 struct Pixel
 {
@@ -21,7 +23,7 @@ struct Pixel
 	uint8_t b;
 };
 
-void readImage(struct Pixel* in, char* file)
+struct Pixel* readImage(char* file)
 {
 	// reference: instesre.org/howto/BW_image/ReadingBitmaps.htm
 	// reading in bmp files requires 4 parts
@@ -77,7 +79,9 @@ void readImage(struct Pixel* in, char* file)
 	uint32_t importantColors;
 	fread(&headerSize, sizeof(uint8_t), 4, f);
 	fread(&width, sizeof(uint8_t), 4, f);
+	image_width = width;
 	fread(&height, sizeof(uint8_t), 4, f);
+	image_height = height;
 	fread(&colorPlanes, sizeof(uint16_t), 1, f);
 	fread(&bitsPerPixel, sizeof(uint16_t), 1, f);
 	fread(&compression, sizeof(uint32_t), 1, f);
@@ -89,37 +93,125 @@ void readImage(struct Pixel* in, char* file)
 		fread(&importantColors, sizeof(uint32_t), 1, f);
 	}
 
-	in = (struct Pixel*)malloc( width*height*sizeof(struct Pixel) );
+	struct Pixel* in = (struct Pixel*)malloc( image_width*image_height*sizeof(struct Pixel) );
 	//output = (PRECISION*)malloc( width*height*sizeof(PRECISION) );
 	// 3. read image data
 	// it is all encoded in 3-word rgb data
 	uint8_t newPixel[3];
-	for( unsigned int i = 0; i < height; i++ )
+	for( unsigned int i = 0; i < image_height; i++ )
 	{
-		for( unsigned int j = 0; j < width; j++ )
+		for( unsigned int j = 0; j < image_width; j++ )
 		{
 			fread(&newPixel, sizeof(uint8_t), 3, f);
-			(in + i*height+ j)->r = newPixel[0];
-			(in + i*height+ j)->g = newPixel[1];
-			(in + i*height+ j)->b = newPixel[2];
+			(in + i*image_height + j)->r = newPixel[0];
+			(in + i*image_height + j)->g = newPixel[1];
+			(in + i*image_height + j)->b = newPixel[2];
 		}
 		// read "end-of-line" mark between each line
 		fread(&buffer, sizeof(uint8_t), 1, f);
 	}
-	printf("Image width, height, size: %d, %d, %d\n", width, height, imageSize);
+#ifdef DEBUG
 	for( unsigned int i = 0; i < height; i++ )
 	{
 		for( unsigned int j = 0; j < width; j++ )
 		{
-			//(in + i*SIZE + j)->r = (uint8_t)rand();
-			//(in + i*SIZE + j)->g = (uint8_t)rand();
-			//(in + i*SIZE + j)->b = (uint8_t)rand();
-			printf("%d, %d, %d | ", (in + i*height+ j)->r, (in + i*height+ j)->g, (in + i*height+ j)->b);
+			//(in + i*image_height + j)->r = (uint8_t)rand();
+			//(in + i*image_height + j)->g = (uint8_t)rand();
+			//(in + i*image_height + j)->b = (uint8_t)rand();
+			printf("%d, %d, %d | ", (in + i*image_height+ j)->r, (in + i*image_height+ j)->g, (in + i*image_height+ j)->b);
 		}
 		printf("\n");
 	}
-	exit(0);
+#endif
+	return in;
 }
+
+void writeImage(struct Pixel* out, char* file)
+{
+	// reference: instesre.org/howto/BW_image/ReadingBitmaps.htm
+	// reading in bmp files requires 4 parts
+	// 1. read header: basic file information 14 bytes long
+ 	//    2 bytes: BM, represented in ASCII code 66 and 77
+	//    4 bytes: file size in bytes
+	//    4 bytes: two two-byte "reserved values" that are not needed
+	//    4 bytes: offset to the beginning of image data, in bytes
+	FILE* f = fopen(file, "wb");
+	uint8_t buffer[4];
+	uint16_t reserve0;
+	uint16_t reserve1;
+	// filesize is the header plus data
+	// this will just be the size of the data plus 54 bytes for the header and file into (14+40)
+	uint32_t fileSize = sizeof(uint8_t)*image_width*image_height + 40;
+	// just 54
+	uint32_t offset = 54;
+	// first two numbers are 66 and 77
+	buffer[0] = 66;
+	fwrite(&buffer, sizeof(uint8_t), 1, f);
+	buffer[0] = 77;
+	fwrite(&buffer, sizeof(uint8_t), 1, f);
+	// write fileSize
+	buffer[0] = (uint8_t)(fileSize & 0xFF);
+	buffer[1] = (uint8_t)(fileSize & 0xFF00);
+	buffer[2] = (uint8_t)(fileSize & 0xFF0000);
+	buffer[3] = (uint8_t)(fileSize & 0xFF000000);
+	fwrite(&buffer, sizeof(uint8_t), 4, f);
+	// don't care about reserved values
+	fwrite(&buffer, sizeof(uint16_t), 1, f);
+	fwrite(&buffer, sizeof(uint16_t), 1, f);
+	// write offset
+	memset(&buffer, 0, 4*sizeof(uint8_t));
+	buffer[0] = (uint8_t)offset;
+	fwrite(&buffer, sizeof(uint8_t), 4, f);
+	// 2. write image information
+	//    4 bytes: Header size, in bytes (should be 40)
+	//    4 bytes: Image width, in pixels
+	//    4 bytes: Image height, in pixels
+	//    2 bytes: Number of color planes
+	//    2 bytes: Bits per pixel, 1 to 24
+	//    4 bytes: Compression, bytes (I assume it is 0)
+	//    4 bytes: Image size, bytes
+	//    4 bytes each: X-resolution and y-resolution, pixels per meter
+	//    4 bytes each: Number of colors and "important colors"
+	uint32_t headerSize = 40;
+	uint32_t width  = image_width;
+	uint32_t height = image_height;
+	uint16_t colorPlanes = 1;
+	uint16_t bitsPerPixel = 24;
+	uint32_t compression = 0;
+	uint32_t imageSize = fileSize - offset;
+	uint32_t XResolution = 0;
+	uint32_t YResolution = 0;
+	uint32_t importantColors = 3;
+	fwrite(&headerSize, sizeof(uint32_t), 1, f);
+	fwrite(&width, sizeof(uint32_t), 1, f);
+	fwrite(&height, sizeof(uint32_t), 1, f);
+	fwrite(&colorPlanes, sizeof(uint16_t), 1, f);
+	fwrite(&bitsPerPixel, sizeof(uint16_t), 1, f);
+	fwrite(&compression, sizeof(uint32_t), 1, f);
+	fwrite(&imageSize, sizeof(uint32_t), 1, f);
+	fwrite(&XResolution, sizeof(uint32_t), 1, f);
+	fwrite(&YResolution, sizeof(uint32_t), 1, f);
+	fwrite(&importantColors, sizeof(uint32_t), 1, f);
+	fwrite(&importantColors, sizeof(uint32_t), 1, f);
+
+	// 3. write image data
+	struct Pixel newPixel;
+	for( unsigned int i = 0; i < image_height; i++ )
+	{
+		for( unsigned int j = 0; j < image_width; j++ )
+		{
+			newPixel.r = (out + i*image_height + j)->r;
+			newPixel.g = (out + i*image_height + j)->g;
+			newPixel.b = (out + i*image_height + j)->b;
+			fwrite(&newPixel, sizeof(struct Pixel), 1, f);
+		}
+		// write "end-of-line" mark between each line
+		newPixel.r = 10; // newline character
+		fwrite(&newPixel, sizeof(uint8_t), 1, f);
+	}
+}
+
+
 
 PRECISION norm_space(struct Pixel* p, int x0, int y0, struct Pixel* q, int x1, int y1)
 {
@@ -158,11 +250,11 @@ PRECISION g(PRECISION diff)
 void BilateralFilter(struct Pixel* in, PRECISION* out)
 {
 	// for each pixel
-	for( unsigned int i = K/2; i < SIZE-(K/2); i++ )
+	for( unsigned int i = K/2; i < image_height-(K/2); i++ )
 	{
-		for( unsigned int j = L/2; j < SIZE-(L/2); j++ )
+		for( unsigned int j = L/2; j < image_width-(L/2); j++ )
 		{
-			struct Pixel* cP = (in + i*SIZE + j);
+			struct Pixel* cP = (in + i*image_height + j);
 			// BF[p] = 1 / Wp * SUM( f(|| p-q ||)g(| Ip-Iq |)Ip )
 			// Wp = SUM( f(|| p-q ||)g(| Ip-Iq |) )
 			// p is the current pixel
@@ -176,18 +268,18 @@ void BilateralFilter(struct Pixel* in, PRECISION* out)
 				for( int l = -L/2; l < L/2; l++ )
 				{
 					// pixel norms are an L5 norm of r, g, b, x, y
-					PRECISION d = norm_space( cP, i, j, cP + k*SIZE + l, i+k, j+l );
+					PRECISION d = norm_space( cP, i, j, cP + k*(int)image_height + l, i+k, j+l );
 					// pixel intensity difference
 					// since we have an input grayscale image these two values are the same
-					PRECISION d_i = fabs( Intensity(cP + k*SIZE + l) - Intensity(cP) );
+					PRECISION d_i = fabs( Intensity(cP + k*(int)image_height + l) - Intensity(cP) );
 					PRECISION f_out = f(d);
 					PRECISION g_out = g(d_i);
 					PRECISION mul = f_out * g_out;
-					*(out + i*SIZE + j) = mul*Intensity(cP + k*SIZE + l);
+					*(out + ((int)i+k)*(int)image_height + (int)j+l) = mul*Intensity(cP + k*(int)image_height + l);
 					Wp += mul;
 				}
 			}
-			*(out + i*SIZE + j) /= Wp;
+			*(out + i*image_height + j) /= Wp;
 		}
 	}
 }
@@ -199,22 +291,13 @@ int main(int argc, char** argv)
 	// the input space is rgb with 3-word width
 	if( argc > 1 )
 	{
-		readImage(input, argv[1]);
+		input = readImage(argv[1]);
 	}
 	else
 	{
-		readImage(input, "john.bmp");
+		input = readImage("john.bmp");
 	}
-	// the output space is grayscale
-	char* outputName;
-	if( argc > 2 )
-	{
-		outputName = argv[2];
-	}
-	else
-	{
-		outputName = "output.bmp";
-	}
+	output = (PRECISION*)malloc(image_width*image_height*sizeof(PRECISION));
 
 	struct timespec start;
 	struct timespec end;
@@ -226,15 +309,27 @@ int main(int argc, char** argv)
 	double totalTime = secdiff + nsecdiff;
 	printf("Bilateral filter runtime: %fs\n", totalTime);
 
-#ifdef DEBUG
-	for( unsigned int i = 0; i < SIZE; i++ )
+	// convert output image to an image acceptable for printing
+	// use the input memory space
+	for( unsigned int i = 0; i < image_height; i++ )
 	{
-		for( unsigned int j = 0; j < SIZE; j++ )
+		for( unsigned int j = 0; j < image_width; j++ )
 		{
-			printf( "%f,", *(output+ j + i*SIZE) );
+			(input + i*image_height + j)->r = (uint8_t)(*(output + i*image_height + j));
+			(input + i*image_height + j)->g = (input + i*image_height + j)->r;
+			(input + i*image_height + j)->b = (input + i*image_height + j)->g;
 		}
-		printf("\n");
 	}
-#endif
+
+	// the output space is grayscale
+	if( argc > 2 )
+	{
+		writeImage(input, argv[2]);
+	}
+	else
+	{
+		writeImage(input, "output.bmp");
+	}
+
 	return 0;
 }
