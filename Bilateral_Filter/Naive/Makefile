@@ -10,8 +10,11 @@ DEBUG=
 TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas/build2/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build2/
 INCLUDE=
-SIGMA_S=0.03
-SIGMA_R=0.1
+
+SIGMA_S=1.0
+SIGMA_R=1.0
+INPUT_IMAGE=john.bmp
+OUTPUT_IMAGE=filtered_john.bmp
 
 all: Instance_$(SOURCE).json
 
@@ -42,6 +45,10 @@ Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 # just builds the source code into elf form
 elf : $(SOURCE).c
 	$(CC) $(D_LINKS) -g3 -O0 $(DEBUG) $< -o $(SOURCE).elf
+
+display : elf
+	./$(SOURCE).elf $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
+	display $(INPUT_IMAGE) & display $(OUTPUT_IMAGE)
 
 clean:
 	rm -rf *.bc *.ll *.tr* *.bin *.json *.exec *.elf *.native *.dot

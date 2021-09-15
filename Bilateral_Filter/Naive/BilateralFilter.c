@@ -8,11 +8,11 @@
 #define PRECISION 	double
 #define K			5
 #define L			5
-#define SIGMA_S		1.0
-#define SIGMA_R		1.0
-#define R			2 * SIGMA_R * SIGMA_R
-#define S 			2 * SIGMA_S * SIGMA_S
 
+// filter parameters
+float sigma_s;
+float sigma_r;
+// image dimensions
 uint32_t image_width  = 0;
 uint32_t image_height = 0;
 
@@ -216,16 +216,16 @@ PRECISION Intensity(struct Pixel* a)
 // computes the spacial component
 PRECISION f(PRECISION diff)
 {
-	// this distribution is N( 0, SIGMA_S )
-	static PRECISION s_2 = SIGMA_S * SIGMA_S;
+	// this distribution is N( 0, sigma_s )
+	PRECISION s_2 = sigma_s * sigma_s;
 	return ( 1 / (2*M_PI * s_2) )*exp( (-1/2) * (diff*diff / 2*s_2) );
 }
 
 // computes the range component
 PRECISION g(PRECISION diff)
 {
-	// this distribution is N( 0, SIGMA_R )
-	static PRECISION r_2 = SIGMA_R * SIGMA_R;
+	// this distribution is N( 0, sigma_r)
+	PRECISION r_2 = sigma_r * sigma_r;
 	return ( 1 / (2*M_PI * r_2) )*exp( (-1/2) * ((diff)*(diff) / 2*r_2) );
 }
 
@@ -268,17 +268,16 @@ void BilateralFilter(struct Pixel* in, PRECISION* out)
 
 int main(int argc, char** argv)
 {
+	if( argc !=5 )
+	{
+		printf("Please provide spacial variance sigma_s, range variance sigma_r, input image name, and output image name\n");
+		return 1;
+	}
+	sigma_s = atoi(argv[1]);
+	sigma_r = atoi(argv[2]);
 	struct Pixel* input;
 	PRECISION* output;
-	// the input space is rgb with 3-word width
-	if( argc > 1 )
-	{
-		input = readImage(argv[1]);
-	}
-	else
-	{
-		input = readImage("john.bmp");
-	}
+	input = readImage(argv[3]);
 	output = (PRECISION*)calloc(image_width*image_height, sizeof(PRECISION));
 	
 	struct timespec start;
@@ -304,14 +303,7 @@ int main(int argc, char** argv)
 	}
 
 	// the output space is grayscale
-	if( argc > 2 )
-	{
-		writeImage(input, argv[2]);
-	}
-	else
-	{
-		writeImage(input, "output.bmp");
-	}
+	writeImage(input, argv[4]);
 
 	free(input);
 	free(output);
