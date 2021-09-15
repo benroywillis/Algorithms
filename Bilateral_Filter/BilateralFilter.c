@@ -115,9 +115,6 @@ struct Pixel* readImage(char* file)
 	{
 		for( unsigned int j = 0; j < width; j++ )
 		{
-			//(in + i*image_height + j)->r = (uint8_t)rand();
-			//(in + i*image_height + j)->g = (uint8_t)rand();
-			//(in + i*image_height + j)->b = (uint8_t)rand();
 			printf("%d, %d, %d | ", (in + i*image_height+ j)->r, (in + i*image_height+ j)->g, (in + i*image_height+ j)->b);
 		}
 		printf("\n");
@@ -275,7 +272,7 @@ void BilateralFilter(struct Pixel* in, PRECISION* out)
 					PRECISION f_out = f(d);
 					PRECISION g_out = g(d_i);
 					PRECISION mul = f_out * g_out;
-					*(out + ((int)i+k)*(int)image_height + (int)j+l) = mul*Intensity(cP + k*(int)image_height + l);
+					*(out + (int)i*(int)image_height + (int)j) += mul*Intensity(cP + k*(int)image_height + l);
 					Wp += mul;
 				}
 			}
@@ -297,7 +294,7 @@ int main(int argc, char** argv)
 	{
 		input = readImage("john.bmp");
 	}
-	output = (PRECISION*)malloc(image_width*image_height*sizeof(PRECISION));
+	output = (PRECISION*)calloc(image_width*image_height, sizeof(PRECISION));
 
 	struct timespec start;
 	struct timespec end;
