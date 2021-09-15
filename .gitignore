@@ -8,3 +8,6 @@ BlockInfo_*
 kernel_*
 Instance_*
 *.dot
+
+# open vi sessions
+*.swp
