@@ -197,7 +197,7 @@ void writeImage(struct Pixel* out, char* file)
 
 PRECISION norm_space(struct Pixel* p, int x0, int y0, struct Pixel* q, int x1, int y1)
 {
-	PRECISION sum = 0;
+	PRECISION sum = 0.0;
 	// we normalize over 5 dimensions
 	sum += pow((PRECISION)(p->r - q->r), 2.0);
 	sum += pow((PRECISION)(p->g - q->g), 2.0);
@@ -218,7 +218,7 @@ PRECISION f(PRECISION diff)
 {
 	// this distribution is N( 0, s_2)
 	PRECISION s_2 = sigma_s * sigma_s;
-	return ( 1 / pow((2.0f*M_PI * s_2), 0.5) )*exp( (-1/2) * (diff*diff / 2*s_2) );
+	return ( 1.0 / pow((2.0f*M_PI * s_2), 0.5) )*exp( (-1.0/2.0) * (diff*diff / 2.0*s_2) );
 }
 
 // computes the range component
@@ -226,7 +226,7 @@ PRECISION g(PRECISION diff)
 {
 	// this distribution is N( 0, r_2)
 	PRECISION r_2 = sigma_r * sigma_r;
-	return ( 1 / pow((2.0*M_PI * r_2), 0.5) )*exp( (-1/2) * ((diff)*(diff) / 2*r_2) );
+	return ( 1.0 / pow((2.0*M_PI * r_2), 0.5) )*exp( (-1.0/2.0) * ((diff)*(diff) / 2.0*r_2) );
 }
 
 void BilateralFilter(struct Pixel* in, PRECISION* out)
