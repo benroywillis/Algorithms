@@ -4,6 +4,7 @@
 *.bin
 *.native
 *.elf
+*.exec
 BlockInfo_*
 kernel_*
 Instance_*
