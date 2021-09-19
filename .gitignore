@@ -12,3 +12,6 @@ Instance_*
 
 # open vi sessions
 *.swp
+
+# generated halide source files
+*generated*

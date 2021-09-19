@@ -5,7 +5,7 @@
 #include <string>
 //#include "bilateral_filter.h"
 //#ifndef NO_AUTO_SCHEDULE
-#include "bilateral_filter_autoschedule_true_generated.h"
+//#include "bilateral_filter_autoschedule_true_generated.h"
 #include "bilateral_filter_autoschedule_false_generated.h"
 //#endif
 
@@ -13,20 +13,21 @@
 #include "halide_benchmark.h"
 #include "halide_image_io.h"
 
-#define PROGPATH DASH_DATA "Halide/benchmarks/"
-#define INPUT0 PROGPATH "mona_lisa.png"
-#define OUTPUT0 PROGPATH "bilateral_filter_output.png"
-
 using namespace Halide::Tools;
 using namespace Halide::Runtime;
 
 int main(int argc, char **argv) {
-    float r_sigma = 0.1;
-    float s_sigma = 0.1;
-    int timing_iterations = 10;
-    Buffer<float> input = load_and_convert_image(INPUT0);
-    std::cout << "Image imported from " << INPUT0 << std::endl;
-    Buffer<float> output(input.width(), input.height());
+	if( argc != 5 )
+	{
+		std::cout << "Please provide sigma_s, sigma_r, inputFileName, outputFileName" << std::endl;
+		return 1;
+	}
+    float sigma_s = std::stof(argv[1]);
+    float sigma_r = std::stof(argv[2]);
+    int timing_iterations = 15;
+    Buffer<uint8_t> input = load_and_convert_image(argv[3]);
+    std::cout << "Image imported from " << argv[3] << std::endl;
+    Buffer<uint8_t> output(input.width(), input.height());
 
     // Manually-tuned version
     double min_t_manual = benchmark(timing_iterations, 10, [&]() {
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
-    convert_and_save_image(output, OUTPUT0);
+    convert_and_save_image(output, argv[4]);
 
     return 0;
 }
