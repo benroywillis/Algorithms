@@ -21,6 +21,11 @@ HALIDE_D_LINKS=-lpthread -ldl -lpng -ljpeg
 SOURCE=bilateral_filter
 OPT_TEST=Instance
 
+SIGMA_S=1.0
+SIGMA_R=1.0
+INPUT_IMAGE=john.png
+OUTPUT_IMAGE=filteredjohn.png
+
 AUTOSCHEDULE=0
 # test of just the executable program
 test: $(SOURCE).exec
@@ -36,6 +41,10 @@ $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
 #$(SOURCE).exec : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated $(SOURCE)_autoschedule_false_generated
 $(SOURCE).exec : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated
 	$(CXX) -std=c++11 -fuse-ld=lld-9 $(HALIDE_D_LINKS) $(CFLAGS) -I$(HALIDE_INSTALL_PREFIX)/include/ -I$(HALIDE_INSTALL_PREFIX)share/tools/ $(^:%_generated=%_generated.bc) -o $@
+
+display : $(SOURCE).exec
+	./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
+	display $(INPUT_IMAGE) & display $(OUTPUT_IMAGE) &
 
 .PHONY : clean
 

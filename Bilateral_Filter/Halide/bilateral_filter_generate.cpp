@@ -32,7 +32,7 @@ public:
 		i_2(x) = pow( cast<double>(x), cast<double>(2.0f) );
 		c_2(x) = pow( cast<double>(x), cast<double>(2.0f) );
 		Func norm_space;
-		norm_space(a, b, d, e) = pow( i_2(b-a) + i_2(e - d), cast<double>(0.5f) );
+		norm_space(a, b, d, e) = pow( i_2(d-a) + i_2(e - b), cast<double>(0.5f) );
 
 		// Norm function for "range" elements (color space)
 		Func gray;
