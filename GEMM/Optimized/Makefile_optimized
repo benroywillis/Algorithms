@@ -1,0 +1,13 @@
+
+CC ?= clang-9
+
+SOURCE = OptimizedGEMM
+
+$(SOURCE).bc : $(SOURCE).c
+	$(CC) -g3 $(LDFLAGS) -mavx $< -o $@
+
+$(SOURCE) : $(SOURCE).c
+	$(CC) -O0 -g3 -mavx $< -o $@
+
+clean:
+	rm -rf $(SOURCE) $(SOURCE).bc
