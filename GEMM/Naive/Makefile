@@ -4,12 +4,13 @@ CXX?=clang++-9
 OPT?=opt-9
 LDFLAGS?=-c -emit-llvm -g3 -O0
 
-SOURCE=BilateralFilter
+SOURCE=GEMM
 D_LINKS=-lm
 DEBUG=
-TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas/build2/
+#TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas/build2/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build2/
-INCLUDE=
+TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
+INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
 all: Instance_$(SOURCE).json
 
@@ -36,6 +37,18 @@ kernel_$(SOURCE).json : $(SOURCE).bin
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$<
+
+tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
+	$(TRACEATLAS_ROOT)bin/tik -j $^ -o $@
+
+ts_$(SOURCE).bc : tik_$(SOURCE).bc $(SOURCE).bc
+	$(TRACEATLAS_ROOT)bin/tikSwap -g -t $< -b $(SOURCE).bc -o $@
+
+ts_$(SOURCE).exec : ts_$(SOURCE).bc tik_$(SOURCE).bc
+	$(CXX) $^ -o $@
+
+ts_$(SOURCE)_run : ts_$(SOURCE).exec
+	./$<
 
 # just builds the source code into elf form
 elf : $(SOURCE).c
