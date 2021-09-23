@@ -34,13 +34,13 @@ $(SOURCE).instance.native : $(SOURCE).instance.bc
 	$(CXX) -fuse-ld=lld-9 $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
-	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< output.image john.ppm $(SIGMA_S) $(SIGMA_R)
+	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 kernel_$(SOURCE).json : $(SOURCE).bin
 	$(TRACEATLAS_ROOT)/bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -o $@
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
-	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< output.image john.ppm $(SIGMA_S) $(SIGMA_R)
+	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 # just builds the source code into elf form
 elf : $(SOURCE).c
