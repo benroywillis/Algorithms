@@ -2,6 +2,8 @@
 #include "Backend/BackendTrace.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 #ifndef TRACING
 #define TRACING 0
@@ -28,6 +30,8 @@ int main()
 #if TRACING
     KernelEnter("MatrixMultiply,Outer");
 #endif
+	struct timespec start, end;
+	while( clock_gettime(CLOCK_MONOTONIC, &start) );
     for (int i = 0; i < SIZE; i++)
     {
 #if TRACING
@@ -53,7 +57,11 @@ int main()
 #if TRACING
     KernelExit("MatrixMultiply,Outer");
 #endif
+	while( clock_gettime(CLOCK_MONOTONIC, &end) );
 
-    printf("Success.\n");
+	double time_s  = (double)end.tv_sec - (double)start.tv_sec;
+	double time_ns = ((double)end.tv_nsec - (double)start.tv_nsec) * pow( 10.0, -9.0 );
+	double total   = time_s + time_ns;
+    printf("Time: %fs\n", total);
     return 0;
 }

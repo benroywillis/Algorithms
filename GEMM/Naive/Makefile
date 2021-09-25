@@ -1,9 +1,10 @@
 LLVM_INSTALL=/mnt/heorot-10/bwilli46/LLVM9/install-release/
+#LLVM_INSTALL=/mnt/heorot-10/bwilli46/LLVM12/install-release/
 
 CC=$(LLVM_INSTALL)bin/clang
 CXX=$(LLVM_INSTALL)bin/clang++
 OPT=$(LLVM_INSTALL)bin/opt
-LDFLAGS?=-flto -fuse-ld=lld-9 -Wl,--plugin-opt=emit-llvm
+LDFLAGS?=-flto -fuse-ld=$(LLVM_INSTALL)/bin/ld.lld -Wl,--plugin-opt=emit-llvm
 #LDFLAGS?=-c -emit-llvm -g3 -O0
 
 SOURCE=GEMM
@@ -56,10 +57,10 @@ Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tik -j $^ -o $@
+	$(TRACEATLAS_ROOT)bin/tik -S -j $^ -o $@
 
 ts_$(SOURCE).bc : tik_$(SOURCE).bc $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tikSwap -g -t $< -b $(SOURCE).bc -o $@
+	$(TRACEATLAS_ROOT)bin/tikSwap -S -g -t $< -b $(SOURCE).bc -o $@
 
 ts_$(SOURCE).exec : ts_$(SOURCE).bc tik_$(SOURCE).bc
 	$(CXX) $^ -o $@
@@ -69,10 +70,10 @@ ts_$(SOURCE)_run : ts_$(SOURCE).exec
 
 # tik with polly
 tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
-	$(CC) $(LDFLAGS) $(POLLY_FLAGS) $< -o $@
+	$(CC) $(LDFLAGS) $(POLLYFLAGS) -S $< -o $@
 
 ts_polly_$(SOURCE).bc : tik_polly_$(SOURCE).bc $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tikSwap -g -t $< -b $(SOURCE).bc -o $@
+	$(TRACEATLAS_ROOT)bin/tikSwap -S -g -t $< -b $(SOURCE).bc -o $@
 
 ts_polly_$(SOURCE).exec : ts_polly_$(SOURCE).bc tik_polly_$(SOURCE).bc
 	$(CXX) $^ -o $@
@@ -83,6 +84,9 @@ ts_polly_$(SOURCE)_run : ts_polly_$(SOURCE).exec
 # just builds the source code into elf form
 elf : $(SOURCE).c
 	$(CC) $(D_LINKS) -g3 -O0 $(DEBUG) $< -o $(SOURCE).elf
+
+elf_polly : $(SOURCE).c
+	$(CC) $(D_LINKKS) -g3 -O0 $(POLLYFLAGS) $(DEBUG) $< -o $(SOURCE).elf
 
 display : elf
 	./$(SOURCE).elf
