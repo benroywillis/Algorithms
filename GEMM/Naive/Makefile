@@ -16,23 +16,23 @@ TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
 INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
 # polly flags
-OPFLAGS=-O0
+OPFLAG=-O1
 # turn polly on in compilation pass
-POLLYFLAGS=$(OPFLAGS) -mllvm -polly
+POLLYFLAGS=$(OPFLAG) -mllvm -polly -mllvm -polly-allow-nonaffine
 ## breakdown polly transformation steps
 # transforms the input program to a canonical form polly can understand
-OPTFLAGS1=-S -polly-canonicalize
+POLLY_OPTFLAGS1=-S -polly-canonicalize
 # print detected scops
-OPTFLAGS2.0=-basic-aa -polly-ast -analyze 
-OPTFLAGS2.1=-polly-process-unprofitable -polly-use-llvm-names
+POLLY_OPTFLAGS2.0=-polly-use-llvm-names -polly-allow-nonaffine-loops -polly-allow-nonaffine-branches -basicaa -polly-scops -analyze
+POLLY_OPTFLAGS2.1=-polly-process-unprofitable 
 # Highlight detected scops in the CFG of the program
-OPTFLAGS3=-polly-use-llvm-names -basic-aa#-view-scops # -disable-output
+POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
 OMPFLAGS =-polly-parallel -lgomp
 
 all: Instance_$(SOURCE).json
 
 $(SOURCE).bc : $(SOURCE).c
-	$(CC) $(LDFLAGS) $(INCLUDE) $< -o $@
+	$(CC) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $< -o $@
 
 $(SOURCE).markov.bc: $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Markov $< -o $@
@@ -81,15 +81,31 @@ ts_polly_$(SOURCE).exec : ts_polly_$(SOURCE).bc tik_polly_$(SOURCE).bc
 ts_polly_$(SOURCE)_run : ts_polly_$(SOURCE).exec
 	./$<
 
+# break polly down into steps
+tik_polly_canon.bc : tik_$(SOURCE).bc
+	$(OPT) -S $(POLLY_OPTFLAGS_1) $< -o $@
+
+tik_polly_scops : tik_polly_canon.bc
+	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
+
+# just polly
+$(SOURCE).canonical.bc : $(SOURCE).bc
+	$(OPT) -S $(POLLY_OPTFLAGS_1) $< -o $@
+
+$(SOURCE)_polly_scops : $(SOURCE).canonical.bc
+	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
+
 # just builds the source code into elf form
 elf : $(SOURCE).c
-	$(CC) $(D_LINKS) -g3 -O0 $(DEBUG) $< -o $(SOURCE).elf
+	$(CC) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $< -o $(SOURCE).elf
 
 elf_polly : $(SOURCE).c
-	$(CC) $(D_LINKKS) -g3 -O0 $(POLLYFLAGS) $(DEBUG) $< -o $(SOURCE).elf
+	$(CC) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $< -o $(SOURCE).elf_polly
 
 display : elf
 	./$(SOURCE).elf
 
+.PHONY:
+
 clean:
-	rm -rf *.bc *.ll *.tr* *.bin *.json *.exec *.elf *.native *.dot
+	rm -rf *.bc *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot *.bc.h *.elf
