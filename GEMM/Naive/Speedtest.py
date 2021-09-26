@@ -35,9 +35,9 @@ for key in timeMap:
 					 "Dilation": { "Dilations": [], "median": 0.0, "mean": 0.0, "stddev": 0.0 } }
 
 # make all the binaries we will need
-#build = "make clean ; make elf ; make elf_polly ; make ts_GEMM.exec ; make ts_polly_GEMM.exec"
-#check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
-#check.wait()
+build = "make clean ; make elf ; make elf_polly ; make ts_GEMM.exec ; make ts_polly_GEMM.exec"
+check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+check.wait()
 
 for key in timeMap:
 	for i in range( iterations ):
