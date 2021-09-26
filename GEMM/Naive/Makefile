@@ -16,7 +16,8 @@ TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
 INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
 # polly flags
-OPFLAG=-O1
+# possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
+OPFLAG=-O0
 # turn polly on in compilation pass
 POLLYFLAGS=$(OPFLAG) -mllvm -polly -mllvm -polly-allow-nonaffine
 ## breakdown polly transformation steps
@@ -41,10 +42,10 @@ $(SOURCE).instance.bc : $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Instance $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
-	$(CXX) -fuse-ld=lld-9 $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
+	$(CXX) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).instance.native : $(SOURCE).instance.bc
-	$(CXX) -fuse-ld=lld-9 $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
+	$(CXX) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
 	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$<
@@ -60,23 +61,23 @@ tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
 	$(TRACEATLAS_ROOT)bin/tik -S -j $^ -o $@
 
 ts_$(SOURCE).bc : tik_$(SOURCE).bc $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tikSwap -S -g -t $< -b $(SOURCE).bc -o $@
+	$(TRACEATLAS_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
 
 ts_$(SOURCE).exec : ts_$(SOURCE).bc tik_$(SOURCE).bc
-	$(CXX) $^ -o $@
+	$(CXX) $(OPFLAG) $^ -o $@
 
 ts_$(SOURCE)_run : ts_$(SOURCE).exec
 	./$<
 
 # tik with polly
 tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
-	$(CC) $(LDFLAGS) $(POLLYFLAGS) -S $< -o $@
+	$(CC) $(LDFLAGS) $(OPFLAG) $(POLLYFLAGS) -S $< -o $@
 
 ts_polly_$(SOURCE).bc : tik_polly_$(SOURCE).bc $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tikSwap -S -g -t $< -b $(SOURCE).bc -o $@
+	$(TRACEATLAS_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
 
 ts_polly_$(SOURCE).exec : ts_polly_$(SOURCE).bc tik_polly_$(SOURCE).bc
-	$(CXX) $^ -o $@
+	$(CXX) $(OPFLAG) $^ -o $@
 
 ts_polly_$(SOURCE)_run : ts_polly_$(SOURCE).exec
 	./$<
