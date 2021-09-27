@@ -38,13 +38,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	// min index, max index, stride
-	halide_dimension_t arrayDims;
-	arrayDims.min  = 0;
-	arrayDims.extent = SIZE;
-	arrayDims.stride = 1;
-    Buffer<double> input0( &A[0][0], 2, &arrayDims );
-    Buffer<double> input1( &B[0][0], 2, &arrayDims );
-    Buffer<double> output( &C[0][0], 2, &arrayDims );
+	halide_dimension_t arrayDims[] = {{0, SIZE, 1} , {0, SIZE, 1}};
+    Buffer<double> input0( &A[0][0], 2, arrayDims );
+    Buffer<double> input1( &B[0][0], 2, arrayDims );
+    Buffer<double> output( &C[0][0], 2, arrayDims );
 
     // Manually-tuned version
     double min_t_manual = benchmark(timing_iterations, 10, [&]() {

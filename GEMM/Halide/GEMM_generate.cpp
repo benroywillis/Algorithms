@@ -3,8 +3,6 @@
 #include "halide_image_io.h"
 #include <math.h>
 
-#define M_PIf	(float)M_PI
-
 namespace {
 
 class GeneralizedMatrixMultiply : public Halide::Generator<GeneralizedMatrixMultiply> {
@@ -18,7 +16,7 @@ public:
 		Func inner_loop("inner_loop");
 		inner_loop(k, i, j) = input0(i, k)*input1(k, j);
 
-		RDom rv(0, input0.width());
+		RDom rv(0, input0.height());
 		Func output("output");
 		output(i, j) += inner_loop(rv, i, j);
 		GEMM = output;
