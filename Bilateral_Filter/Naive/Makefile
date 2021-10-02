@@ -112,11 +112,12 @@ run : elf
 	./$(SOURCE).elf $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 gprof_$(SOURCE).elf : $(SOURCE).c
-	$(GCC) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -a -Wno-unused-result $< -o gprof_$(SOURCE).obj
-	$(GCC) -pg -a gprof_$(SOURCE).obj $(D_LINKS) -o gprof_$(SOURCE).elf
-	./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE) 
+	$(GCC) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result $< -o gprof_$(SOURCE).obj
+	$(GCC) -pg gprof_$(SOURCE).obj $(D_LINKS) -o $@
+	./$@ $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE) 
 
-gcov : $(SOURCE).c
+gprof : gprof_$(SOURCE).elf
+	gprof -l ./$<
 
 gcov_$(SOURCE).elf : $(SOURCE).c
 	$(GXX) $(INCLUDE) $(OPFLAG) $(DEBUG) $(D_LINKS) -Wno-unused-result -fprofile-arcs -ftest-coverage -fPIC $< -o $@
@@ -124,12 +125,6 @@ gcov_$(SOURCE).elf : $(SOURCE).c
 gcov : gcov_$(SOURCE).elf
 	./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 	gcov --all-blocks --branch-probabilities --branch-counts --display-progress --function-summaries $<
-
-elf_polly : $(SOURCE).c
-	$(CC) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $< -o $(SOURCE).elf_polly
-
-display : elf
-	./$(SOURCE).elf
 
 perf : elf
 	sudo perf stat -d ./BilateralFilter.elf $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
@@ -139,10 +134,11 @@ operf : elf
 	sudo time -p operf ./$(SOURCE).elf $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
-gprof : gprof_$(SOURCE).elf
-	gprof -l ./$<
-#	gprof -l ./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
+elf_polly : $(SOURCE).c
+	$(CC) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $< -o $(SOURCE).elf_polly
 
+display : elf
+	./$(SOURCE).elf
 
 .PHONY:
 
