@@ -144,7 +144,9 @@ operf : elf
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
 elf_polly : $(SOURCE).c
-	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $(LIBRARIES) $< -o $(SOURCE).elf_polly
+	$(CC) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
+	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
+#	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 
 display : elf
 	./$(SOURCE).elf
