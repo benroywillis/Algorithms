@@ -9,7 +9,9 @@ BlockInfo_*
 kernel_*
 Instance_*
 *.dot
-
+*.gcda
+*.gcno
+*.obj
 # open vi sessions
 *.swp
 
