@@ -17,7 +17,7 @@ INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
 # polly flags
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
-OPFLAG=-O0
+OPFLAG=-O0 -g3
 # turn polly on in compilation pass
 POLLYFLAGS=$(OPFLAG) -mllvm -polly -mllvm -polly-allow-nonaffine
 ## breakdown polly transformation steps
