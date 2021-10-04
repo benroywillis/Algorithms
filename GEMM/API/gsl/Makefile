@@ -21,7 +21,7 @@ MATRIX_DIM_B=512
 MATRIX_DIM_C=512
 ALPHA=1.0
 BETA=1.0
-TRANSPOSE=1
+TRANSPOSE=0
 
 D_LINKS=
 DEBUG=-g3
@@ -115,7 +115,7 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 
 # just builds the source code into elf form
 elf : $(SOURCE).c
-	$(CC) -fuse-ld=$(LLVM_INSTALL)/bin/ld.lld $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $< -o $(SOURCE).elf
+	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $< -o $(SOURCE).elf
 
 run : elf
 	./$(SOURCE).elf $(MATRIX_DIM_A) $(MATRIX_DIM_B) $(MATRIX_DIM_C) $(ALPHA) $(BETA) $(TRANSPOSE)
@@ -144,7 +144,7 @@ operf : elf
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
 elf_polly : $(SOURCE).c
-	$(CC) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $(LIBRARIES) $< -o $(SOURCE).elf_polly
+	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $(LIBRARIES) $< -o $(SOURCE).elf_polly
 
 display : elf
 	./$(SOURCE).elf
