@@ -18,7 +18,7 @@ LDFLAGS?=-flto -fuse-ld=$(LLVM_INSTALL)/bin/ld.lld -Wl,--plugin-opt=emit-llvm
 SOURCE=FFT
 PRECISION=0 # 0 for double, 1 for float
 INPUT_DIM_N=512
-MATRIX_DIM_DEGREE=2
+INPUT_DIM_DEGREE=2
 
 D_LINKS=-lm
 DEBUG=-g3
@@ -62,13 +62,13 @@ $(SOURCE).instance.native : $(SOURCE).instance.bc
 	$(CXX) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
-	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 kernel_$(SOURCE).json : $(SOURCE).bin
 	$(TRACEATLAS_ROOT)/bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -o $@
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
-	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
@@ -81,7 +81,7 @@ ts_$(SOURCE).exec : ts_$(SOURCE).bc tik_$(SOURCE).bc
 	$(CXX) $(OPFLAG) $^ -o $@
 
 ts_$(SOURCE)_run : ts_$(SOURCE).exec
-	./$< $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	./$< $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 # tik with polly
 tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
@@ -94,7 +94,7 @@ ts_polly_$(SOURCE).exec : ts_polly_$(SOURCE).bc tik_polly_$(SOURCE).bc
 	$(CXX) $(OPFLAG) $^ -o $@
 
 ts_polly_$(SOURCE)_run : ts_polly_$(SOURCE).exec
-	./$< $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	./$< $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 # break polly down into steps
 tik_polly_canon.bc : tik_$(SOURCE).bc
@@ -115,12 +115,12 @@ elf : $(SOURCE).c
 	$(CC) -DPRECISION=$(PRECISION) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $< -o $(SOURCE).elf
 
 run : elf
-	./$(SOURCE).elf $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	./$(SOURCE).elf $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 gprof_$(SOURCE).elf : $(SOURCE).c
 	$(GCC) -DPRECISION=$(PRECISION) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result  $< -o gprof_$(SOURCE).obj
 	$(GCC) -pg gprof_$(SOURCE).obj $(D_LINKS) -o $@
-	./$@ $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	./$@ $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 gprof : gprof_$(SOURCE).elf
 	gprof -l ./$<
@@ -129,15 +129,15 @@ gcov_$(SOURCE).elf : $(SOURCE).c
 	$(GXX) -DPRECISION=$(PRECISION) $(INCLUDE) $(OPFLAG) $(DEBUG) $(D_LINKS) -Wno-unused-result -fprofile-arcs -ftest-coverage -fPIC $< -o $@
 
 gcov : gcov_$(SOURCE).elf
-	./$< $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
-	gcov --all-blocks --branch-probabilities --branch-counts --display-progress --function-summaries $<
+	./$< $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
+	gcov --all-blocks --branch-probabilities --branch-counts --display-progress --function-summaries $(SOURCE)
 
 perf : elf
-	sudo perf stat -d ./BilateralFilter.elf $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)    
+	sudo perf stat -d ./BilateralFilter.elf $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)    
 
 # can't figure out where oprofile puts the program stdout, so I have to use time -p for now
 operf : elf
-	sudo time -p operf ./$(SOURCE).elf $(INPUT_DIM_N) $(MATRIX_DIM_DEGREE)
+	sudo time -p operf ./$(SOURCE).elf $(INPUT_DIM_N) $(INPUT_DIM_DEGREE)
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
 elf_polly : $(SOURCE).c
