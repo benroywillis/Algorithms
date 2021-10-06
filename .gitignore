@@ -11,6 +11,7 @@ Instance_*
 *.dot
 *.gcda
 *.gcno
+*.gcov
 *.obj
 # open vi sessions
 *.swp
