@@ -890,8 +890,6 @@ void MDDFT512512(PRECISION  *Y, PRECISION  *X) {
 
 int main()
 {
-	if( false ) printf("");	
-	else printf("");	
 	struct timespec start, end;
 	while( clock_gettime(CLOCK_MONOTONIC, &start) ) {}
 	PRECISION* input  = (PRECISION*)malloc( SIZE*SIZE*2*sizeof(PRECISION) );
