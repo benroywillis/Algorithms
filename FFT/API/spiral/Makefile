@@ -2,7 +2,8 @@
 LLVM_INSTALL=/mnt/heorot-10/bwilli46/LLVM9/install-release/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build2/
 #TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
-TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_debug/
+TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
+TRACEATLAS_HC_ROOT=/home/bwilli46/Install/TraceAtlas_hotCode/
 SPIRAL_ROOT=/mnt/heorot-10/bwilli46/spiral-software/
 
 GCC=gcc
@@ -52,20 +53,32 @@ $(SOURCE).bc : $(SOURCE).c
 $(SOURCE).markov.bc: $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Markov $< -o $@
 
+$(SOURCE).hotcode.bc: $(SOURCE).bc
+	$(OPT) -load $(TRACEATLAS_HC_ROOT)/lib/AtlasPasses.so -Markov $< -o $@
+
 $(SOURCE).instance.bc : $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Instance $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
 	$(CXX) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
+$(SOURCE).hotcode.native : $(SOURCE).hotcode.bc
+	$(CXX) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(D_LINKS) $(TRACEATLAS_HC_ROOT)/lib/libAtlasBackend.a $< -o $@
+
 $(SOURCE).instance.native : $(SOURCE).instance.bc
 	$(CXX) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
-	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$<
+	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$@ ./$<
+
+$(SOURCE).hotcode.bin : $(SOURCE).hotcode.native
+	BLOCK_FILE=BlockInfo_$(SOURCE).hotcode.json MARKOV_FILE=$@ ./$<
 
 kernel_$(SOURCE).json : $(SOURCE).bin
 	$(TRACEATLAS_ROOT)/bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -o $@
+
+kernel_$(SOURCE).hotcode.json : $(SOURCE).hotcode.bin
+	$(TRACEATLAS_HC_ROOT)/bin/newCartographer -h -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).hotcode.json -d dot_$(SOURCE).hotcode.dot -o $@
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$<
