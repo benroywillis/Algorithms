@@ -522,7 +522,7 @@ int main()
 	struct timespec start, end;
 	while( clock_gettime(CLOCK_MONOTONIC, &start) ) {}
 	PRECISION* input  = (PRECISION*)malloc( SIZE*2*sizeof(PRECISION) );
-	PRECISION* output = (PRECISION*)calloc( SIZE*2*,sizeof(PRECISION) );
+	PRECISION* output = (PRECISION*)calloc( SIZE*2,sizeof(PRECISION) );
 	init_DFT1024();
 	DFT1024(output, input);
 	while( clock_gettime(CLOCK_MONOTONIC, &end) ) {}
