@@ -124,7 +124,7 @@ gcov_$(SOURCE).elf : $(SOURCE).c
 
 gcov : gcov_$(SOURCE).elf
 	./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
-	gcov --all-blocks --branch-probabilities --branch-counts --display-progress --function-summaries $<
+	gcov --all-blocks --branch-probabilities --branch-counts --display-progress --function-summaries $(SOURCE)
 
 perf : elf
 	sudo perf stat -d ./BilateralFilter.elf $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
