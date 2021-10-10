@@ -3,7 +3,7 @@ LLVM_INSTALL=/mnt/heorot-10/bwilli46/LLVM9/install-release/
 #TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas/build2/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build2/
 TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
-FFTW_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/fftw/
+FFTW_ROOT=/mnt/heorot-10/bwilli46/dash-archives/release/fftw/
 
 GCC=gcc
 GXX=g++
@@ -142,7 +142,8 @@ operf : elf
 
 elf_polly : $(SOURCE).c
 	$(CC) -DPRECISION=$(PRECISION) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
-	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
+	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
+	#$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 #	$(CC) -fuse-ld=$(LLVM_INSTALL)bin/ld.lld $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 
 display : elf
