@@ -6,3 +6,30 @@ The purpose of these algorithms is to test the capabilities of the TraceAtlas fr
 
 ## Makefiles
 Each Makefile in this repository facilitates the building of their respective programs using either a simple compilation pass (using GNU or LLVM C compilers) or the TraceAtlas analysis framework. For just building the program, make elf is the rule. For using the TraceAtlas framework, make all should do the trick.
+
+## Project Status
+### GEMM
+    * Naive:
+    * API:
+    * Halide:
+### CGEMM
+    * Naive:
+    * API:
+    * Halide:
+### GaussianFilter
+    * Naive:
+    * API:
+    * Halide:
+### BilateralFilter
+    * Naive:
+    * API:
+    * Halide:
+### FFT
+#### Spiral
+    * Naive:
+    * API:
+    * Halide:
+#### FFTW
+    * Naive:
+    * API:
+    * Halide:
