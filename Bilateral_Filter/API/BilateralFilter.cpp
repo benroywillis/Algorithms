@@ -15,9 +15,9 @@ int main( int argc, char** argv )
 
 	struct timespec start;
 	struct timespec end;
-	while(clock_gettime(CLOCK_MONOTONIC, &start));
+	while(clock_gettime(CLOCK_MONOTONIC, &start)) {}
   	bilateralFilter( src, dst, 5, sigma_r, sigma_s );
-	while(clock_gettime(CLOCK_MONOTONIC, &end));
+	while(clock_gettime(CLOCK_MONOTONIC, &end)) {}
 	double secdiff = (double)(end.tv_sec - start.tv_sec);
 	double nsecdiff = (double)(end.tv_nsec - start.tv_nsec) * pow(10.0, -9.0);
 	double totalTime = secdiff + nsecdiff;

@@ -119,6 +119,12 @@ display : run
 	display $(INPUT_IMAGE) &
 	display $(OUTPUT_IMAGE) &
 
+elf_polly : $(SOURCE).cpp
+	$(CXX) $(LLD) $(OPFLAG) $(DEBUG) $(INCLUDE) $(D_LINKS) $(LIBRARIES) -mllvm -polly -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $< -o $(SOURCE).elf_polly
+
+run_polly : elf_polly
+	./$(SOURCE).elf_polly $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
+
 gprof_$(SOURCE).elf : $(SOURCE).cpp
 	$(GXX) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result $< -o gprof_$(SOURCE).obj
 	$(GXX) -pg gprof_$(SOURCE).obj $(D_LINKS) -o $@
@@ -141,9 +147,6 @@ perf : elf
 operf : elf
 	sudo time -p operf ./$(SOURCE).elf $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
-
-elf_polly : $(SOURCE).cpp
-	$(CXX) $(OPFLAG) $(DEBUG) $(INCLUDE) $(D_LINKS) -mllvm -polly -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $< -o $(SOURCE).elf_polly
 
 .PHONY:
 
