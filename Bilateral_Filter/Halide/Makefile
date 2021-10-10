@@ -71,8 +71,10 @@ Instance_$(SOURCE).bin : $(SOURCE).instance.native
 $(SOURCE).exec : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated
 	$(CXX) -std=c++11 -fuse-ld=lld-9 $(HALIDE_D_LINKS) $(CFLAGS) $(HALIDE_INCLUDE) $(^:%_generated=%_generated.bc) -o $@
 
-display : $(SOURCE).exec
+run : $(SOURCE).exec
 	./$< $(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
+
+display : run
 	display $(INPUT_IMAGE) & display $(OUTPUT_IMAGE) &
 
 .PHONY : clean
