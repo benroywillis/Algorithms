@@ -15,6 +15,7 @@ Instance_*
 *.obj
 # open vi sessions
 *.swp
-
 # generated halide source files
 *generated*
+# nohup history
+nohup.out
