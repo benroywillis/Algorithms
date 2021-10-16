@@ -101,10 +101,11 @@ elf : $(SOURCE).c
 	$(CC) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $< -o $(SOURCE).elf
 
 elf_polly : $(SOURCE).c
-	$(CC) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $< -o $(SOURCE).elf_polly
+	$(CC) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
+	$(CC) $(LLD) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG) -mllvm -polly-show-only -mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 
-display : elf
-	./$(SOURCE).elf
+run_polly : elf_polly
+	./$(SOURCE).elf_polly
 
 .PHONY:
 
