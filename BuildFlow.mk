@@ -1,10 +1,3 @@
-LLVM_INSTALL=/mnt/heorot-10/bwilli46/LLVM9/install-release/
-#LLVM_INSTALL=/mnt/heorot-10/bwilli46/LLVM12/install-release/
-#TRACEATLAS_ROOT=/home/bwilli46/Install/TraceAtlas_dev/
-TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build_Release/
-TRACEATLAS_HC_ROOT=/home/bwilli46/Install/TraceAtlas_hotCode/
-GSL_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/gsl/
-FFTW_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/fftw/
 
 GCC=gcc
 GXX=g++
@@ -18,12 +11,19 @@ LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
 #LDFLAGS?=-c -emit-llvm -g3 -O0
 
 SOURCE?=test
-
+SUFFIX?=.c
 D_LINKS?=-lm
 DEBUG?=-g3
 INCLUDE?=
 LIBRARIES?=
 RARGS?=
+ifeq ($(SUFFIX),.c)
+	C=$(CC)
+	GC=$(GCC)
+else
+	C=$(CXX)
+	GC=$(GXX)
+endif
 
 # polly flags
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
@@ -31,7 +31,7 @@ OPFLAG=-O1
 # turn polly on in compilation pass
 POLLYFLAGS=$(OPFLAG) -mllvm -polly -mllvm -polly-allow-nonaffine
 # have polly output a bunch of dots that it then attempts to open with libreoffice
-POLLY_SHOW=-mllvm -polly-show-only
+POLLY_SHOW?=-mllvm -polly-show-only
 # set this to blank if you don't want plly to consider non-affine structures
 POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops
 ## breakdown polly transformation steps
@@ -46,8 +46,8 @@ OMPFLAGS =-polly-parallel -lgomp
 
 all: lastwriter_$(SOURCE).dot
 
-$(SOURCE).bc : $(SOURCE).c
-	$(CC) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $< -o $@
+$(SOURCE).bc : $(SOURCE)$(SUFFIX)
+	$(C) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $< -o $@
 
 $(SOURCE).markov.bc: $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Markov $< -o $@
@@ -59,7 +59,7 @@ $(SOURCE).instance.bc : $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Instance $< -o $@
 
 $(SOURCE).lastwriter.bc : $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Instance $< -o $@
+	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -LastWriter $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
@@ -71,7 +71,7 @@ $(SOURCE).hotcode.native : $(SOURCE).hotcode.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_HC_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).lastwriter.native : $(SOURCE).lastwriter.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_HC_ROOT)/lib/libAtlasBackend.a $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)/lib/libAtlasBackend.a $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
 	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
@@ -89,7 +89,7 @@ Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
 
 lastwriter.dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
-	INSTANCE_FILE=$@ ./$< $(RARGS)
+	INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
@@ -106,7 +106,7 @@ ts_$(SOURCE)_run : ts_$(SOURCE).exec
 
 # tik with polly
 tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
-	$(CC) $(LDFLAGS) $(OPFLAG) $(CFLAGS) $(POLLYFLAGS) -S $(LIBRARIES) $< -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(CFLAGS) $(POLLYFLAGS) -S $(LIBRARIES) $< -o $@
 
 ts_polly_$(SOURCE).bc : tik_polly_$(SOURCE).bc $(SOURCE).bc
 	$(TRACEATLAS_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
@@ -132,28 +132,28 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
 
 # just builds the source code into elf form
-elf : $(SOURCE).c
-	$(CC) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf
+elf : $(SOURCE)$(SUFFIX)
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf
 
 run : elf
-	./$(SOURCE).elf
+	./$(SOURCE).elf $(RARGS)
 
-elf_polly : $(SOURCE).c
-	$(CC) $(LLD) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
+elf_polly : $(SOURCE)$(SUFFIX)
+	$(C) $(LLD) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
 	$(CC) $(LLD) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG)  $(POLLY_SHOW) $(POLLY_NONAFFINE) $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 
 run_polly : elf_polly
 	./$(SOURCE).elf_polly $(RARGS)
 
-gprof_$(SOURCE).elf : $(SOURCE).c
-	$(GCC) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result  $< -o gprof_$(SOURCE).obj
-	$(GCC) -pg gprof_$(SOURCE).obj $(D_LINKS) -o $@
+gprof_$(SOURCE).elf : $(SOURCE)$(SUFFIX)
+	$(GC) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result  $< -o gprof_$(SOURCE).obj
+	$(GC) -pg gprof_$(SOURCE).obj $(D_LINKS) -o $@
 	./$@ $(RARGS)
 
 gprof : gprof_$(SOURCE).elf
 	gprof -l ./$< $(RARGS)
 
-gcov_$(SOURCE).elf : $(SOURCE).c
+gcov_$(SOURCE).elf : $(SOURCE)$(SUFFIX)
 	$(GXX) $(INCLUDE) $(OPFLAG) $(DEBUG) $(D_LINKS) -Wno-unused-result -fprofile-arcs -ftest-coverage -fPIC $< -o $@
 
 gcov : gcov_$(SOURCE).elf
