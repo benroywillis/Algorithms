@@ -1,5 +1,5 @@
+include ../../../Environment.mk
 
-GSL_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/gsl/
 SOURCE=heapsort
 
 D_LINKS=-lm
