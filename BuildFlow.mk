@@ -47,9 +47,28 @@ OMPFLAGS =-polly-parallel -lgomp
 
 all: lastwriter_$(SOURCE).dot
 
+# Halide generator rules
+# In order for this variable to work, your run files need to be named
+# $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
+# and your generator (-g <generator_name>) needs to match this variable
+$(SOURCE)_generated.exec : $(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp
+	$(CXX) $(HALIDE_COMPILE_ARGS) -I$(HALIDE_INSTALL_PREFIX)/include/ -I$(HALIDE_INSTALL_PREFIX)share/tools/ -L$(HALIDE_INSTALL_PREFIX)/lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
+
+$(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp target=host auto_schedule=false
+$(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_mullapudi2016.so -s Mullapudi2016 target=host auto_schedule=true machine_params=32,16777216,40
+
+# Halide needs to be build a special way
+ifeq ($(HALIDE),1)
+$(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated
+	$(CC) $(LLD) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+else
 $(SOURCE).bc : $(SOURCE)$(SUFFIX)
 	$(C) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $< -o $@
+endif
 
+# TraceAtlas pipeline rules
 $(SOURCE).markov.bc: $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)/lib/AtlasPasses.so -Markov $< -o $@
 
@@ -89,7 +108,7 @@ kernel_$(SOURCE).hotcode.json : $(SOURCE).hotcode.bin
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
 
-lastwriter.dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
+lastwriter_$(SOURCE).dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
 	INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
 
 # regular tik
