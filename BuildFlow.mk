@@ -160,7 +160,7 @@ run : elf
 
 elf_polly : $(SOURCE)$(SUFFIX)
 	$(C) $(LLD) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
-	$(CC) $(LLD) $(INCLUDE) $(D_LINKS) -mllvm -polly $(OPFLAG)  $(POLLY_SHOW) $(POLLY_NONAFFINE) $(LIBRARIES) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
+	$(C) $(LLD) $(D_LINKS) -mllvm -polly $(OPFLAG) $(POLLY_SHOW) $(POLLY_NONAFFINE) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 
 run_polly : elf_polly
 	./$(SOURCE).elf_polly $(RARGS)

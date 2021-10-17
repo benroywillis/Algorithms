@@ -14,6 +14,8 @@ HALIDE_INCLUDE=\
 -I$(HALIDE_INSTALL_PREFIX)share/tools
 
 # some library installs
-GSL_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/gsl/
-FFTW_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/fftw/
+DASH_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/
+GSL_ROOT=$(DASH_ROOT)gsl/
+FFTW_ROOT=$(DASH_ROOT)fftw/
+OPENCV_ROOT=$(DASH_ROOT)opencv/
 
