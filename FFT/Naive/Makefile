@@ -1,4 +1,4 @@
-include ../../../Environment.mk
+include ../../Environment.mk
 
 SOURCE=FFT
 INPUT_DIM_N=512
@@ -10,4 +10,4 @@ INCLUDE=-I$(TRACEATLAS_ROOT)include/
 LIBRARIES=
 POLLY_SHOW=
 
-include ../../../BuildFlow.mk
+include ../../BuildFlow.mk
