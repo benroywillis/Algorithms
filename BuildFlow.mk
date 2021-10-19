@@ -11,6 +11,7 @@ LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
 #LDFLAGS?=-c -emit-llvm -g3 -O0
 
 SOURCE?=test
+ADDSOURCE?=
 SUFFIX?=.c
 D_LINKS?=-lm
 DEBUG?=-g3
@@ -64,8 +65,8 @@ ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated
 	$(CC) $(LLD) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
-$(SOURCE).bc : $(SOURCE)$(SUFFIX)
-	$(C) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $< -o $@
+$(SOURCE).bc : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(C) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
 endif
 
 # TraceAtlas pipeline rules
@@ -152,8 +153,8 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
 
 # just builds the source code into elf form
-elf : $(SOURCE)$(SUFFIX)
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf
+elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $^ -o $(SOURCE).elf
 
 run : elf
 	./$(SOURCE).elf $(RARGS)
