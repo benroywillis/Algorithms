@@ -21,8 +21,8 @@ $(DASH_ROOT)zlib/lib/libz.a
 
 SIGMA_S=10.0
 SIGMA_R=10.0
-INPUT_IMAGE=john.bmp
-OUTPUT_IMAGE=filtered_john.bmp
+INPUT_IMAGE=../Data/john.bmp
+OUTPUT_IMAGE=../Data/filtered_john.bmp
 RARGS=$(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 POLLY_SHOW=

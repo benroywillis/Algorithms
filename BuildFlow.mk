@@ -53,8 +53,7 @@ all: lastwriter_$(SOURCE).dot
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
 # and your generator (-g <generator_name>) needs to match this variable
 $(SOURCE)_generated.exec : $(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp
-	$(CXX) $(HALIDE_COMPILE_ARGS) -I$(HALIDE_INSTALL_PREFIX)/include/ -I$(HALIDE_INSTALL_PREFIX)share/tools/ -L$(HALIDE_INSTALL_PREFIX)/lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
-
+	$(CXX) $(HALIDE_COMPILE_ARGS) $(HALIDE_INCLUDE) -L$(HALIDE_INSTALL_PREFIX)/lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 $(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp target=host auto_schedule=false
 $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
@@ -63,7 +62,7 @@ $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
 # Halide needs to be build a special way
 ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated
-	$(CC) $(LLD) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(CC) $(LDFLAGS) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
@@ -153,13 +152,13 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
 
 # just builds the source code into elf form
-elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+elf : $(SOURCE).bc
 	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $^ -o $(SOURCE).elf
 
 run : elf
 	./$(SOURCE).elf $(RARGS)
 
-elf_polly : $(SOURCE)$(SUFFIX)
+elf_polly : $(SOURCE).bc
 	$(C) $(LLD) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
 	$(C) $(LLD) $(D_LINKS) -mllvm -polly $(OPFLAG) $(POLLY_SHOW) $(POLLY_NONAFFINE) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
 
