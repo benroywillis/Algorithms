@@ -158,7 +158,6 @@ elf : $(SOURCE).bc
 run : elf
 	./$(SOURCE).elf $(RARGS)
 
-	#$(C) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
 elf_polly : $(SOURCE).bc
 	$(C) $(LLD) $(D_LINKS) -mllvm -polly $(OPFLAG) $(POLLY_SHOW) $(POLLY_NONAFFINE) $< -o $(SOURCE).elf_polly
 
@@ -191,7 +190,7 @@ operf : elf
 .PHONY:
 
 clean:
-	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated*
+	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.*
 
 clean_oprofile:
 	sudo rm -rf oprofile_data
