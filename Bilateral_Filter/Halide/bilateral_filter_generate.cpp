@@ -46,12 +46,13 @@ public:
 		Func g;
 		g( a, b, d, e ) = ( 1.0f / pow( 2.0f * sigma_r * M_PIf, 0.5f ) )*exp( (-1.0f/2.0f) * (norm_range(a, b, d, e)*norm_range(a, b, d, e) / 2.0f*sigma_r) );
 	
-		// sliding window
+		// normalizer for each pixel blur
 		Func Wp_x;
 		Func Wp_y;
 		Wp_x(x, y) = f(x, y, x, y)*g(x, y, x, y) + f(x, y, x+1, y)*g(x, y, x+1, y) + f(x, y, x+2, y)*g(x, y, x+2, y) + f(x, y, x-1, y)*g(x, y, x-1, y) + f(x, y, x-2, y)*g(x, y, x-2, y);
 		Wp_y(x, y) = Wp_x(x, y) + Wp_x(x, y+1) + Wp_x(x, y+2) + Wp_x(x, y-1) + Wp_x(x, y-2);
 
+		// each pixel blur
 		Func blurx;
 		Func blury;
 		blurx(x, y) = f(x, y, x, y)*g(x, y, x, y)*gray(x, y) + f(x, y, x+1, y)*g(x, y, x+1, y)*gray(x+1, y) + f(x, y, x+2, y)*g(x, y, x+2, y)*gray(x+2, y) + f(x, y, x-1, y)*g(x, y, x-1, y)*gray(x-1, y) + f(x, y, x-2, y)*g(x, y, x-2, y)*gray(x-2, y);

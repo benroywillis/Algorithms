@@ -158,9 +158,9 @@ elf : $(SOURCE).bc
 run : elf
 	./$(SOURCE).elf $(RARGS)
 
+	#$(C) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
 elf_polly : $(SOURCE).bc
-	$(C) $(LLD) $(LDFLAGS) $(INCLUDE) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $< -o $(SOURCE).elf_polly.bc
-	$(C) $(LLD) $(D_LINKS) -mllvm -polly $(OPFLAG) $(POLLY_SHOW) $(POLLY_NONAFFINE) $(SOURCE).elf_polly.bc -o $(SOURCE).elf_polly
+	$(C) $(LLD) $(D_LINKS) -mllvm -polly $(OPFLAG) $(POLLY_SHOW) $(POLLY_NONAFFINE) $< -o $(SOURCE).elf_polly
 
 run_polly : elf_polly
 	./$(SOURCE).elf_polly $(RARGS)
@@ -191,7 +191,7 @@ operf : elf
 .PHONY:
 
 clean:
-	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out
+	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated*
 
 clean_oprofile:
 	sudo rm -rf oprofile_data

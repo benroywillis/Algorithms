@@ -9,4 +9,6 @@ RARGS=$(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 D_LINKS=-lm
 INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
+POLLY_SHOW=
+
 include ../../BuildFlow.mk
