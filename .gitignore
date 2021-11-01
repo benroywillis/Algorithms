@@ -19,3 +19,5 @@ Instance_*
 *generated*
 # nohup history
 nohup.out
+# output data files that come from PERFECT apps
+*_output.*
