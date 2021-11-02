@@ -190,7 +190,7 @@ operf : elf
 .PHONY:
 
 clean:
-	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.*
+	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw
 
 clean_oprofile:
 	sudo rm -rf oprofile_data
