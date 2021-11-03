@@ -117,7 +117,7 @@ int main (int argc, char * argv[])
   PRINT_STAT_DOUBLE ("time_generate_random_data", toc ());
 
   /* Write the generated input file to disk */
-  write_array_to_octave (a, M, N, "random_input.mat", "input");
+  //write_array_to_octave (a, M, N, "random_input.mat", "input");
   PRINT_STAT_STRING ("input_file", "random_input.mat");
 
   /* Perform the FFT */
