@@ -21,6 +21,7 @@ using namespace Halide::Tools;
 using namespace Halide::Runtime;
 
 int main(int argc, char **argv) {
+	halide_set_num_threads(1);
     int timing_iterations = 15;
 	if( argc != 5 )
 	{
