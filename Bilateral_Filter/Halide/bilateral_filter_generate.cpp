@@ -21,10 +21,6 @@ public:
     	Var a("a"), b("b");
     	Var d("d"), e("e");
 
-        // Add a boundary condition
-		// this returns the nearest sample every time we go beyond a sample boundary
-        Func clamped = Halide::BoundaryConditions::repeat_edge(input);
-
 		// Norm functions for spacial and rangeelements
 		Func i_2;
 		Func c_2;
