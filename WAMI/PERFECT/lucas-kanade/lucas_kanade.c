@@ -89,8 +89,8 @@ warp_image (fltPixel_t *Iin, int nCols, int nRows, float *W_xp, fltPixel_t *Iout
     compa1 = W_xp[4] * ((float) y) + compb1;
 
     for (x = 1; x <= nCols; x++) {
-      Tlocalx = W_xp[0] * ((float) x) + compa0;
-      Tlocaly = W_xp[3] * ((float) x) + compa1;
+      Tlocalx = W_xp[0] * ((float) x) + compa0; // h_compression * y + (v_distortion  * x + (h_translation) )
+      Tlocaly = W_xp[3] * ((float) x) + compa1; // h_distortion  * y + (v_compression * x + (v_translation) )
 
       Iout[index] = interpolate (Tlocalx, Tlocaly, nCols, nRows, Iin);
       index++;
@@ -126,8 +126,8 @@ steepest_descent (fltPixel_t *gradX_warped, fltPixel_t *gradY_warped, int nCols,
       Jacobian_y[5] = 1.0;
 
       for (k = 0; k < 6; k++) {
-	j_index = (6 * y * nCols) + (nCols * k) + x;
-	I_steepest[j_index] = (Jacobian_x[k] * gradX_warped[index]) + (Jacobian_y[k] * gradY_warped[index]);
+	    j_index = (6 * y * nCols) + (nCols * k) + x;
+	    I_steepest[j_index] = (Jacobian_x[k] * gradX_warped[index]) + (Jacobian_y[k] * gradY_warped[index]);
       }
     }
   }
@@ -139,16 +139,19 @@ hessian (fltPixel_t *I_steepest, int nCols, int nRows, int np, float *H)
   int i, j;
   int x, y;
 
+  // for every row in the image
   for (y = 0; y < nRows; y++) {
+	// I accumulate to a hessian entry
     for (i = 0; i < np; i++) {
       for (j = 0; j < np; j++) {
-	float total = 0.0;
-	for (x = 0; x < nCols; x++) {
-	  int index1 = (6 * y * nCols) + (nCols * i) + x;
-	  int index2 = (6 * y * nCols) + (nCols * j) + x;
-	  total += I_steepest[index1] * I_steepest[index2];
-	}
-	H[6*i + j] += total;
+		// each hessian entry accumulates the correlation between all permutations of pairs of rows
+	    float total = 0.0;
+	    for (x = 0; x < nCols; x++) {
+	      int index1 = (6 * y * nCols) + (nCols * i) + x;
+	      int index2 = (6 * y * nCols) + (nCols * j) + x;
+	      total += I_steepest[index1] * I_steepest[index2];
+	    }
+    	H[6*i + j] += total;
       }
     }
   }

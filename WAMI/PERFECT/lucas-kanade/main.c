@@ -158,9 +158,9 @@ int main (int argc, char * argv[])
   p_in[5] = 5.5;         /* vertical translation */
 
     /* W(x;p) */
-  W_xp[0] = 1.0 + p_in[0];  W_xp[1] = p_in[2];        W_xp[2] = p_in[4];
-  W_xp[3] = p_in[1];        W_xp[4] = 1.0 + p_in[3];  W_xp[5] = p_in[5];
-  W_xp[6] = 0.0;            W_xp[7] = 0.0;            W_xp[8] = 1.0;
+  W_xp[0] = 1.0 + p_in[0];  W_xp[1] = p_in[2];        W_xp[2] = p_in[4]; // horizontal compression, vertical distortion, horizontal translation
+  W_xp[3] = p_in[1];        W_xp[4] = 1.0 + p_in[3];  W_xp[5] = p_in[5]; // horizontal distortion, veritcal compression, vertical translation
+  W_xp[6] = 0.0;            W_xp[7] = 0.0;            W_xp[8] = 1.0;     // stuff
 
   warp_image (gradX, M, N, W_xp, gradX_warped);
   warp_image (gradY, M, N, W_xp, gradY_warped);
@@ -168,7 +168,7 @@ int main (int argc, char * argv[])
   
   /* Compute the steepest descent images Gradient * Jacobian */
   tic ();
-  steepest_descent (gradX_warped, gradY_warped, M, N, I_steepest);
+  steepest_descent(gradX_warped, gradY_warped, M, N, I_steepest);
   PRINT_STAT_DOUBLE ("time_steepest_descent", toc ());
 
   /* Compute the Hessian matrix */
@@ -188,8 +188,3 @@ int main (int argc, char * argv[])
 
   return 0;
 }
-
-
-
-
-
