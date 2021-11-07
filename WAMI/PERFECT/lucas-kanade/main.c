@@ -164,17 +164,18 @@ int main (int argc, char * argv[])
 
   warp_image (gradX, M, N, W_xp, gradX_warped);
   warp_image (gradY, M, N, W_xp, gradY_warped);
-  PRINT_STAT_DOUBLE ("time_warp", toc ());
+//  PRINT_STAT_DOUBLE ("time_warp", toc ());
   
   /* Compute the steepest descent images Gradient * Jacobian */
-  tic ();
+ // tic ();
   steepest_descent(gradX_warped, gradY_warped, M, N, I_steepest);
-  PRINT_STAT_DOUBLE ("time_steepest_descent", toc ());
+//  PRINT_STAT_DOUBLE ("time_steepest_descent", toc ());
 
   /* Compute the Hessian matrix */
-  tic ();
+//  tic ();
   hessian (I_steepest, M, N, 6, H);
-  PRINT_STAT_DOUBLE ("time_hessian", toc ());
+//  PRINT_STAT_DOUBLE ("time_hessian", toc ());
+  PRINT_STAT_DOUBLE("LucasKanade Time:", toc());
   write_fltarray_to_octave (H, 6, 6, "output.mat", "output");
 
   STATS_END ();
