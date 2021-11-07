@@ -8,5 +8,6 @@ CFLAGS += -DINPUT_SIZE=1
 INCLUDE=-I$(TRACEATLAS_ROOT)include/ -I. -I$(PERFECT_LIB_PATH) -I../lib/
 RARGS=../data/
 POLLY_SHOW=
-
+DEBUG=-g0
+OPFLAG=-O3
 include ../../../BuildFlow.mk
