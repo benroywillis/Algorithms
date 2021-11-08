@@ -20,8 +20,10 @@ public:
 		// john: if you make these variables the same type as the two above, Halide will likely have a problem with it
     	Var a("a"), b("b");
     	Var d("d"), e("e");
+		// boundary condition for when we have to select pixels for the window that are outside the image boundaries
+		Func clamped = Halide::BoundaryConditions::repeat_edge(input);
 
-		// Norm functions for spacial and rangeelements
+		// Norm functions for spacial and range elements
 		Func i_2;
 		Func c_2;
 		// Constants in Halide must be floats, therefore we have to declare our exponents as floats
