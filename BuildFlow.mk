@@ -62,10 +62,10 @@ $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
 # Halide needs to be build a special way
 ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(OPFLAG) $(DEBUG) $(LDFLAGS) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
 endif
 
 # TraceAtlas pipeline rules
