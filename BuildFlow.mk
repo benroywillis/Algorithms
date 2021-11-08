@@ -14,7 +14,7 @@ SOURCE?=test
 ADDSOURCE?=
 SUFFIX?=.c
 D_LINKS?=-lm
-DEBUG?=-g3
+DEBUG?=-g0
 CFLAGS?=
 INCLUDE?=
 LIBRARIES?=
@@ -29,7 +29,7 @@ endif
 
 # polly flags
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
-OPFLAG=-O1
+OPFLAG?=-O3
 # turn polly on in compilation pass
 POLLYFLAGS=$(OPFLAG) -mllvm -polly -mllvm -polly-allow-nonaffine
 # have polly output a bunch of dots that it then attempts to open with libreoffice
@@ -53,7 +53,7 @@ all: lastwriter_$(SOURCE).dot
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
 # and your generator (-g <generator_name>) needs to match this variable
 $(SOURCE)_generated.exec : $(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp
-	$(CXX) $(HALIDE_COMPILE_ARGS) $(INCLUDE) $(HALIDE_INCLUDE) -L$(HALIDE_INSTALL_PREFIX)/lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
+	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) -L$(HALIDE_INSTALL_PREFIX)/lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 $(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp target=host auto_schedule=false
 $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
