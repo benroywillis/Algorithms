@@ -88,7 +88,7 @@ int main(int argc, char **argv)
  	halide_dimension_t complex_bp_image_dims[] = {{0, BP_NPIX_Y, 1} , {0, BP_NPIX_X, 1} , {0, 2, 1}};
     Buffer<double> Buffer_data( (double*)data, 3, complex_bp_image_dims);
 	// the position struct is just 3 doubles x,y,z put together
- 	halide_dimension_t position_dims[] = {{0, 3, 1}};
+ 	halide_dimension_t position_dims[] = {{0, 3*N_PULSES, 1}};
     Buffer<double> Buffer_position( (double*)platpos, 1, position_dims);
  	halide_dimension_t scalar_dims[] = {{0, 1, 1}};
     Buffer<double> Buffer_ku( &ku, 1, scalar_dims);
