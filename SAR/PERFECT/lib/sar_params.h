@@ -74,7 +74,7 @@
 #define INPUT_SIZE_LARGE 3
 
 #ifndef INPUT_SIZE
-    #define INPUT_SIZE INPUT_SIZE_MEDIUM
+    #define INPUT_SIZE INPUT_SIZE_SMALL
 #endif
 
 /*

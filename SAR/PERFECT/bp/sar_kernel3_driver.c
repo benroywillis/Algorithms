@@ -71,7 +71,7 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
-
+#include "timing/timer.h"
 #include "sar_backprojection.h"
 #include "sar_utils.h"
 
@@ -168,6 +168,7 @@ int main(int argc, char **argv)
 
     printf("\nStarting kernel 3 (backprojection)... this can take several minutes.\n");
     /* SAR Kernel 3: Backprojection */
+	tic();
     sar_backprojection(
         image,
         data,
@@ -177,8 +178,8 @@ int main(int argc, char **argv)
         dR,
         dxdy,
         z0); 
-
-    printf("Kernel complete.\n");
+	PRINT_STAT_DOUBLE("Backprojection time: ", toc());
+    printf("\nKernel complete.\n");
 
 #ifdef WRITE_OUTPUT_TO_DISK
     printf("Saving output to %s.\n", output_filename);
