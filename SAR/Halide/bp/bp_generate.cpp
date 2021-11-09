@@ -1,6 +1,6 @@
 #include "Halide.h"
 #include <math.h>
-
+#include <iostream>
 #include "sar_utils.h"
 #include "sar_backprojection.h"
 
@@ -63,18 +63,19 @@ public:
 		mul_sample_filter_re(x, y, p) = compute_sample_re(x, y, p)*matched_filter_re(x, y, p) - compute_sample_im(x, y, p)*matched_filter_im(x, y, p);
 		Func mul_sample_filter_im("mul_sample_filter_im");
 		mul_sample_filter_im(x, y, p) = compute_sample_re(x, y, p)*matched_filter_im(x, y, p) + compute_sample_im(x, y, p)*matched_filter_re(x, y, p);
+		mul_sample_filter_im.trace_stores();
 
 		// Function determines if we accumulate the current pulse or not (bin must fall within the correct range)
 		Func accum_re("accum_re");
-		accum_re(x, y, p) = mux( (0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2), { cast<float>(mul_sample_filter_re(x, y, p)), 0.0f } );
+		accum_re(x, y, p) = Halide::mux( (0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2), { 0.0f, cast<float>(mul_sample_filter_re(x, y, p)) } );
 		Func accum_im("accum_im");
-		accum_im(x, y, p) = mux( (0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2), { cast<float>(mul_sample_filter_im(x, y, p)), 0.0f } );
+		accum_im(x, y, p) = Halide::mux( (0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2), { 0.0f, cast<float>(mul_sample_filter_im(x, y, p)) } );
 		// reduction domain over the space of pulses
 		RDom r(0, N_PULSES);
 		// initialize each pixel to 0
 		image(x, y, c) = Halide::ConciseCasts::f64(0.0f);
 		// write output
-		image(x, y, c) = mux( c, {cast<double>(accum_re(x, y, r)), cast<double>(accum_im(x, y, r))} );
+		image(x, y, c) = Halide::mux( 0, {cast<double>(accum_re(x, y, r)), cast<double>(accum_im(x, y, r))} );
 	}
 };
 

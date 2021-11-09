@@ -1,7 +1,7 @@
 include ../../../Environment.mk
 
 DASH_DATA=/mnt/nobackup-09/Dash/Data/
-CFLAGS+=-DDASH_DATA=\"$(DASH_DATA)\" -std=c++17 -DINPUT_SIZE=1
+CFLAGS+=-DDASH_DATA=\"$(DASH_DATA)\" -std=c++17 -DINPUT_SIZE=1 -DENABLE_CORRECTNESS_CHECKING
 
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp

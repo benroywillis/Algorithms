@@ -57,6 +57,9 @@ int main(int argc, char **argv)
     complex (*image)[BP_NPIX_X] = NULL;
     const char *input_directory = NULL;
     position *platpos = NULL;
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    complex (*gold_image)[BP_NPIX_X] = NULL;
+#endif
 
     const size_t num_data_elements = N_PULSES * N_RANGE_UPSAMPLED;
     const size_t num_image_elements = BP_NPIX_Y * BP_NPIX_X;
@@ -69,6 +72,9 @@ int main(int argc, char **argv)
     data = (complex (*)[N_RANGE_UPSAMPLED])malloc(sizeof(complex) * num_data_elements);
     image = (complex (*)[BP_NPIX_X])malloc(sizeof(complex) * num_image_elements);
     platpos = (position*)malloc(sizeof(position) * N_PULSES);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    gold_image = (complex (*) [BP_NPIX_X])malloc(sizeof(complex) * num_image_elements);
+#endif
 
     read_bp_data_file(
         input_filename,
@@ -78,6 +84,13 @@ int main(int argc, char **argv)
         &fc,
         &R0,
         &dR);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    read_data_file(
+        (char *) gold_image,
+        golden_output_filename,
+        input_directory,
+        sizeof(complex)*num_image_elements);
+#endif
 
     dxdy = dR;
     dR /= RANGE_UPSAMPLE_FACTOR;
@@ -114,9 +127,24 @@ int main(int argc, char **argv)
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
     convert_and_save_image(Buffer_image, argv[2]);
+
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    {
+        double snr = calculate_snr(
+            (complex *) gold_image,
+            (complex *) image,
+            num_image_elements);
+        printf("\nImage correctness SNR: %.2f\n", snr);
+    }
+#endif
+
 	free(data);
 	free(image);
 	free(platpos);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    free(gold_image);
+#endif
+
     return 0;
 }
 
