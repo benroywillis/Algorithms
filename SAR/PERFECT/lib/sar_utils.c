@@ -97,6 +97,7 @@ double calculate_snr(
 
     for (i = 0; i < num_elements; ++i)
     {
+//		printf("Test image point: %.2f + j%.2f\n", test[i].re, test[i].im);
         den += (reference[i].re - test[i].re) *
                (reference[i].re - test[i].re);
         den += (reference[i].im - test[i].im) *
@@ -115,6 +116,7 @@ double calculate_snr(
     }
     else
     {
+		printf("\nThe difference between reference and test was num: %.2f, den: %.2f\n", num, den);
         return 10.0*log10(num/den);
     }
 }
