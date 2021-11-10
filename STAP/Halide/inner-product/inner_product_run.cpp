@@ -103,13 +103,13 @@ int main(int argc, char **argv)
 #endif
 
  	halide_dimension_t datacube_dims[] = {{0, N_CHAN, 1}, {0, N_DOP, 1} , {0, N_RANGE, 1}, {0, 2, 1}};
-    Buffer<double> Buffer_datacube( (double*)datacube, 4, datacube_dims);
+    Buffer<float> Buffer_datacube( (float*)datacube, 4, datacube_dims);
  	halide_dimension_t weights_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1}, {0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1}, {0, 2, 1}};
-    Buffer<double> Buffer_adaptive_weight( (double*)adaptive_weights, 5, weights_dims);
+    Buffer<float> Buffer_adaptive_weight( (float*)adaptive_weights, 5, weights_dims);
  	halide_dimension_t steering_dims[] = {{0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1} , {0, 2, 1}};
-    Buffer<double> Buffer_steering_vectors( (double*)steering_vectors, 3, steering_dims);
+    Buffer<float> Buffer_steering_vectors( (float*)steering_vectors, 3, steering_dims);
  	halide_dimension_t output_dims[] = {{0, N_STEERING, 1}, {0, N_DOP, 1}, {0, N_RANGE, 1}, {0, 2, 1}};
-    Buffer<double> Buffer_output( (double*)output, 4, output_dims);
+    Buffer<float> Buffer_output( (float*)output, 4, output_dims);
 
     // Manually-tuned version
     int timing_iterations = 15;
