@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
-    convert_and_save_image(Buffer_adaptive_weights, argv[2]);
+    //convert_and_save_image(Buffer_adaptive_weights, argv[2]);
 
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {

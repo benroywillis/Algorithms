@@ -10,7 +10,7 @@ SOURCE=system_solve
 ADDSOURCE=../../PERFECT/lib/stap_utils.c
 SUFFIX=.cpp
 
-INCLUDE=-I../../PERFECT/inner-product/ -I../../PERFECT/lib/
+INCLUDE=-I../../PERFECT/inner-product/ -I../../PERFECT/lib/ -I../../../lib/Halide/
 D_LINKS=-ljpeg -lpng -lpthread
 
 INPUT_DIRECTORY=../../PERFECT/data/
