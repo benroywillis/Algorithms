@@ -82,9 +82,9 @@ int main(int argc, char **argv)
     memset(covariances, 0, sizeof(complex) * num_covariance_elements);
 
  	halide_dimension_t datacube_dims[] = {{0, N_CHAN, 1}, {0, N_DOP, 1} , {0, N_RANGE, 1}, {0, 2, 1}};
-    Buffer<double> Buffer_datacube( (double*)datacube, 4, datacube_dims);
+    Buffer<float> Buffer_datacube( (float*)datacube, 4, datacube_dims);
  	halide_dimension_t covariances_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1} , {0, TDOF*N_CHAN, 1}, {0, TDOF*N_CHAN, 1}, {0, 2, 1}};
-    Buffer<double> Buffer_covariances( (double*)covariances, 5, covariances_dims);
+    Buffer<float> Buffer_covariances( (float*)covariances, 5, covariances_dims);
 
     // Manually-tuned version
     int timing_iterations = 15;
