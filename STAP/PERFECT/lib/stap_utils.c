@@ -111,10 +111,12 @@ double calculate_snr(
          * The test and reference sets are identical. Just
          * return a large number (in dB) rather than +infinity.
          */
+		printf("\nTest and reference sets are identical\n");
         return 140.0;
     }
     else
     {
+		printf("\nTest and reference sets did not match. Difference between the two were %.2f\n", den);
         return 10.0*log10(num/den);
     }
 }
