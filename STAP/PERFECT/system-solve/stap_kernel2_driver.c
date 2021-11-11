@@ -74,6 +74,7 @@
 #include "stap_params.h"
 #include "stap_utils.h"
 #include "stap_system_solver.h"
+#include "timing/timer.h"
 
 #define ENABLE_CORRECTNESS_CHECKING
 
@@ -156,16 +157,18 @@ int main(int argc, char **argv)
 
     /* Kernel 2: Weight Generation (Linear System Solver) */
     printf("Calling STAP Kernel 2 -- weight generation / linear system solver...\n");
+	tic();
     stap_system_solver(
         adaptive_weights,
         covariances,
         steering_vectors,
         cholesky_factors);
+	PRINT_STAT_DOUBLE("system_solve timing: ", toc());
 
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {
         double snr;
-        printf("Computing correctness metrics...\n");
+        printf("\nComputing correctness metrics...\n");
         snr = calculate_snr(
             (complex *) gold_weights,
             (complex *) adaptive_weights,
