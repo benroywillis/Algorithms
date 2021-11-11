@@ -32,8 +32,8 @@ public:
 		// induction variables over radarPixels_x, radarPixels_y, pulse, complex
 		Var x("x"), y("y"), p("p"), c("c");
 		// clamps induction variables to input array bounds
-		ComplexFunc in_data("in_data");
-		in_data(x, y) = ComplexExpr( data(x, y, 0), data(x, y, 1) );
+		Func input("input");
+		input(x, y, c) = data( clamp(x, 0, data.height()-1), clamp(y, 0, data.width()-1), clamp(c, 0, 2) );
 
 		// compute diffs between the current coordinates and the camera position
 		Func xdiff("xdiff");
@@ -46,30 +46,36 @@ public:
 		R(x, y, p) = sqrt( xdiff(x, p)*xdiff(x, p) + ydiff(y, p)*ydiff(y, p) + zdiff(p)*zdiff(p) );
 		Func bin("bin");
 		bin(x, y, p) = ( R(x, y, p) - R0(0) ) * Halide::cast<double>(1.0f) / dR(0);
-
 		// compute current sample weight, if bin is within the correct range
 		Func compute_weight("compute_weight");
 		compute_weight(x, y, p) = bin(x, y, p) - cast<int>(Halide::floor(bin(x, y, p)));
 		// compute current sample
-		ComplexFunc compute_sample("compute_sample");
-		compute_sample(x, y, p).x = (Halide::cast<double>(1.0f)-compute_weight(x, y, p)) * in_data(p, cast<int>(Halide::floor(bin(x, y, p)))).re() + compute_weight(x, y, p)*in_data(p, cast<int>(Halide::floor(bin(x, y, p)))).re();
-		compute_sample(x, y, p).y = (Halide::cast<double>(1.0f)-compute_weight(x, y, p)) * in_data(p, cast<int>(Halide::floor(bin(x, y, p)))).im() + compute_weight(x, y, p)*in_data(p, cast<int>(Halide::floor(bin(x, y, p)))).im();
+		Func compute_sample_re("compute_sample_re");
+		compute_sample_re(x, y, p) = (Halide::cast<double>(1.0f)-compute_weight(x, y, p)) * input(p, cast<int>(Halide::floor(bin(x, y, p))), 0) + compute_weight(x, y, p)*input(p, cast<int>(Halide::floor(bin(x, y, p))), 0);
+		Func compute_sample_im("compute_sample_im");
+		compute_sample_im(x, y, p) = (Halide::cast<double>(1.0f)-compute_weight(x, y, p)) * input(p, cast<int>(Halide::floor(bin(x, y, p))), 1) + compute_weight(x, y, p)*input(p, cast<int>(Halide::floor(bin(x, y, p))), 1);
 		// compute matched filter weights
-		ComplexFunc matched_filter("matched_filter");
-		matched_filter(x, y, p).x = cos( Halide::cast<double>(2.0f) * R(x, y, p) * ku(0) );
-		matched_filter(x, y, p).y = sin( Halide::cast<double>(2.0f) * R(x, y, p) * ku(0) );
+		Func matched_filter_re("matched_filter_re");
+		matched_filter_re(x, y, p) = cos( Halide::cast<double>(2.0f) * R(x, y, p) * ku(0) );
+		Func matched_filter_im("matched_filter_im");
+		matched_filter_im(x, y, p) = sin( Halide::cast<double>(2.0f) * R(x, y, p) * ku(0) );
 		// multiply sample by matched filter
-		ComplexFunc mul_sample_filter("mul_sample_filter");
-		mul_sample_filter(x, y, p) = compute_sample(x, y)*matched_filter(x, y, p);
-//(0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2)
+		Func mul_sample_filter_re("mul_sample_filter_re");
+		mul_sample_filter_re(x, y, p) = compute_sample_re(x, y, p)*matched_filter_re(x, y, p) - compute_sample_im(x, y, p)*matched_filter_im(x, y, p);
+		Func mul_sample_filter_im("mul_sample_filter_im");
+		mul_sample_filter_im(x, y, p) = compute_sample_re(x, y, p)*matched_filter_im(x, y, p) + compute_sample_im(x, y, p)*matched_filter_re(x, y, p);
+		mul_sample_filter_im.trace_stores();
+
 		// Function determines if we accumulate the current pulse or not (bin must fall within the correct range)
-		ComplexFunc accum("accum");
-		accum(x, y) = ComplexExpr();
+		Func accum_re("accum_re");
+		accum_re(x, y, p) = Halide::mux( (0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2), { 0.0f, cast<float>(mul_sample_filter_re(x, y, p)) } );
+		Func accum_im("accum_im");
+		accum_im(x, y, p) = Halide::mux( (0 <= bin(x, y, p)) && (bin(x, y, p) < N_RANGE_UPSAMPLED-2), { 0.0f, cast<float>(mul_sample_filter_im(x, y, p)) } );
+		// reduction domain over the space of pulses
 		RDom r(0, N_PULSES);
-		accum(x, y) +=  ComplexExpr(Halide::tuple_select((0 <= bin(x, y, r)) && (bin(x, y, r) < N_RANGE_UPSAMPLED-2), mul_sample_filter(x, y, r), ComplexExpr() ));
-		accum.compute_root();
 		// write output
-		image(x, y, c) = Halide::mux( c, {accum(x, y).re(), accum(x, y).im()} );
+		image(x, y, c) = 0.0f;
+		image(x, y, c) = Halide::mux( c, {accum_re(x, y, r), accum_im(x, y, r)} );
 	}
 };
 

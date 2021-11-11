@@ -97,9 +97,9 @@ int main(int argc, char **argv)
     ku = 2.0 * M_PI * fc / SPEED_OF_LIGHT;
 
  	halide_dimension_t complex_radar_image_dims[] = {{0, N_PULSES, 1}, {0, N_RANGE_UPSAMPLED, 1} , {0, 2, 1}};
-    Buffer<double> Buffer_image( (double*)image, 3, complex_radar_image_dims);
+    Buffer<float> Buffer_image( (float*)image, 3, complex_radar_image_dims);
  	halide_dimension_t complex_bp_image_dims[] = {{0, BP_NPIX_Y, 1} , {0, BP_NPIX_X, 1} , {0, 2, 1}};
-    Buffer<double> Buffer_data( (double*)data, 3, complex_bp_image_dims);
+    Buffer<float> Buffer_data( (float*)data, 3, complex_bp_image_dims);
 	// the position struct is just 3 doubles x,y,z put together
  	halide_dimension_t position_dims[] = {{0, N_PULSES, 1},{0, 3, 1}};
     Buffer<double> Buffer_position( (double*)platpos, 2, position_dims);
@@ -128,6 +128,15 @@ int main(int argc, char **argv)
 
     convert_and_save_image(Buffer_image, argv[2]);
 
+	for( int i = 0; i < BP_NPIX_Y; i++ )
+	{
+		for( int j = 0; j < BP_NPIX_X; j++ )
+		{
+			printf("%.2f + j%.2f,", data[i][j].re, data[i][j].im);
+			printf("%.2f + j%.2f,", Buffer_image(i, j, 0), Buffer_image(i, j, 1));
+			printf("%.2f + j%.2f\n", gold_image[i][j].re, gold_image[i][j].im);
+		}
+	}
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {
         double snr = calculate_snr(
@@ -174,7 +183,7 @@ void read_bp_data_file(
         dir_and_filename,
         input_directory,
         input_filename);
-
+	printf("opening %s\n", dir_and_filename);
     fp = fopen(dir_and_filename, "rb");
     if (fp == NULL)
     {

@@ -10,7 +10,7 @@ SOURCE=bp
 ADDSOURCE=../../PERFECT/lib/sar_utils.c
 SUFFIX=.cpp
 
-INCLUDE=-I../../PERFECT/bp/ -I../../PERFECT/lib/
+INCLUDE=-I../../PERFECT/bp/ -I../../PERFECT/lib/ -I../../../lib/Halide/
 D_LINKS=-ljpeg -lpng -lpthread
 
 INPUT_DIRECTORY=../../PERFECT/data/
