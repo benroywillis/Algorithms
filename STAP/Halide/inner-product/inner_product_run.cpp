@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     Buffer<float> Buffer_output( (float*)output, 4, output_dims);
 
     // Manually-tuned version
-    int timing_iterations = 15;
+    int timing_iterations = 1;
     double min_t_manual = benchmark(timing_iterations, 10, [&]() {
         inner_product_autoschedule_false_generated(Buffer_datacube, Buffer_adaptive_weight, Buffer_steering_vectors, Buffer_output);
         Buffer_output.device_sync();
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
-    convert_and_save_image(Buffer_output, argv[2]);
+    //convert_and_save_image(Buffer_output, argv[2]);
 
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {
