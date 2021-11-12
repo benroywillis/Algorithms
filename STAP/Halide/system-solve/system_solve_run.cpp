@@ -95,20 +95,67 @@ int main(int argc, char **argv)
 
     memset(adaptive_weights, 0, sizeof(complex) * num_adaptive_weight_elements);
 
- 	halide_dimension_t covariance_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1}, {0, TDOF*N_CHAN, 1}, {0, TDOF*N_CHAN, 1}, {0, 2, 1}};
-    Buffer<float> Buffer_covariances( (float*)covariances, 5, covariance_dims);
-    Buffer<float> Buffer_cholesky_factors( (float*)cholesky_factors, 5, covariance_dims);
- 	halide_dimension_t steering_dims[] = {{0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1}, {0, 2, 1}};
-    Buffer<float> Buffer_steering_vectors( (float*)steering_vectors, 3, steering_dims);
- 	halide_dimension_t adaptive_weights_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1},{0, N_STEERING, 1}, {0, TDOF*N_CHAN, 1}, {0, 2, 1}};
-    Buffer<float> Buffer_adaptive_weights( (float*)adaptive_weights, 5, adaptive_weights_dims);
+ 	//halide_dimension_t covariance_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1}, {0, TDOF*N_CHAN, 1}, {0, TDOF*N_CHAN, 1}, {0, 2, 1}};
+    Buffer<float> Buffer_covariances( (float*)covariances, 2, TDOF*N_CHAN, TDOF*N_CHAN, N_BLOCKS, N_DOP);
+    Buffer<float> Buffer_cholesky_factors( (float*)cholesky_factors, 2, TDOF*N_CHAN, TDOF*N_CHAN, N_BLOCKS, N_DOP);
+ 	//halide_dimension_t steering_dims[] = {{0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1}, {0, 2, 1}};
+    Buffer<float> Buffer_steering_vectors( (float*)steering_vectors, 2, N_CHAN*TDOF, N_STEERING);
+ 	//halide_dimension_t adaptive_weights_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1},{0, N_STEERING, 1}, {0, TDOF*N_CHAN, 1}, {0, 2, 1}};
+    Buffer<float> Buffer_adaptive_weights( (float*)adaptive_weights, 2, N_CHAN*TDOF, N_STEERING, N_BLOCKS, N_DOP);
+	uint64_t badMatch = 0;
+	for( int i = 0; i < N_DOP; i++ )
+	{
+		for( int j = 0; j < N_BLOCKS; j++ )
+		{
+			for( int k = 0; k < N_CHAN*TDOF; k++ )
+			{
+				for( int l = 0; l < N_CHAN*TDOF; l++ )
+				{
+					if( covariances[i][j][k][l].re != Buffer_covariances(0, l, k, j, i) || ( covariances[i][j][k][l].im != Buffer_covariances(1, l, k, j, i) ) )
+					{
+					//printf("%.2f + j%.2f , %.2f + j%.2f\n", 
+														//datacube[i][j][k].re, 
+														//datacube[i][j][k].im, 
+														//Buffer_datacube(0, k, j, i), 
+														//Buffer_datacube(1, k, j, i)); 
+						badMatch++;
+					}
+				}
+			}
+		}
+	}
+	printf(" %.2f%% of the inputs did not match\n", (float)( (float)badMatch / (float)(N_DOP*N_BLOCKS*N_CHAN*TDOF*N_CHAN*TDOF) * 100));
 
     // Manually-tuned version
-    int timing_iterations = 15;
+    int timing_iterations = 1;
     double min_t_manual = benchmark(timing_iterations, 10, [&]() {
         system_solve_autoschedule_false_generated(Buffer_covariances, Buffer_cholesky_factors, Buffer_steering_vectors, Buffer_adaptive_weights);
         Buffer_adaptive_weights.device_sync();
     });
+
+	badMatch = 0;
+	for( int i = 0; i < N_DOP; i++ )
+	{
+		for( int j = 0; j < N_BLOCKS; j++ )
+		{
+			for( int k = 0; k < N_STEERING; k++ )
+			{
+				for( int l = 0; l < N_CHAN*TDOF; l++ )
+				{
+					if( gold_weights[i][j][k][l].re != Buffer_adaptive_weights(0, l, k, j, i) || ( gold_weights[i][j][k][l].im != Buffer_adaptive_weights(1, l, k, j, i) ) )
+					{
+						//printf("%.2f + j%.2f , %.2f, %.2f\n", 
+														  //Buffer_covariances(0, l, k, j, i), 
+														  //Buffer_covariances(1, l, k, j, i), 
+														  //gold_covariances[i][j][k][l].re,
+														  //gold_covariances[i][j][k][l].im);
+						badMatch++;
+					}
+				}
+			}
+		}
+	}
+	printf(" %.2f%% of the outputs did not match\n", (float)( (float)badMatch / (float)(N_DOP*N_BLOCKS*N_STEERING*N_CHAN*TDOF) *100 ));
     printf("Manually-tuned time: %gms\n", min_t_manual * 1e3);
 
     // Auto-scheduled version
