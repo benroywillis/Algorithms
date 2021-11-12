@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     Buffer<float> Buffer_covariances( (float*)covariances, 5, covariances_dims);
 
     // Manually-tuned version
-    int timing_iterations = 15;
+    int timing_iterations = 1;
     double min_t_manual = benchmark(timing_iterations, 10, [&]() {
         outer_product_autoschedule_false_generated(Buffer_datacube, Buffer_covariances);
         Buffer_covariances.device_sync();
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
-    convert_and_save_image(Buffer_covariances, argv[2]);
+    //convert_and_save_image(Buffer_covariances, argv[2]);
 
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {
