@@ -20,23 +20,25 @@ class TwoDConvolution : public Halide::Generator<TwoDConvolution> {
 private:
 	Buffer<int> fil{(int*)&filter, 2, f_dim};
 public:
-	// input image is grayscale 640x480
-    Input<Buffer<int>> in{"in", 2};
-    Output<Buffer<int>> TwoDConv{"TwoDConv", 2};
+	// input image is grayscale 640x480 and multiple frames
+    Input<Buffer<int>> in{"in", 3};
+    Output<Buffer<int>> TwoDConv{"TwoDConv", 3};
 
     void generate() {
-		// induction over the input image
-		Var x("x"), y("y");
-		// to clamp the induction to the boundaries of the input image
+		// induction over the input image frames
+		Var x("x"), y("y"), f("f");
+		// when the array access vars go out of bounds, the nearest pixel is returned
+		// there's also "mirror_image" which walks back into the image for each index you go out of the image
+		Func clamped = Halide::BoundaryConditions::repeat_edge(in);
 		Func input("input");
-		input(x, y) = in( clamp(x, 0, in.width()-1), clamp(y, 0, in.height()-1) );
+		input(f, x, y) = clamped( y, x, f );
 		// Reduction over the convolution window
 		RDom r(fil);
 		// convolution over the fil
 		Func conv("conv");
-		conv(x, y) += fil(r.x, r.y) * input(x + r.x - 1, y + r.y - 1);		
+		conv(f, x, y) += fil(r.x, r.y) * input(f, x + r.x - 1, y + r.y - 1);		
 		// output
-		TwoDConv(x, y) = conv(x, y);
+		TwoDConv(y, x, f) = conv(f, x, y);
     }
 };
 
