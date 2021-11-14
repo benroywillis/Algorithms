@@ -106,6 +106,7 @@ int main(int argc, char **argv) {
 				{
 					badMatch++;
 					printf(" %d, %d \n", Buffer_output(k, j, i), PERFECT_answer[i][j][k]);
+					//printf(" %d, %d \n", output[i][j][k], PERFECT_answer[i][j][k]);
 				}
 			}
 		}
