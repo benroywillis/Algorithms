@@ -37,7 +37,7 @@ public:
 		RDom r(fil);
 		// convolution over the fil
 		Func conv("conv");
-		conv(f, x, y) += filt(r.x, r.y) * input(f, x + r.x - 1, y + r.y - 1);
+		conv(f, x, y) += filt(r.x, r.y) * Halide::cast<float>(input(f, x + r.x - 4, y + r.y - 4));
 		// output
 		TwoDConv(y, x, f) = Halide::cast<int>(conv(f, x, y));
     }

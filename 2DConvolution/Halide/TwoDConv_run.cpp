@@ -49,13 +49,27 @@ using namespace Halide::Runtime;
 #error "Unhandled value for INPUT_SIZE"
 #endif
 
+const float filter[9][9] = {
+             {1,   3,   4,   5,   6,   5,  4,    3,  1},
+             {3,   9,  12,  15,  18,  15,  12,   9,  3},
+             {4,  12,  16,  20,  24,  20,  16,  12,  4},
+             {5,  15,  20,  25,  30,  25,  20,  15,  5},
+             {6,  18,  24,  30,  36,  30,  24,  18,  6},
+             {5,  15,  20,  25,  30,  25,  20,  15,  5},
+             {4,  12,  16,  20,  24,  20,  16,  12,  4},
+             {3,   9,  12,  15,  18,  15,  12,   9,  3},
+             {1,   3,   4,   5,   6,   5,   4,   3,  1}
+        };
+
+
 int main(int argc, char **argv) {
 	std::string PERFECT_answer_filename = "../PERFECT/2dconv_output.small.";
 	halide_set_num_threads(1);
 	// file load from PERFECT benchmark tools
 	int (*data)[M][N] = (int (*)[M][N])malloc(sizeof(int)*BATCH_SIZE*M*N);
-	int (*output)[M][N] = (int (*)[M][N])malloc(sizeof(int)*BATCH_SIZE*M*N);
+	int (*output)[M][N] = (int (*)[M][N])calloc(BATCH_SIZE*M*N,sizeof(int));
 	int (*PERFECT_answer)[M][N] = (int (*)[M][N])malloc(sizeof(int)*BATCH_SIZE*M*N);
+	int (*NAIVE_answer)[M][N] = (int (*)[M][N])calloc(BATCH_SIZE*M*N,sizeof(int));
 	int err = read_array_from_octave(&data[0][0][0], M, N, (char*)&FILENAME);
 	for( int i = 1; i < BATCH_SIZE; i++ ) { 
 		for( int j = 0; j < M; j++ ) {
@@ -75,6 +89,28 @@ int main(int argc, char **argv) {
         Buffer_output.device_sync();
     });
     printf("Manually-tuned time: %gms\n", min_t_manual * 1e3);
+
+	// naive implementation
+	for( int i = 0; i < BATCH_SIZE; i++ )
+	{
+		for( int j = 0; j < M; j++ )
+		{
+			for( int k = 0; k < N; k++ )
+			{
+				float sum = 0.0f;
+				for( int l = 0; l < 9; l++ )
+				{
+					for( int m = 0; m < 9; m++ )
+					{
+						int rowIdx = j+l-4; if( rowIdx < 0 ) rowIdx = 0; if( rowIdx > M-1 ) rowIdx = M - 1;
+						int colIdx = k+m-4; if( colIdx < 0 ) rowIdx = 0; if( colIdx > N-1 ) colIdx = N - 1;
+						sum += filter[l][m] * (float)data[i][rowIdx][colIdx] / 1024.0f;
+					}
+				}
+				NAIVE_answer[i][j][k] = (int)sum;
+			}
+		}
+	}
 
 	uint64_t badMatch = 0;
 	for( int i = 0; i < BATCH_SIZE; i++ )
@@ -102,11 +138,12 @@ int main(int argc, char **argv) {
 		{
 			for( int k = 0; k < N; k++ )
 			{
-				if( Buffer_output(k, j, i) != PERFECT_answer[i][j][k] )
+				//if( fabsf( (float)(Buffer_output(k, j, i) - PERFECT_answer[i][j][k]) / (float)PERFECT_answer[i][j][k] ) > 0.001f )
+				if( fabsf( (float)(Buffer_output(k, j, i) - NAIVE_answer[i][j][k]) / (float)NAIVE_answer[i][j][k] ) > 0.001f )
+				//if( fabsf( (float)(PERFECT_answer[i][j][k] - NAIVE_answer[i][j][k]) / (float)PERFECT_answer[i][j][k] ) > 0.001f )
 				{
 					badMatch++;
-					printf(" %d, %d \n", Buffer_output(k, j, i), PERFECT_answer[i][j][k]);
-					//printf(" %d, %d \n", output[i][j][k], PERFECT_answer[i][j][k]);
+					//printf(" %d, %d \n", Buffer_output(k, j, i), NAIVE_answer[i][j][k]);
 				}
 			}
 		}
