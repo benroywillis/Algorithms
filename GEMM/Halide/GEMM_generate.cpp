@@ -2,24 +2,22 @@
 #include "halide_trace_config.h"
 #include "halide_image_io.h"
 #include <math.h>
+#include "GEMM_config.h"
 
 namespace {
 
 class GeneralizedMatrixMultiply : public Halide::Generator<GeneralizedMatrixMultiply> {
 public:
-    Input<Buffer<double>> input0{"input0", 2};
-    Input<Buffer<double>> input1{"input1", 2};
-    Output<Buffer<double>> GEMM{"GEMM", 2};
+    Input<Buffer<PRECISION>> input0{"input0", 2};
+    Input<Buffer<PRECISION>> input1{"input1", 2};
+    Output<Buffer<PRECISION>> GEMM{"GEMM", 2};
 
     void generate() {
-    	Var i("i"), j("j"), k("k");
-		Func inner_loop("inner_loop");
-		inner_loop(k, i, j) = input0(i, k)*input1(k, j);
-
+    	Var i("i"), j("j");
 		RDom rv(0, input0.height());
-		Func output("output");
-		output(i, j) += inner_loop(rv, i, j);
-		GEMM = output;
+		GEMM(j, i) = Halide::cast<PRECISION>(0);
+		//GEMM(j, i) += input0(rv, i)*input1(j, rv);
+		GEMM(j, i) += input0(rv, i)*input1(j, rv);
     }
 };
 
