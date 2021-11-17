@@ -102,8 +102,9 @@ int main(int argc, char **argv) {
 				{
 					for( int m = 0; m < 9; m++ )
 					{
-						int rowIdx = j+l-4; if( rowIdx < 0 ) rowIdx = 0; if( rowIdx > M-1 ) rowIdx = M - 1;
-						int colIdx = k+m-4; if( colIdx < 0 ) rowIdx = 0; if( colIdx > N-1 ) colIdx = N - 1;
+						int rowIdx = j+l-4; //if( rowIdx < 0 ) rowIdx = 0; if( rowIdx > M-1 ) rowIdx = M - 1;
+						int colIdx = k+m-4; //if( colIdx < 0 ) rowIdx = 0; if( colIdx > N-1 ) colIdx = N - 1;
+						if( (rowIdx < 0) || (colIdx < 0) || (rowIdx > M-1) || (colIdx > M-1) ) { sum += 0.0; continue; }
 						sum += filter[l][m] * (float)data[i][rowIdx][colIdx] / 1024.0f;
 					}
 				}
