@@ -15,14 +15,13 @@
 
 // PERFECT methods for reading data
 #include "octave/octave.h"
-#define N_BINS 255
+#define N_BINS 1 << 16
 
 using namespace Halide::Tools;
 using namespace Halide::Runtime;
 
 int main(int argc, char **argv) {
 	halide_set_num_threads(1);
-    int timing_iterations = 15;
 	if( argc != 5 )
 	{
 		std::cout << "Please provide n_rows, n_cols, inputFilePath, outputFilePath" << std::endl;
@@ -32,13 +31,15 @@ int main(int argc, char **argv) {
 	int n_cols = std::stoi(argv[2]);
 	// file load from PERFECT benchmark tools
 	int data[n_rows][n_cols];
-	int err = read_array_from_octave((int*)&data, n_rows, n_cols, argv[4]);
+	int PERFECT_answer[n_rows][n_cols];
+	int err = read_array_from_octave((int*)&data, n_rows, n_cols, argv[3]);
 
  	halide_dimension_t arrayDims[] = {{0, n_rows, 1} , {0, n_cols, 1}};
-    Buffer<uint8_t> input( (uint8_t*)&data[0][0], 2, arrayDims );
-    Buffer<uint8_t> output(input.width(), input.height());
+    Buffer<int> input( (int*)&data[0][0], 2, arrayDims );
+    Buffer<int> output(input.width(), input.height());
 
     // Manually-tuned version
+    int timing_iterations = 1;
     double min_t_manual = benchmark(timing_iterations, 10, [&]() {
         HistEq_autoschedule_false_generated(input, N_BINS, output);
         output.device_sync();
@@ -53,7 +54,23 @@ int main(int argc, char **argv) {
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
-    convert_and_save_image(output, argv[4]);
+    //convert_and_save_image(output, argv[4]);
+
+	// compare to PERFECT output
+	int badMatch = 0;
+	err = read_array_from_octave((int*)&PERFECT_answer, n_rows, n_cols, "../PERFECT/histeq_output.small.0.mat");
+	for( int i = 0; i < n_rows; i++ )
+	{
+		for( int j = 0; j < n_cols; j++ )
+		{
+			if( (PERFECT_answer[i][j] != output(j, i)) )
+			{
+				badMatch++;
+				printf("%d, %d\n", output(j, i), PERFECT_answer[i][j]);
+			}
+		}
+	}
+	printf("%.2f%% of the output did not match\n", (float)((float)badMatch/(float)(n_rows*n_cols)*100) );
 
     return 0;
 }

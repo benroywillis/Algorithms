@@ -15,7 +15,7 @@ D_LINKS=-ljpeg -lpng -lpthread
 
 N_ROWS=480
 N_COLS=640
-INPUT_IMAGE=../PERFECT/input_small.m
+INPUT_IMAGE=../PERFECT/input_small.mat
 OUTPUT_IMAGE=equalized.png
 RARGS=$(N_ROWS) $(N_COLS) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
