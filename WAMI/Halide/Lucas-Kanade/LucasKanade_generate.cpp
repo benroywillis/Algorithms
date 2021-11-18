@@ -82,7 +82,6 @@ public:
 		Func hessian("hessian");
 		hessian(r.y, r.z) += crosscorr_rows(r.x, r.y, r.z);
 		LucasKanade = hessian;
-		// john: stop early and dump a reference image. This will compartmentalize the good code and bad code
     }
 };
 

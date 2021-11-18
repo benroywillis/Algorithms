@@ -24,11 +24,11 @@ public:
 		Var ch("ch"), tdof("tdof"), b("b"), st("st"), d("d"), r("r"), c("c");
 
 		ComplexFunc in_datacube("in_datacube");
-		in_datacube(ch, d, r) = ComplexExpr( clamped( ch, d, r, 0 ), clamped( ch, d, r, 1 ) );
+		in_datacube(ch, d, r) = ComplexExpr( clamped( 0, r, d, ch ), clamped( 1, r, d, ch ) );
 		ComplexFunc in_adaptive_weights("in_adaptive_weights");
-		in_adaptive_weights(d, b, st, tdof) = ComplexExpr( adaptive_weights(d, b, st, tdof, 0), adaptive_weights(d, b, st, tdof, 1) );
+		in_adaptive_weights(d, b, st, tdof) = ComplexExpr( adaptive_weights(0, tdof, st, b, d), adaptive_weights(1, tdof, st, b, d) );
 		ComplexFunc in_steering_vectors("in_steering_vectors");
-		in_steering_vectors(st, tdof) = ComplexExpr( steering_vectors(st, tdof, 0), steering_vectors(st, tdof, 1) );
+		in_steering_vectors(st, tdof) = ComplexExpr( steering_vectors(0, tdof, st), steering_vectors(1, tdof, st) );
 
 		ComplexFunc accum_gamma_weight("accum_gamma_weight");
 		accum_gamma_weight(d, b, st) = ComplexExpr();
@@ -38,12 +38,12 @@ public:
 		Func compute_gamma_weight("compute_gamma_weight");
 		compute_gamma_weight(d, b, st) = Halide::sqrt(accum_gamma_weight(d, b, st).re()*accum_gamma_weight(d, b, st).re() + 
 											          accum_gamma_weight(d, b, st).im()*accum_gamma_weight(d, b, st).im() );
-		compute_gamma_weight.compute_root();
 
 		ComplexFunc accum_inner_product("accum_inner_product");
 		accum_inner_product(d, b, st, r) = ComplexExpr();
 		RDom j(0, N_CHAN, 0, TDOF);
 		accum_inner_product(d, b, st, r) += conj(in_adaptive_weights(d, b, st, 0))*in_datacube(j.x, j.y+d-1, r);
+		accum_inner_product.compute_root();
 
 		ComplexFunc compute_output("compute_output");
 		compute_output(d, b, st, r) = accum_inner_product(d, b, st, r) * 1.0f / compute_gamma_weight(d, b, st);
@@ -53,9 +53,9 @@ public:
 		// 3rd dim: training block space
 		// 4th dim: first range cell to last range cell is TRAINING_BLOCK_SIZE in length, offset by block*TRAINING_BLOCK_SIZE
 		RDom _red(0, N_BLOCKS, 0, TRAINING_BLOCK_SIZE);
-		output(st, d, r, c) = 0.0f;
-		output(st, d, _red.x, 0) = compute_output(d, _red.x, st, _red.x*TRAINING_BLOCK_SIZE+_red.y).re(); 
-		output(st, d, _red.x, 1) = compute_output(d, _red.x, st, _red.x*TRAINING_BLOCK_SIZE+_red.y).im(); 
+		output(c, r, d, st) = 0.0f;
+		output(0, r, d, st) = compute_output(d, _red.x, st, _red.x*TRAINING_BLOCK_SIZE+_red.y).re(); 
+		output(1, r, d, st) = compute_output(d, _red.x, st, _red.x*TRAINING_BLOCK_SIZE+_red.y).im(); 
 	}
 };
 

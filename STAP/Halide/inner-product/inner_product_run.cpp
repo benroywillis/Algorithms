@@ -104,14 +104,18 @@ int main(int argc, char **argv)
         num_output_elements);
 #endif
 
- 	halide_dimension_t datacube_dims[] = {{0, N_CHAN, 1}, {0, N_DOP, 1} , {0, N_RANGE, 1}, {0, 2, 1}};
-    Buffer<float> Buffer_datacube( (float*)datacube, 4, datacube_dims);
- 	halide_dimension_t weights_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1}, {0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1}, {0, 2, 1}};
-    Buffer<float> Buffer_adaptive_weight( (float*)adaptive_weights, 5, weights_dims);
- 	halide_dimension_t steering_dims[] = {{0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1} , {0, 2, 1}};
-    Buffer<float> Buffer_steering_vectors( (float*)steering_vectors, 3, steering_dims);
- 	halide_dimension_t output_dims[] = {{0, N_STEERING, 1}, {0, N_DOP, 1}, {0, N_RANGE, 1}, {0, 2, 1}};
-    Buffer<float> Buffer_output( (float*)output, 4, output_dims);
+ 	//halide_dimension_t datacube_dims[] = {{0, N_CHAN, 1}, {0, N_DOP, 1} , {0, N_RANGE, 1}, {0, 2, 1}};
+    //Buffer<float> Buffer_datacube( (float*)datacube, 4, datacube_dims);
+    Buffer<float> Buffer_datacube( (float*)datacube, 2, N_RANGE, N_DOP, N_CHAN);
+ 	//halide_dimension_t weights_dims[] = {{0, N_DOP, 1}, {0, N_BLOCKS, 1}, {0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1}, {0, 2, 1}};
+    //Buffer<float> Buffer_adaptive_weight( (float*)adaptive_weights, 5, weights_dims);
+    Buffer<float> Buffer_adaptive_weight( (float*)adaptive_weights, 2, N_CHAN*TDOF, N_STEERING, N_BLOCKS, N_DOP);
+ 	//halide_dimension_t steering_dims[] = {{0, N_STEERING, 1}, {0, N_CHAN*TDOF, 1} , {0, 2, 1}};
+    //Buffer<float> Buffer_steering_vectors( (float*)steering_vectors, 3, steering_dims);
+    Buffer<float> Buffer_steering_vectors( (float*)steering_vectors, 2, N_CHAN*TDOF, N_STEERING);
+ 	//halide_dimension_t output_dims[] = {{0, N_STEERING, 1}, {0, N_DOP, 1}, {0, N_RANGE, 1}, {0, 2, 1}};
+    //Buffer<float> Buffer_output( (float*)output, 4, output_dims);
+    Buffer<float> Buffer_output( (float*)output, 2, N_RANGE, N_DOP, N_STEERING);
 
     // Manually-tuned version
     int timing_iterations = 1;
@@ -130,6 +134,47 @@ int main(int argc, char **argv)
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
     //convert_and_save_image(Buffer_output, argv[2]);
+
+	uint64_t badMatch = 0;
+	for( int i = 0; i < N_CHAN; i++ )
+	{
+		for( int j = 0; j < N_DOP; j++ )
+		{
+			for( int k = 0; k < N_RANGE; k++ )
+			{
+				if( datacube[i][j][k].re != Buffer_datacube(0, k, j, i) || ( datacube[i][j][k].im != Buffer_datacube(1, k, j, i) ) )
+				{
+					printf("%.2f + j%.2f , %.2f + j%.2f\n", 
+														datacube[i][j][k].re, 
+														datacube[i][j][k].im, 
+														Buffer_datacube(0, k, j, i), 
+														Buffer_datacube(1, k, j, i)); 
+					badMatch++;
+				}
+			}
+		}
+	}
+	printf(" %.2f%% of the inputs did not match\n", (float)( (float)badMatch / (float)(N_CHAN*N_DOP*N_RANGE) * 100));
+	badMatch = 0;
+	for( int i = 0; i < N_STEERING; i++ )
+	{
+		for( int j = 0; j < N_DOP; j++ )
+		{
+			for( int k = 0; k < N_RANGE; k++ )
+			{
+				if( gold_output[i][j][k].re != Buffer_output(0, k, j, i) || ( gold_output[i][j][k].im != Buffer_output(1, k, j, i) ) )
+					{
+						//printf("%.2f + j%.2f , %.2f, %.2f\n", 
+														  //Buffer_covariances(0, l, k, j, i), 
+														  //Buffer_covariances(1, l, k, j, i), 
+														  //gold_covariances[i][j][k][l].re,
+														  //gold_covariances[i][j][k][l].im);
+						badMatch++;
+				}
+			}
+		}
+	}
+	printf(" %.2f%% of the outputs did not match\n", (float)( (float)badMatch / (float)(N_STEERING*N_DOP*N_RANGE) * 100));
 
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {

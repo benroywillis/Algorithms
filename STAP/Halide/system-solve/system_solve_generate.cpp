@@ -23,11 +23,14 @@ public:
 		// TDOF*N_CHAN, doppler bin, training blocks, steering vectors
 		Var ch_tdof0("ch_tdof0"), ch_tdof1("ch_tdof1"), ch_tdof2("ch_tdof2"), d("d"), b("b"), st("st"), c("c");
 		ComplexFunc in_covariances("in_covariances");
-		in_covariances(d, b, ch_tdof0, ch_tdof1) = ComplexExpr(covariances(d, b, ch_tdof0, ch_tdof1, 0), covariances(d, b, ch_tdof0, ch_tdof1, 1));
+		//in_covariances(d, b, ch_tdof0, ch_tdof1) = ComplexExpr(covariances(d, b, ch_tdof0, ch_tdof1, 0), covariances(d, b, ch_tdof0, ch_tdof1, 1));
+		in_covariances(d, b, ch_tdof0, ch_tdof1) = ComplexExpr(covariances(0, ch_tdof1, ch_tdof0, b, d), covariances(1, ch_tdof1, ch_tdof0, b, d));
 		ComplexFunc in_cholesky_factors("in_cholesky_factors");
-		in_cholesky_factors(d, b, ch_tdof0, ch_tdof1) = ComplexExpr(cholesky_factors(d, b, ch_tdof0, ch_tdof1, 0), cholesky_factors(d, b, ch_tdof0, ch_tdof1, 1));
+		//in_cholesky_factors(d, b, ch_tdof0, ch_tdof1) = ComplexExpr(cholesky_factors(d, b, ch_tdof0, ch_tdof1, 0), cholesky_factors(d, b, ch_tdof0, ch_tdof1, 1));
+		in_cholesky_factors(d, b, ch_tdof0, ch_tdof1) = ComplexExpr(cholesky_factors(0, ch_tdof1, ch_tdof0, b, d), cholesky_factors(1, ch_tdof1, ch_tdof0, b, d));
 		ComplexFunc in_steering_vectors("in_steering_vectors");
-		in_steering_vectors(st, ch_tdof0) = ComplexExpr(steering_vectors(st, ch_tdof0, 0), steering_vectors(st, ch_tdof0, 1));
+		//in_steering_vectors(st, ch_tdof0) = ComplexExpr(steering_vectors(st, ch_tdof0, 0), steering_vectors(st, ch_tdof0, 1));
+		in_steering_vectors(st, ch_tdof0) = ComplexExpr(steering_vectors(0, ch_tdof0, st), steering_vectors(1, ch_tdof0, st));
 
 		// cholesky_factorization
 		ComplexFunc cholesky("cholesky");
@@ -43,7 +46,6 @@ public:
 		RDom j(0, N_CHAN*TDOF, 0, N_CHAN*TDOF);
 		j.where(j.y >= j.x);
 		cholesky(d, b, j.x, j.y) = ComplexExpr( Halide::sqrt( 1.0f / cholesky(d, b, j.x, j.x).re()), Halide::sqrt( 1.0f / cholesky(d, b, j.x, j.x).re()) );
-		cholesky.compute_root();
 
 		// copy upper righttriangle to lower left
 		RDom k(0, N_CHAN*TDOF, 0, N_CHAN*TDOF);
@@ -57,19 +59,20 @@ public:
 		// forward substitution
 		RDom l(0, N_CHAN*TDOF, 0, N_CHAN*TDOF);
 		l.where(l.y < l.x);
-		ComplexExpr accum_R;
-		accum_R += conj(cholesky(d, b, l.y, l.x))*forward_back_substitution(d, b, st, l.y);
-		forward_back_substitution(d, b, st, l.x) = (in_steering_vectors(st, l.x) - accum_R) * 1.0f / cholesky(d, b, l.x, l.x).re();
+		forward_back_substitution(d, b, st, l.x) += 
+			(in_steering_vectors(st, l.x) - conj(cholesky(d, b, l.y, l.x))*forward_back_substitution(d, b, st, l.y))*
+			1.0f / cholesky(d, b, l.x, l.x).re();
 		forward_back_substitution.compute_root();
 		// backsubstitition
 		RDom m(N_CHAN*TDOF-1, 0, 0, N_CHAN*TDOF);
 		m.where(m.y > m.x);
-		accum_R = c_0;
-		accum_R += cholesky(d, b, m.y, m.x)*forward_back_substitution(d, b, st, m.y);
-		forward_back_substitution(d, b, st, m.x) = (forward_back_substitution(d, b, st, m.x) - accum_R) * 1.0f / cholesky(d, b, m.x, m.x).re();
-		forward_back_substitution.compute_root();
+		forward_back_substitution(d, b, st, m.x) += 
+			(forward_back_substitution(d, b, st, m.x) - cholesky(d, b, m.y, m.x)*forward_back_substitution(d, b, st, m.y))*
+			1.0f / cholesky(d, b, m.x, m.x).re();
 
-		adaptive_weights(d, b, st, ch_tdof2, c) = Halide::mux( c, { forward_back_substitution(d, b, st, ch_tdof2).re(), forward_back_substitution(d, b, st, ch_tdof2).im() } );
+		adaptive_weights(c, ch_tdof2, st, b, d) = 0.0f;
+		adaptive_weights(0, ch_tdof2, st, b, d) = forward_back_substitution(d, b, st, ch_tdof2).re();
+		adaptive_weights(1, ch_tdof2, st, b, d) = forward_back_substitution(d, b, st, ch_tdof2).im();
 	}
 };
 
