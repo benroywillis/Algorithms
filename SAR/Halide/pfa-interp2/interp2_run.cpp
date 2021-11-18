@@ -78,6 +78,9 @@ int main(int argc, char **argv)
     input_coords = (double (*)[N_PULSES])malloc(sizeof(double) * PFA_NOUT_RANGE * N_PULSES);
     output_coords = (double*)malloc(sizeof(double) * PFA_NOUT_RANGE);
     window = (float*)malloc(sizeof(float) * num_window_elements);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    gold_resampled = XMALLOC(sizeof(complex) * num_resampled_elements);
+#endif
 
     read_kern2_data_file(
         input_filename,
@@ -86,6 +89,14 @@ int main(int argc, char **argv)
         (double *) input_coords,
         output_coords,
         window);
+
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    read_data_file(
+        (char *) gold_resampled,
+        golden_output_filename,
+        input_directory,
+        sizeof(complex)*num_resampled_elements);
+#endif
 
  	halide_dimension_t complex_radar_image_dims[] = {{0, N_PULSES, 1}, {0, PFA_NOUT_RANGE, 1} , {0, 2, 1}};
     Buffer<double> Buffer_data( (double*)data, 3, complex_radar_image_dims);
@@ -115,12 +126,25 @@ int main(int argc, char **argv)
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    {
+        double snr = calculate_snr(
+            (complex *) gold_resampled,
+            (complex *) resampled,
+            num_resampled_elements);
+        printf("\nImage correctness SNR = %.2f\n", snr);
+    }
+#endif
+
     convert_and_save_image(Buffer_resampled, argv[2]);
 	free(data);
 	free(resampled);
 	free(input_coords);
 	free(output_coords);
 	free(window);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    	FREE_AND_NULL(gold_resampled);
+#endif
     return 0;
 }
 

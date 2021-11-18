@@ -22,6 +22,8 @@ using namespace Halide::Runtime;
 #include "stap_utils.h"
 #include "stap_apply_weighting.h"
 
+#define ENABLE_CORRECTNESS_CHECKING
+
 #if INPUT_SIZE == INPUT_SIZE_SMALL
     static const char *input_filename = "small_input.bin";
     static const char *kernel2_output_filename = "small_kernel2_output.bin";

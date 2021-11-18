@@ -19,6 +19,24 @@ using namespace Halide::Runtime;
 // PERFECT methods for reading data
 #include "wami_params.h"
 
+#if INPUT_SIZE == INPUT_SIZE_SMALL
+    static const char *input_filename = "small_kernel3_input.bin";
+    static const char *golden_output_filename = "small_golden_kernel3_output.bin";
+    static const char *output_filename = "small_kernel3_output.bin";
+#elif INPUT_SIZE == INPUT_SIZE_MEDIUM
+    static const char *input_filename = "medium_kernel3_input.bin";
+    static const char *golden_output_filename = "medium_golden_kernel3_output.bin";
+    static const char *output_filename = "medium_kernel3_output.bin";
+#elif INPUT_SIZE == INPUT_SIZE_LARGE
+    static const char *input_filename = "large_kernel3_input.bin";
+    static const char *golden_output_filename = "large_golden_kernel3_output.bin";
+    static const char *output_filename = "large_kernel3_output.bin";
+#else
+    #error "Unhandled value for INPUT_SIZE"
+#endif
+
+#define ENABLE_CORRECTNESS_CHECKING
+
 void read_gmm_input_data(
     float mu[WAMI_GMM_IMG_NUM_ROWS][WAMI_GMM_IMG_NUM_COLS][WAMI_GMM_NUM_MODELS],
     float sigma[WAMI_GMM_IMG_NUM_ROWS][WAMI_GMM_IMG_NUM_COLS][WAMI_GMM_NUM_MODELS],
@@ -71,6 +89,13 @@ int main(int argc, char **argv)
     memset(frames, 0, sizeof(u16) * num_pixels * WAMI_GMM_NUM_FRAMES);
 
     read_gmm_input_data(mu, sigma, weights, frames, input_filename, input_directory);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    read_data_file(
+        (char *) golden_foreground,
+        golden_output_filename,
+        input_directory,
+        sizeof(u8) * num_pixels * WAMI_GMM_NUM_FRAMES);
+#endif
 
     int timing_iterations = 15;
 	// file load from PERFECT benchmark tools
@@ -100,6 +125,67 @@ int main(int argc, char **argv)
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
     //convert_and_save_image(output, argv[6]);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    {
+        int j, k, validation_warning = 0;
+        for (i = 0; i < WAMI_GMM_NUM_FRAMES; ++i)
+        {
+            int num_misclassified = 0, num_foreground = 0;
+            double misclassification_rate = 0;
 
+            wami_morpho_erode(
+                eroded, (u8 (*)[WAMI_GMM_IMG_NUM_COLS]) &foreground[i][0][0]);
+            wami_morpho_erode(
+                golden_eroded, (u8 (*)[WAMI_GMM_IMG_NUM_COLS]) &golden_foreground[i][0][0]);
+
+            printf("\nValidating frame %d output...\n", i);
+
+            for (j = 0; j < WAMI_GMM_IMG_NUM_ROWS; ++j)
+            {
+                for (k = 0; k < WAMI_GMM_IMG_NUM_COLS; ++k)
+                {
+                    if (eroded[j][k] != golden_eroded[j][k])
+                    {
+                        ++num_misclassified;
+                    }
+                    if (golden_eroded[j][k] != 0)
+                    {
+                        ++num_foreground;
+                    }
+                }
+            }
+            misclassification_rate = (100.0*num_misclassified)/num_foreground;
+            printf("\tMisclassified pixels: %d\n", num_misclassified);
+            printf("\tGolden foreground pixels (after erosion): %d\n", num_foreground);
+            printf("\tMisclassification rate relative to foreground: %f%%\n",
+                misclassification_rate);
+            if (misclassification_rate > 0.1)
+            {
+                validation_warning = 1;
+            }
+        }
+	if (validation_warning)
+        {
+            printf("\nValidation warning: Misclassification rate appears high; check images.\n\n");
+        }
+        else
+        {
+            printf("\nValidation checks passed.\n\n");
+        }
+    }
+#endif
+
+    FREE_AND_NULL(mu);
+    FREE_AND_NULL(sigma);
+    FREE_AND_NULL(weights);
+    FREE_AND_NULL(foreground);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    FREE_AND_NULL(golden_foreground);
+    FREE_AND_NULL(eroded);
+    FREE_AND_NULL(golden_eroded);
+#endif
+    FREE_AND_NULL(morph);
+    FREE_AND_NULL(frames);
+   
     return 0;
 }

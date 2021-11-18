@@ -20,6 +20,24 @@ using namespace Halide::Runtime;
 #include "wami_debayer.h"
 #include "wami_utils.h"
 
+#if INPUT_SIZE == INPUT_SIZE_SMALL
+    static const char *output_filename = "small_kernel1_output.bin";
+    static const char *golden_output_filename = "small_golden_kernel1_output.bin";
+    static const char *input_filename = "small_kernel1_input.bin";
+#elif INPUT_SIZE == INPUT_SIZE_MEDIUM
+    static const char *output_filename = "medium_kernel1_output.bin";
+    static const char *golden_output_filename = "medium_golden_kernel1_output.bin";
+    static const char *input_filename = "medium_kernel1_input.bin";
+#elif INPUT_SIZE == INPUT_SIZE_LARGE
+    static const char *output_filename = "large_kernel1_output.bin";
+    static const char *golden_output_filename = "large_golden_kernel1_output.bin";
+    static const char *input_filename = "large_kernel1_input.bin";
+#else
+    #error "Unhandled value for INPUT_SIZE"
+#endif
+
+#define ENABLE_CORRECTNESS_CHECKING
+
 int main(int argc, char **argv)
 {
 	halide_set_num_threads(1);
@@ -45,6 +63,9 @@ int main(int argc, char **argv)
 
     bayer = (u16 (*)[WAMI_DEBAYER_IMG_NUM_COLS])malloc(sizeof(u16) * num_bayer_pixels);
     debayer = (rgb_pixel(*)[WAMI_DEBAYER_IMG_NUM_COLS-2*PAD])malloc(sizeof(rgb_pixel) * num_debayer_pixels);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    gold_debayer = XMALLOC(sizeof(rgb_pixel) * num_debayer_pixels);
+#endif
 
     read_image_file(
         (char *) bayer,
@@ -76,5 +97,63 @@ int main(int argc, char **argv)
 
     //convert_and_save_image(output, argv[6]);
 
-    return 0;
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    read_image_file(
+        (char *) gold_debayer,
+        golden_output_filename,
+        input_directory,    
+        sizeof(rgb_pixel) * num_debayer_pixels);
+
+    /*
+     * An exact match is expected for the debayer kernel, so we check
+     * each pixel individually and report either the first failure or
+     * a success message.
+     */
+    {
+        int r, c, success = 1;
+        for (r = 0; success && r < WAMI_DEBAYER_IMG_NUM_ROWS - 2*PAD; ++r)
+        {
+            for (c = 0; c < WAMI_DEBAYER_IMG_NUM_ROWS - 2*PAD; ++c)
+            {
+                if (debayer[r][c].r != gold_debayer[r][c].r)
+                {
+                    printf("Validation error: red pixel mismatch at row=%d, col=%d : "
+                        "test value = %u, golden value = %u\n\n", r, c,
+                        debayer[r][c].r, gold_debayer[r][c].r);
+                    success = 0;
+                    break;
+                }
+
+                if (debayer[r][c].g != gold_debayer[r][c].g)
+                {
+                    printf("Validation error: green pixel mismatch at row=%d, col=%d : "
+                        "test value = %u, golden value = %u\n\n", r, c,
+                        debayer[r][c].g, gold_debayer[r][c].g);
+                    success = 0;
+                    break;
+                }
+
+                if (debayer[r][c].b != gold_debayer[r][c].b)
+                {
+                    printf("Validation error: blue pixel mismatch at row=%d, col=%d : "
+                        "test value = %u, golden value = %u\n\n", r, c,
+                        debayer[r][c].b, gold_debayer[r][c].b);
+                    success = 0;
+                    break;
+                }
+            }
+        }
+        if (success)
+        {
+            printf("\nValidation checks passed -- the test output matches the golden output.\n\n");
+        }
+    }
+#endif
+
+    FREE_AND_NULL(bayer);
+    FREE_AND_NULL(debayer);
+#ifdef ENABLE_CORRECTNESS_CHECKING
+    FREE_AND_NULL(gold_debayer);
+#endif
+	return 0;
 }

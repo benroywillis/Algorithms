@@ -21,6 +21,8 @@ using namespace Halide::Runtime;
 #include "stap_params.h"
 #include "stap_utils.h"
 
+#define ENABLE_CORRECTNESS_CHECKING
+
 #if INPUT_SIZE == INPUT_SIZE_SMALL
     static const char *input_filename = "small_input.bin";
     static const char *kernel1_outer_filename = "small_kernel1_output.bin";
