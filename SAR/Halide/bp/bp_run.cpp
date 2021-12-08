@@ -96,25 +96,13 @@ int main(int argc, char **argv)
     dR /= RANGE_UPSAMPLE_FACTOR;
     ku = 2.0 * M_PI * fc / SPEED_OF_LIGHT;
 
- 	halide_dimension_t complex_radar_image_dims[] = {{0, N_PULSES, 1}, {0, N_RANGE_UPSAMPLED, 1} , {0, 2, 1}};
-    Buffer<float> Buffer_image( (float*)image, 3, complex_radar_image_dims);
- 	halide_dimension_t complex_bp_image_dims[] = {{0, BP_NPIX_Y, 1} , {0, BP_NPIX_X, 1} , {0, 2, 1}};
-    Buffer<float> Buffer_data( (float*)data, 3, complex_bp_image_dims);
-	// the position struct is just 3 doubles x,y,z put together
- 	halide_dimension_t position_dims[] = {{0, N_PULSES, 1},{0, 3, 1}};
-    Buffer<double> Buffer_position( (double*)platpos, 2, position_dims);
- 	halide_dimension_t scalar_dims[] = {{0, 1, 1}};
-    Buffer<double> Buffer_ku( &ku, 1, scalar_dims);
-    Buffer<double> Buffer_R0( &R0, 1, scalar_dims);
-    Buffer<double> Buffer_dR( &dR, 1, scalar_dims);
-    Buffer<double> Buffer_dxdy( &dxdy, 1, scalar_dims);
-    Buffer<double> Buffer_z0( &z0, 1, scalar_dims);
-
+    Buffer<float> Buffer_image( (float*)image, 2, BP_NPIX_X, BP_NPIX_Y);
+    Buffer<float> Buffer_data( (float*)data, 2, N_RANGE_UPSAMPLED, N_PULSES);
+    Buffer<double> Buffer_position( (double*)platpos, 3, N_PULSES);
     // Manually-tuned version
-    int timing_iterations = 15;
-    double min_t_manual = benchmark(timing_iterations, 10, [&]() {
-        bp_autoschedule_false_generated(Buffer_data, Buffer_position, Buffer_ku, Buffer_R0, Buffer_dR, Buffer_dxdy, Buffer_z0, Buffer_image);
-        Buffer_image.device_sync();
+    int timing_iterations = 1;
+    double min_t_manual = benchmark(timing_iterations, 1, [&]() {
+        bp_autoschedule_false_generated(Buffer_data, Buffer_position, ku, R0, dR, dxdy, z0, Buffer_image);
     });
     printf("Manually-tuned time: %gms\n", min_t_manual * 1e3);
 
@@ -126,17 +114,41 @@ int main(int argc, char **argv)
     });
     printf("Auto-scheduled time: %gms\n", min_t_auto * 1e3);*/
 
-    convert_and_save_image(Buffer_image, argv[2]);
-
+    //convert_and_save_image(Buffer_image, argv[2]);
+	uint64_t badMatch = 0;
 	for( int i = 0; i < BP_NPIX_Y; i++ )
 	{
 		for( int j = 0; j < BP_NPIX_X; j++ )
 		{
-			printf("%.2f + j%.2f,", data[i][j].re, data[i][j].im);
-			printf("%.2f + j%.2f,", Buffer_image(i, j, 0), Buffer_image(i, j, 1));
-			printf("%.2f + j%.2f\n", gold_image[i][j].re, gold_image[i][j].im);
+			//printf("%.2f + j%.2f,", data[i][j].re, data[i][j].im);
+			if( (Buffer_data(0, j, i) != data[i][j].re) || (Buffer_data(1, j, i) != data[i][j].im) )
+			{
+				//printf("%.2f + j%.2f , ", Buffer_data(0, j, i), Buffer_data(1, j, i));
+				//printf("%.2f + j%.2f\n", data[i][j].re, data[i][j].im);
+				badMatch++;
+			}
 		}
 	}
+	printf("%.2f%% of the input did not match\n", (float)( (float)badMatch / (float)(BP_NPIX_Y*BP_NPIX_X) * 100) );
+
+
+	badMatch = 0;
+	for( int i = 0; i < N_PULSES; i++ )
+	{
+		for( int j = 0; j < N_RANGE_UPSAMPLED; j++ )
+		{
+			//printf("%.2f + j%.2f,", data[i][j].re, data[i][j].im);
+			//printf("%.2f + j%.2f,", Buffer_image(i, j, 0), Buffer_image(i, j, 1));
+			//printf("%.2f + j%.2f\n", gold_image[i][j].re, gold_image[i][j].im);
+			if( fabsf((Buffer_image(0, j, i) - gold_image[i][j].re) / gold_image[i][j].re) > 0.001 || 
+				fabsf((Buffer_image(1, j, i) - gold_image[i][j].im) / gold_image[i][j].im) > 0.001 )
+			{
+				printf("%.2f + j%.2f , %.2f + j%.2f\n", Buffer_image(0, j, i), Buffer_image(1, j, i), data[i][j].re, data[i][j].im);
+				badMatch++;
+			}
+		}
+	}
+	printf("%.2f%% of the output did not match\n", (float)( (float)badMatch / (float)(N_PULSES*N_RANGE_UPSAMPLED) * 100) );
 #ifdef ENABLE_CORRECTNESS_CHECKING
     {
         double snr = calculate_snr(
