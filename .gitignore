@@ -22,3 +22,5 @@ SourceMap_*
 nohup.out
 # output data files that come from PERFECT apps
 *_output.*
+# llvm-polly scop files
+*.jscop
