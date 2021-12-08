@@ -1,4 +1,4 @@
-include ../../../Environment.mk
+include ../../Environment.mk
 
 SOURCE=heapsort
 
@@ -9,4 +9,4 @@ INCLUDE=\
 LIBRARIES=\
 $(GSL_ROOT)lib/libgsl.a\
 
-include ../../../BuildFlow.mk
+include ../../BuildFlow.mk
