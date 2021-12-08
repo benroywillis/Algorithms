@@ -93,8 +93,6 @@
     #error "Unhandled value for INPUT_SIZE"
 #endif
 
-#define WRITE_OUTPUT_TO_DISK
-
 static void read_bp_data_file(
     const char *input_filename,
     const char *input_directory,
@@ -180,6 +178,16 @@ int main(int argc, char **argv)
         z0); 
 	PRINT_STAT_DOUBLE("Backprojection time: ", toc());
     printf("\nKernel complete.\n");
+
+	for( int i = 0; i < BP_NPIX_Y; i++)
+	{
+		for( int j = 0; j < BP_NPIX_X; j++)
+		{
+			printf("%.2f + j%.2f, ", data[i][j].re, data[i][j].im);
+			printf("%.2f + j%.2f, ", image[i][j].re, image[i][j].im);
+			printf("%.2f + j%.2f\n", gold_image[i][j].re, gold_image[i][j].im);
+		}
+	}
 
 #ifdef WRITE_OUTPUT_TO_DISK
     printf("Saving output to %s.\n", output_filename);
