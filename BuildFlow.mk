@@ -31,11 +31,12 @@ endif
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
 OPFLAG?=-O3
 # turn polly on in compilation pass
-POLLYFLAGS=$(OPFLAG) -mllvm -polly -mllvm -polly-allow-nonaffine
+POLLYFLAGS+=-mllvm -polly
 # have polly output a bunch of dots that it then attempts to open with libreoffice
 POLLY_SHOW?=-mllvm -polly-show-only
 # set this to blank if you don't want plly to consider non-affine structures
 POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops
+POLLYFLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE)
 ## breakdown polly transformation steps
 # transforms the input program to a canonical form polly can understand
 POLLY_OPTFLAGS1=-S -polly-canonicalize
@@ -59,7 +60,7 @@ $(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
 $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_mullapudi2016.so -s Mullapudi2016 target=host auto_schedule=true machine_params=32,16777216,40
 
-# Halide needs to be build a special way
+# Halide needs to be built a special way
 ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
@@ -161,8 +162,12 @@ elf : $(SOURCE).bc
 run : elf
 	./$(SOURCE).elf $(RARGS)
 
-elf_polly : $(SOURCE).bc
-	$(C) $(LLD) $(D_LINKS) -mllvm -polly $(OPFLAG) $(POLLY_SHOW) $(POLLY_NONAFFINE) $< -o $(SOURCE).elf_polly
+$(SOURCE).bc_polly : $(SOURCE).bc
+	$(OPT) --basicaa -polly-use-llvm-names -polly-export-jscop -polly-process-unprofitable $< -o $@
+#	$(OPT) --basicaa -polly-ast -analyze -polly-use-llvm-names -polly-process-unprofitable $< -o $@
+
+elf_polly : $(SOURCE).bc $(SOURCE).bc_polly
+	$(C) $(LLD) $(D_LINKS) $(OPFLAG) $(DEBUG) $(POLLYFLAGS) $< -o $(SOURCE).elf_polly
 
 run_polly : elf_polly
 	./$(SOURCE).elf_polly $(RARGS)
