@@ -15,6 +15,7 @@ SourceMap_*
 *.gcno
 *.gcov
 *.obj
+DashAutomate.log
 # open vi sessions
 *.swp
 # generated halide source files
