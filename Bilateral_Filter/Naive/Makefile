@@ -10,5 +10,4 @@ D_LINKS=-lm
 INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
 POLLY_SHOW=
-
 include ../../BuildFlow.mk

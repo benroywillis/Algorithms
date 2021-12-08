@@ -1,4 +1,5 @@
 # files that are common outputs from the benroywillis/TraceAtlas git repository
+tmp
 *.bc*
 *.ll
 *.bin
