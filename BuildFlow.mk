@@ -70,11 +70,8 @@ $(SOURCE).bc : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
 endif
 
 # TraceAtlas pipeline rules
-$(SOURCE).markov.bc: $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Markov $< -o $@
-
-$(SOURCE).hotcode.bc: $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_HC_ROOT)lib/AtlasPasses.so -Markov $< -o $@
+$(SOURCE).markov.bc Loopfile_$(SOURCE).json: $(SOURCE).bc
+	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Markov $< -o $@
 
 $(SOURCE).instance.bc : $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Instance $< -o $@
@@ -83,28 +80,19 @@ $(SOURCE).lastwriter.bc : $(SOURCE).bc
 	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -LastWriter $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.a $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).instance.native : $(SOURCE).instance.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.a $< -o $@
-
-$(SOURCE).hotcode.native : $(SOURCE).hotcode.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_HC_ROOT)lib/libAtlasBackend.a $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).lastwriter.native : $(SOURCE).lastwriter.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.a $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
 	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
-$(SOURCE).hotcode.bin : $(SOURCE).hotcode.native
-	BLOCK_FILE=BlockInfo_$(SOURCE).hotcode.json MARKOV_FILE=$(SOURCE).hotcode.bin ./$< $(RARGS)
-
-kernel_$(SOURCE).json : $(SOURCE).bin
-	$(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -o $@
-
-kernel_$(SOURCE).hotcode.json : $(SOURCE).hotcode.bin
-	$(TRACEATLAS_HC_ROOT)bin/newCartographer -h -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).hotcode.json -d dot_$(SOURCE).hotcode.dot -o $@
+kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json: $(SOURCE).bin
+	$(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
