@@ -89,16 +89,16 @@ $(SOURCE).lastwriter.native : $(SOURCE).lastwriter.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
-	BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
+	$(SO_PATH) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
 kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json: $(SOURCE).bin
-	$(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
+	$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
 Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
-	KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
+	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
 
 lastwriter_$(SOURCE).dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
-	INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
+	$(SO_PATH) INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
 
 SourceMap_$(SOURCE).json : lastwriter_$(SOURCE).dot
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
