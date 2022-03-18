@@ -1,0 +1,8 @@
+dependencies
+bin
+obj
+testresult.yuv
+*log
+tpdn_hls
+*.swp
+*~
