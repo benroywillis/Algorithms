@@ -29,21 +29,19 @@
 
 int print1(char* stuff, int n)
 {
-	//for( int i = 0; i < n; i++ )
-	//{
-		//printf("Print1 has been handed %s stuff for the %d time!\n", stuff, i);
-		printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);
-	//}
+	for( int i = 0; i < n; i++ )
+	{
+		printf("Print1 has been handed %s stuff for the %d time!\n", stuff, i);
+	}
 	return 0;
 }
 
 int print2(char* stuff, int n)
 {
-	//for( int i = 0; i < n; i++ )
-	//{
-		//printf("Print2 has been handed %s stuff for the %d time!\n", stuff, i);
-		printf("Print2 has been handed %s stuff for the %d time!\n", stuff, 0);
-	//}
+	for( int i = 0; i < n; i++ )
+	{
+		printf("Print2 has been handed %s stuff for the %d time!\n", stuff, i);
+	}
 	return 0;
 }
 
@@ -55,30 +53,13 @@ int helper(char* name, int n, int (*op)(char*, int))
 
 int main()
 {
-	for( int i = 0; i < 20; i++ )
-	{
-		if( i % 2 )
-		{
-			if( i % 3 )
-			{
-				helper("Crappy", i, print1);
-			}
-			else
-			{
-				helper("Good", i, print2);
-			}
-		}
-		else
-		{
-			if( i % 5 )
-			{
-				helper("Good", i, print2);
-			}
-			else
-			{
-				helper("Crappy", i, print1);
-			}
-		}
-	}
+	helper("Crappy", 2, print1);
+	helper("Good", 4, print1);
+	helper("Crappy", 6, print2);
+	helper("Good", 8, print2);
+	helper("Crappy", 10, print1);
+	helper("Good", 12, print2);
+	helper("Crappy", 14, print1);
+	helper("Good", 16, print2);
 	return 0;
 }
