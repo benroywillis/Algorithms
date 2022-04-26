@@ -183,6 +183,9 @@ operf : elf
 	sudo time -p operf ./$(SOURCE).elf
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
+ll : $(SOURCE).markov.bc
+	llvm-dis-9 $<
+
 .PHONY:
 
 clean:
