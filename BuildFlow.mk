@@ -189,7 +189,7 @@ ll : $(SOURCE).markov.bc
 .PHONY:
 
 clean:
-	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot .elf *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw
+	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw
 
 clean_oprofile:
 	sudo rm -rf oprofile_data
