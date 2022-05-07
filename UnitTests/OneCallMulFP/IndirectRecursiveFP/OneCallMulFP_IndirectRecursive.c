@@ -34,6 +34,15 @@
 // general solution: "decidability problem"... what should the right threshold number should be?
 // at some point, the threshold will need to be large so things work, then stitch things back together in a clever way
 
+/* john
+ * we want to inline anytime the callgraphname is different for two or more invocations of that function
+ * - this rule has an obvious problem: anytime my callgraphname includes my own name, there is a chance that this will not terminate
+ * - so when should we stop? perhaps it is when we find a direct recursion call
+ * - in the naive case this should produce what we are hoping for
+ * john: what happens when the indirect recursion calls are predicated? we can't actually get rid of the indirect recursion...
+ * - but it supports our analysis
+ */
+
 int print1(char* stuff, int n)
 {
 	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);

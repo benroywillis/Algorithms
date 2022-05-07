@@ -1,6 +1,14 @@
 #include <stdio.h>
 //#include <stdlib.h>
 
+/**
+ * we should get 7 kernels out of this 
+ * one for the loop around fib()
+ * three for the fib() call in the loop
+ * three for the fib() call outside the loop
+ * fib() has 3 kernels because it has 3 conditions within the function
+ */
+
 int fib(int num)
 {
 	if( num == 0 ) {

@@ -3,11 +3,11 @@
 #include <string.h>
 
 /**
- * There are 5 loops in this file
- * super() -> 1
- * sub()   -> 1
+ * There are 7 loops in this file
+ * super() -> 1 x 2 (because it is invoked twice in different contexts)
+ * sub()   -> 1 x 2 (because it is invoked twice in different contexts)
  * main    -> 3
- * We should get 5 kernels out the other side
+ * We should get 7 kernels out the other side
  */
 
 void* allocMemory(size_t elemSize, uint64_t count) {

@@ -29,21 +29,13 @@
 
 int print1(char* stuff, int n)
 {
-	//for( int i = 0; i < n; i++ )
-	//{
-		//printf("Print1 has been handed %s stuff for the %d time!\n", stuff, i);
-		printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);
-	//}
+	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);
 	return 0;
 }
 
 int print2(char* stuff, int n)
 {
-	//for( int i = 0; i < n; i++ )
-	//{
-		//printf("Print2 has been handed %s stuff for the %d time!\n", stuff, i);
-		printf("Print2 has been handed %s stuff for the %d time!\n", stuff, 0);
-	//}
+	printf("Print2 has been handed %s stuff for the %d time!\n", stuff, 0);
 	return 0;
 }
 
