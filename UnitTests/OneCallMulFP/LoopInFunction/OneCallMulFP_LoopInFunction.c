@@ -27,6 +27,10 @@
  *  - case: my datastructure is making arbitrary traversal decisions... so we would have to extract this code and run it ourselves
  */
 
+/** Kernels: 8
+ *  One for each invocation of helper()
+ */
+
 int print1(char* stuff, int n)
 {
 	for( int i = 0; i < n; i++ )

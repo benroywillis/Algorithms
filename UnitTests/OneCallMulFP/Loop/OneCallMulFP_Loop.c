@@ -27,6 +27,9 @@
  *  - case: my datastructure is making arbitrary traversal decisions... so we would have to extract this code and run it ourselves
  */
 
+/** Kernels: 1, for the single loop in main
+ */
+
 int print1(char* stuff, int n)
 {
 	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);

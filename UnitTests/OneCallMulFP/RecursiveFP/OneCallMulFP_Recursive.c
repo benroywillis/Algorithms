@@ -27,6 +27,9 @@
  *  - case: my datastructure is making arbitrary traversal decisions... so we would have to extract this code and run it ourselves
  */
 
+/** Kernels: 8
+ *  Two for each invocation of helper()
+ */
 int print1(char* stuff, int n)
 {
 	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);
@@ -41,10 +44,13 @@ int print2(char* stuff, int n)
 	return 0;
 }
 
+// if the commented lines are uncommented the result is 0 kernels, which is wrong
 int helper(char* name, int n, int (*op)(char*, int))
 {
 	printf("Running helper with %s!\n", name);
+	//op(name, n);
 	if( n ) helper( name, n - 1, op );
+	// else return op(name, n);
 	return op(name, n);
 }
 
