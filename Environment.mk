@@ -1,7 +1,9 @@
-#LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM9/install-release/
-LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM12/install-release/
-#TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build/
-TRACEATLAS_ROOT=/mnt/heorot-10/bwilli46/Installs/TraceAtlas/devb_relwithdebinfo/
+LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM9/install-release/
+#LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM12/install-release/
+TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build/
+#TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build_RelWithDebInfo/
+#TRACEATLAS_ROOT=/mnt/heorot-10/bwilli46/Installs/TraceAtlas/devb_relwithdebinfo/
+SO_PATH=LD_LIBRARY_PATH=$(TRACEATLAS_ROOT)lib/
 
 # Halide install
 # Halide 12 install
