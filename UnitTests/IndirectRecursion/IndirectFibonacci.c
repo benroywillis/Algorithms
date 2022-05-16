@@ -1,11 +1,16 @@
 #include <stdio.h>
 
 /**
- * This file should have 13 kernels in it
- * 3 for fib  x 2
- * 3 for fib2 x 2
- * 1 for outer loop
+ * This file should have 8 kernels in it
+ * fib() should be 4 (two for loops that go out of hte indirect recursion, one for the way down, one for the way up)
+ * fib2() 
  * 
+ */
+
+/**
+ * John: do we need to perform parent/child fusion to do away with "loops" like the loop formed when fib() starts returning
+ *  - in this case we would "just do it"
+ *  - in the case that the function has within it a loop, or other type of cycle, we wouldn't
  */
 
 int fib(int num)

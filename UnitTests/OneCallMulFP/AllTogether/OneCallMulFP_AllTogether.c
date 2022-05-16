@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 		helper("Good", n, print2);
 		helper("Crappy", n, print1);
 		helper("Okay", n, print3);
-		helper("Crappy", n, print2);
+		/*helper("Crappy", n, print2);
 		helper("Good", n, print3);
 		helper("Okay", n, print1);
 		helper("Okay", n, print3);
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
 		helper("Crappy", n, print1);
 		helper("Okay", n, print3);
 		helper("Crappy", n, print1);
-		helper("Good", n, print2);
+		helper("Good", n, print2);*/
 	}
 	return 0;
 }

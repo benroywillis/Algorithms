@@ -60,7 +60,7 @@ int print2(char* stuff, int n)
 int helper(char* name, int n, int (*op)(char*, int))
 {
 	printf("Running helper with %s!\n", name);
-	if( n ) helper( name, n - 1, op );
+	if( n % 2 ) helper( name, n - 1, op );
 	return op(name, n);
 }
 
