@@ -27,3 +27,6 @@ nohup.out
 *_output.*
 # llvm-polly scop files
 *.jscop
+# image files from GraphViz
+*.svg
+*.gv
