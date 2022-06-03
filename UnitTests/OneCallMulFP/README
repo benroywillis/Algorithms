@@ -1,4 +1,6 @@
 Simple: Should have 0 kernels because all functions are inlined (passes 5/04/2022)
 Loop: Should have 1 kernel (passes 05/04/2022)
 LoopInFunction: Should have 8 kernels (fails, says 16 kernels 05/04/2022)
-
+Recurse: Has commented code that breaks the tool and active code that passes the tool (5/18/2022)
+IndirectRecursive: Has commented code that breaks the tool and active code that passes the tool (5/18/2022)
+All: 

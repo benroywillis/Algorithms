@@ -32,14 +32,14 @@
  */
 int print1(char* stuff, int n)
 {
-	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);
+	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, n);
 	if( n ) print1(stuff, n - 1);
 	return 0;
 }
 
 int print2(char* stuff, int n)
 {
-	printf("Print2 has been handed %s stuff for the %d time!\n", stuff, 0);
+	printf("Print2 has been handed %s stuff for the %d time!\n", stuff, n);
 	if( n ) print2(stuff, n - 1);
 	return 0;
 }
@@ -49,7 +49,7 @@ int helper(char* name, int n, int (*op)(char*, int))
 {
 	printf("Running helper with %s!\n", name);
 	//op(name, n);
-	if( n ) helper( name, n - 1, op );
+	if( n % 2 ) helper( name, n - 1, op );
 	// else return op(name, n);
 	return op(name, n);
 }

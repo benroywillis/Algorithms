@@ -45,6 +45,7 @@
 
 int print1(char* stuff, int n)
 {
+	//printf("Print1 has been handed %s stuff for the %d time!\n", stuff, n);
 	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, 0);
 	if( n ) print2(stuff, n - 1);
 	return 0;
@@ -52,6 +53,7 @@ int print1(char* stuff, int n)
 
 int print2(char* stuff, int n)
 {
+	//printf("Print2 has been handed %s stuff for the %d time!\n", stuff, n);
 	printf("Print2 has been handed %s stuff for the %d time!\n", stuff, 0);
 	if( n ) print1(stuff, n - 1);
 	return 0;
