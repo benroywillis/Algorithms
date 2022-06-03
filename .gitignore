@@ -8,7 +8,7 @@
 *.exec
 Loopfile*
 BlockInfo*
-kernel_*
+kernel*
 Instance_*
 SourceMap_*
 *.dot
