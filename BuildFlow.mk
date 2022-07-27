@@ -82,16 +82,14 @@ $(SOURCE).markov.native : $(SOURCE).markov.bc
 $(SOURCE).memory.native : $(SOURCE).memory.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
-memory_$(SOURCE).dot : $(SOURCE).memory.native kernel_$(SOURCE).json
-	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
-
 $(SOURCE).bin : $(SOURCE).markov.native
 	$(SO_PATH) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
+memory_$(SOURCE).dot : $(SOURCE).memory.native kernel_$(SOURCE).json
+	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
+
 kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json: $(SOURCE).bin
 	$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
-
-	$(SO_PATH) ./$< $(RARGS)
 
 SourceMap_$(SOURCE).json : memory_$(SOURCE).dot
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
