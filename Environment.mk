@@ -1,3 +1,5 @@
+ALGORITHMS_DIR=/home/bwilli46/Algorithms/
+
 LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM9/install-release/
 #LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM12/install-release/
 TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build/
@@ -19,7 +21,8 @@ HALIDE_INCLUDE=\
 
 # some library installs
 DASH_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/
+BWILLI_ROOT=/mnt/heorot-10/bwilli46/Installs/
 GSL_ROOT=$(DASH_ROOT)gsl/
 FFTW_ROOT=$(DASH_ROOT)fftw/
-OPENCV_ROOT=$(DASH_ROOT)opencv/
-
+#OPENCV_ROOT=$(DASH_ROOT)opencv/
+OPENCV_ROOT=$(BWILLI_ROOT)opencv/debug/

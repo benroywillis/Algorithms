@@ -16,7 +16,7 @@ SUFFIX?=.c
 D_LINKS?=-lm
 DEBUG?=-g0
 CFLAGS?=
-INCLUDE?=
+INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/
 LIBRARIES?=
 RARGS?=
 ifeq ($(SUFFIX),.c)
@@ -34,7 +34,7 @@ OPFLAG?=-O3
 POLLYFLAGS+=-mllvm -polly
 # have polly output a bunch of dots that it then attempts to open with libreoffice
 POLLY_SHOW?=-mllvm -polly-show-only
-# set this to blank if you don't want plly to consider non-affine structures
+# set this to blank if you don't want polly to consider non-affine structures
 POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops
 POLLYFLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE)
 ## breakdown polly transformation steps
