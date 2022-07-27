@@ -13,8 +13,14 @@
  *  - in the case that the function has within it a loop, or other type of cycle, we wouldn't
  */
 
+void shared_function()
+{
+	int doNothing = 1;
+}
+
 int fib(int num)
 {
+	shared_function();
 	if( num == 0 ) {
 		return 0;
 	}
@@ -28,6 +34,7 @@ int fib(int num)
 
 int fib2(int num)
 {
+	shared_function();
 	if( num == 0 ) {
 		return 0;
 	}
@@ -41,6 +48,7 @@ int fib2(int num)
 
 int main(int argc, char** argv)
 {
+	shared_function();
 	int num = 0;
 	if( argc < 2 )
 	{
