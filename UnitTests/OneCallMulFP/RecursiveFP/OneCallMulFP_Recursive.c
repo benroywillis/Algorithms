@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 
 /* John: how to break the tools
  * Variation: call the function pointer in a loop, where the function in the pointer is different for each iteration
@@ -30,8 +31,14 @@
 /** Kernels: 8
  *  Two for each invocation of helper()
  */
+void shared_function()
+{
+	bool doNothing = true;
+}
+
 int print1(char* stuff, int n)
 {
+	shared_function();
 	printf("Print1 has been handed %s stuff for the %d time!\n", stuff, n);
 	if( n ) print1(stuff, n - 1);
 	return 0;
@@ -39,6 +46,7 @@ int print1(char* stuff, int n)
 
 int print2(char* stuff, int n)
 {
+	shared_function();
 	printf("Print2 has been handed %s stuff for the %d time!\n", stuff, n);
 	if( n ) print2(stuff, n - 1);
 	return 0;
@@ -47,11 +55,12 @@ int print2(char* stuff, int n)
 // if the commented lines are uncommented the result is 0 kernels, which is wrong
 int helper(char* name, int n, int (*op)(char*, int))
 {
+	shared_function();
 	printf("Running helper with %s!\n", name);
 	//op(name, n);
 	if( n % 2 ) helper( name, n - 1, op );
-	// else return op(name, n);
-	return op(name, n);
+	else return op(name, n);
+	//return op(name, n);
 }
 
 int main(int argc, char** argv)
