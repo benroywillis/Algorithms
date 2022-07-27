@@ -30,3 +30,5 @@ nohup.out
 # image files from GraphViz
 *.svg
 *.gv
+# memory footprint files from memory pass
+MemoryFootprints_*.csv
