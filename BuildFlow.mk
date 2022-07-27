@@ -47,7 +47,7 @@ POLLY_OPTFLAGS2.1=-polly-process-unprofitable
 POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
 OMPFLAGS =-polly-parallel -lgomp
 
-all: lastwriter_$(SOURCE).dot
+all: memory_$(SOURCE).dot
 
 # Halide generator rules
 # In order for this variable to work, your run files need to be named
@@ -73,20 +73,17 @@ endif
 $(SOURCE).markov.bc Loopfile_$(SOURCE).json: $(SOURCE).bc
 	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Markov $< -o $@
 
-$(SOURCE).instance.bc : $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Instance $< -o $@
-
-$(SOURCE).lastwriter.bc : $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -LastWriter $< -o $@
+$(SOURCE).memory.bc : $(SOURCE).bc
+	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Memory $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
-$(SOURCE).instance.native : $(SOURCE).instance.bc
+$(SOURCE).memory.native : $(SOURCE).memory.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
-$(SOURCE).lastwriter.native : $(SOURCE).lastwriter.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+memory_$(SOURCE).dot : $(SOURCE).memory.native kernel_$(SOURCE).json
+	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 $(SOURCE).bin : $(SOURCE).markov.native
 	$(SO_PATH) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
@@ -94,13 +91,9 @@ $(SOURCE).bin : $(SOURCE).markov.native
 kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json: $(SOURCE).bin
 	$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
-Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
-	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
+	$(SO_PATH) ./$< $(RARGS)
 
-lastwriter_$(SOURCE).dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
-	$(SO_PATH) INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
-
-SourceMap_$(SOURCE).json : lastwriter_$(SOURCE).dot
+SourceMap_$(SOURCE).json : memory_$(SOURCE).dot
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
 
 # regular tik
@@ -193,3 +186,24 @@ clean:
 
 clean_oprofile:
 	sudo rm -rf oprofile_data
+
+# [BW] these passes are deprecated as of 7/01/22
+#$(SOURCE).instance.bc : $(SOURCE).bc
+#	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Instance $< -o $@
+
+#$(SOURCE).lastwriter.bc : $(SOURCE).bc
+#	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -LastWriter $< -o $@
+
+#$(SOURCE).instance.native : $(SOURCE).instance.bc
+#	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+
+#$(SOURCE).lastwriter.native : $(SOURCE).lastwriter.bc
+#	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+
+#Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
+#	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
+
+#lastwriter_$(SOURCE).dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
+#	$(SO_PATH) INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
+
+
