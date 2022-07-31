@@ -1,27 +1,15 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>
-
-#define PRECISION 	double
-#define K			5
-#define L			5
+#include "BilateralFilter.h"
 
 // filter parameters
-float sigma_s;
-float sigma_r;
+float sigma_s = 0.0;
+float sigma_r = 0.0;
 // image dimensions
-uint32_t image_width  = 0;
+uint32_t image_width = 0;
 uint32_t image_height = 0;
-
-struct Pixel
-{
-	uint8_t r;
-	uint8_t g;
-	uint8_t b;
-};
 
 struct Pixel* readImage(char* file)
 {
@@ -264,48 +252,4 @@ void BilateralFilter(struct Pixel* in, PRECISION* out)
 			*(out + i*image_height + j) /= Wp;
 		}
 	}
-}
-
-int main(int argc, char** argv)
-{
-	if( argc !=5 )
-	{
-		printf("Please provide spacial variance sigma_s, range variance sigma_r, input image name, and output image name\n");
-		return 1;
-	}
-	sigma_s = atoi(argv[1]);
-	sigma_r = atoi(argv[2]);
-	struct Pixel* input;
-	PRECISION* output;
-	input = readImage(argv[3]);
-	output = (PRECISION*)calloc(image_width*image_height, sizeof(PRECISION));
-	
-	struct timespec start;
-	struct timespec end;
-	while(clock_gettime(CLOCK_MONOTONIC, &start));
-	BilateralFilter(input, output);
-	while(clock_gettime(CLOCK_MONOTONIC, &end));
-	double secdiff = (double)(end.tv_sec - start.tv_sec);
-	double nsecdiff = (double)(end.tv_nsec - start.tv_nsec) * pow(10.0, -9.0);
-	double totalTime = secdiff + nsecdiff;
-	printf("Bilateral filter runtime: %fs\n", totalTime);
-
-	// convert output image to an image acceptable for printing
-	// use the input memory space
-	for( unsigned int i = 0; i < image_height; i++ )
-	{
-		for( unsigned int j = 0; j < image_width; j++ )
-		{
-			(input + i*image_height + j)->r = (uint8_t)(*(output + i*image_height + j));
-			(input + i*image_height + j)->g = (input + i*image_height + j)->r;
-			(input + i*image_height + j)->b = (input + i*image_height + j)->g;
-		}
-	}
-
-	// the output space is grayscale
-	writeImage(input, argv[4]);
-
-	free(input);
-	free(output);
-	return 0;
 }
