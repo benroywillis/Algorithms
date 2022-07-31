@@ -1,5 +1,5 @@
 
-#include "Backend/BackendTrace.h"
+#include "Trace.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -29,34 +29,34 @@ int main()
     }
 
 #if TRACING
-    KernelEnter("MatrixMultiply,Outer");
+   TraceAtlasMarkovKernelEnter("MatrixMultiply,Outer");
 #endif
 	struct timespec start, end;
 	while( clock_gettime(CLOCK_MONOTONIC, &start) ) {}
     for (int i = 0; i < SIZE; i++)
     {
 #if TRACING
-        KernelEnter("MatrixMultiply,Inner");
+        TraceAtlasMarkovKernelEnter("MatrixMultiply,Inner");
 #endif
         for (int j = 0; j < SIZE; j++)
         {
 #if TRACING
-            KernelEnter("MatrixMultiply,Mul");
+            TraceAtlasMarkovKernelEnter("MatrixMultiply,Mul");
 #endif
             for (int k = 0; k < SIZE; k++)
             {
                 out[i][j] += in0[i][k] * in1[k][j];
             }
 #if TRACING
-            KernelExit("MatrixMultiply,Mul");
+            TraceAtlasMarkovKernelExit("MatrixMultiply,Mul");
 #endif
         }
 #if TRACING
-        KernelExit("MatrixMultiply,Inner");
+        TraceAtlasMarkovKernelExit("MatrixMultiply,Inner");
 #endif
     }
 #if TRACING
-    KernelExit("MatrixMultiply,Outer");
+    TraceAtlasMarkovKernelExit("MatrixMultiply,Outer");
 #endif
 	while( clock_gettime(CLOCK_MONOTONIC, &end) ) {}
 
