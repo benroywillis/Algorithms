@@ -13,8 +13,8 @@ D_LINKS=-ljpeg -lpng -lpthread
 
 SIGMA_S=1
 SIGMA_R=1.0
-INPUT_IMAGE=../../Bilateral_Filter/Data/john.png
-OUTPUT_IMAGE=../../Bilateral_Filter/Data/filteredjohn.png
+INPUT_IMAGE=../../BilateralFilter/Data/john.png
+OUTPUT_IMAGE=../../BilateralFilter/Data/filteredjohn.png
 RARGS=$(INPUT_IMAGE) $(OUTPUT_IMAGE) $(SIGMA_R) $(SIGMA_S)
 
 AUTOSCHEDULE=0

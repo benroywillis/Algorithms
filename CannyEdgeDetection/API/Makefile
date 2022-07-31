@@ -22,8 +22,8 @@ $(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a
 
 HYST_THRESH_0 = 1.0
 HYST_THRESH_1 = 2.0
-INPUT_IMAGE=../../Bilateral_Filter/Data/john.bmp
-OUTPUT_IMAGE=../../Bilateral_Filter/Data/canny_john.bmp
+INPUT_IMAGE=../../BilateralFilter/Data/john.bmp
+OUTPUT_IMAGE=../../BilateralFilter/Data/canny_john.bmp
 RARGS=$(HYST_THRESH_0) $(HYST_THRESH_1) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 include ../../BuildFlow.mk

@@ -20,8 +20,6 @@ $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibopenjp2.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibpng.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a
 
-#$(DASH_ROOT)libjpeg/lib/libjpeg.a
-
 OPFLAG=-O0
 
 SIGMA_S=10.0
