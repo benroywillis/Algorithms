@@ -392,6 +392,10 @@ struct Image {
 	{
 		*(image + i*width*3 + j*3 + c) = a;
 	}
+	void free()
+	{
+		std::free(image);
+	}
 }; 
 
 // A bilateral filter of a color image with the given spatial standard
@@ -444,10 +448,8 @@ int main(int argc, char** argv)
     sigma_s = strtof(argv[1], NULL);
     sigma_r = strtof(argv[2], NULL);
     struct Pixel* input = readImage(argv[3]);
-    printf("Image size: %d x %d\n", image_height, image_width);
-
-	// we present the width and height backwards because the bilateral algorithm uses backwards dimensions
 	Image im = Image(input, image_height, image_width);
+    printf("Image size: %d x %d\n", image_height, image_width);
 	
 	__TIMINGLIB_start_time();
 	bilateral(im, sigma_s, sigma_r);
@@ -455,7 +457,7 @@ int main(int argc, char** argv)
 
     writeImage((struct Pixel*)im.image, argv[4]);
 	free(input);
-	free(im.image);
+	im.free();
 	cout << "Success!" << endl;
 	return 0;
 }
