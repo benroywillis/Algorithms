@@ -11,6 +11,7 @@ LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
 #LDFLAGS?=-c -emit-llvm -g3 -O0
 
 SOURCE?=test
+SOURCE_PATH?=
 ADDSOURCE?=
 SUFFIX?=.c
 D_LINKS?=-lm
@@ -53,7 +54,7 @@ all: memory_$(SOURCE).dot
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
 # and your generator (-g <generator_name>) needs to match this variable
-$(SOURCE)_generated.exec : $(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE)
+$(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE)
 	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 $(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp target=host auto_schedule=false
@@ -65,7 +66,7 @@ ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
-$(SOURCE).bc : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+$(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
 endif
 
