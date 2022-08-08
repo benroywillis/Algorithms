@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include "BilateralFilter.h"
+#include "TimingLib.h"
 
 int main(int argc, char** argv)
 {
@@ -17,16 +18,10 @@ int main(int argc, char** argv)
 	PRECISION* output;
 	input = readImage(argv[3]);
 	output = (PRECISION*)calloc(image_width*image_height, sizeof(PRECISION));
-	
-	struct timespec start;
-	struct timespec end;
-	while(clock_gettime(CLOCK_MONOTONIC, &start));
+
+	__TIMINGLIB_start_time();	
 	BilateralFilter(input, output);
-	while(clock_gettime(CLOCK_MONOTONIC, &end));
-	double secdiff = (double)(end.tv_sec - start.tv_sec);
-	double nsecdiff = (double)(end.tv_nsec - start.tv_nsec) * pow(10.0, -9.0);
-	double totalTime = secdiff + nsecdiff;
-	printf("Bilateral filter runtime: %fs\n", totalTime);
+	__TIMINGLIB_end_time();
 
 	// convert output image to an image acceptable for printing
 	// use the input memory space

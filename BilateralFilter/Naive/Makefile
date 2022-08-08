@@ -12,3 +12,7 @@ INCLUDE=-I$(TRACEATLAS_ROOT)include/
 
 POLLY_SHOW=
 include ../../BuildFlow.mk
+
+local_polly : BilateralFilter.c
+	$(CC) -O3 -mllvm -polly -mllvm -polly-parallel -lgomp -lm -I../../TimingLib/ $< main.c -o BilateralFilter.polly
+
