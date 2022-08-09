@@ -16,7 +16,6 @@ public:
     	Var i("i"), j("j");
 		RDom rv(0, input0.height());
 		GEMM(j, i) = Halide::cast<PRECISION>(0);
-		//GEMM(j, i) += input0(rv, i)*input1(j, rv);
 		GEMM(j, i) += input0(rv, i)*input1(j, rv);
     }
 };
