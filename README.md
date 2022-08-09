@@ -24,7 +24,7 @@ Each Makefile in this repository facilitates the building of their respective pr
 	* API: OpenCV - done
 	* DSLs: Halide - done
 	* Benchmarks: PERFECT - 0%
-## Canny Edge Detection
+### Canny Edge Detection
 	* Naive: 0%
 	* API: OpenCV - done
 	* DSLs: Halide - 0%
