@@ -31,30 +31,43 @@ endif
 # polly flags
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
 OPFLAG?=-O3
+# polly pass flags
+#POLLY_OPT_FLAGS+=-polly-simplify -polly-optree -polly-delicm -polly-simplify -polly-prune-unprofitable -polly-use-llvm-names -polly-export-jscop -polly-process-unprofitable
+POLLY_OPT_FLAGS+=-polly-simplify -polly-optree -polly-delicm -polly-simplify -polly-prune-unprofitable -polly-opt-isl -polly-codegen
+
 # turn polly on in compilation pass
-POLLYFLAGS+=-mllvm -polly
+POLLY_C_FLAGS+=-mllvm -polly
 # have polly output a bunch of dots that it then attempts to open with libreoffice
 POLLY_SHOW?=-mllvm -polly-show-only
 # set this to blank if you don't want polly to consider non-affine structures
 POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops
-POLLYFLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE)
+# maximizes vector code generation
+POLLY_VECTORIZE=-mllvm -polly-vectorizer=stripmine
+# turns on omp code generation and parallelization
+POLLY_THREADS=1
+POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS)
+# contains all flags that will be passed to polly opt pass
+POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
+
 ## breakdown polly transformation steps
 # transforms the input program to a canonical form polly can understand
 POLLY_OPTFLAGS1=-S -polly-canonicalize
 # print detected scops
 POLLY_OPTFLAGS2.0=-polly-use-llvm-names -polly-allow-nonaffine-loops -polly-allow-nonaffine-branches -basicaa -polly-scops -analyze
 POLLY_OPTFLAGS2.1=-polly-process-unprofitable 
+
 # Highlight detected scops in the CFG of the program
 POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
-OMPFLAGS =-polly-parallel -lgomp
 
 all: memory_$(SOURCE).dot
 
+HALIDE_THREADS?=1
+ADDSOURCE_GENERATE?=
 # Halide generator rules
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
 # and your generator (-g <generator_name>) needs to match this variable
-$(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE)
+$(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE_GENERATE)
 	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 $(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp target=host auto_schedule=false
@@ -64,7 +77,7 @@ $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
 # Halide needs to be built a special way
 ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) -DHALIDE_THREADS=$(HALIDE_THREADS) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
@@ -143,11 +156,11 @@ run : elf
 	./$(SOURCE).elf $(RARGS)
 
 $(SOURCE).bc_polly : $(SOURCE).bc
-	$(OPT) --basicaa -polly-use-llvm-names -polly-export-jscop -polly-process-unprofitable $< -o $@
+	$(OPT) $(POLLY_OPT_FLAGS) $< -o $@
 #	$(OPT) --basicaa -polly-ast -analyze -polly-use-llvm-names -polly-process-unprofitable $< -o $@
 
 elf_polly : $(SOURCE).bc $(SOURCE).bc_polly
-	$(C) $(LLD) $(D_LINKS) $(OPFLAG) $(DEBUG) $(POLLYFLAGS) $< -o $(SOURCE).elf_polly
+	$(C) $(LLD) $(D_LINKS) $(OPFLAG) $(DEBUG) $(POLLY_C_FLAGS) $< -o $(SOURCE).elf_polly
 
 run_polly : elf_polly
 	./$(SOURCE).elf_polly $(RARGS)
