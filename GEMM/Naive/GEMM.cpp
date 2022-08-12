@@ -61,7 +61,7 @@ int main()
         }
     }
 
-	__TIMINGLIB_benchmark(10, 10, [&]{ GEMM(in0, in1, out); });
+	__TIMINGLIB_benchmark([&]{ GEMM(in0, in1, out); });
 
     return 0;
 }
