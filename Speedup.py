@@ -87,4 +87,6 @@ with open(args.output+".csv", "w") as f:
 			csvString += op
 			for thread in timeMap[key][op]:
 				csvString += ","+str(timeMap[key][op][thread])
+			csvString += "\n"
 		csvString += "\n"
+	f.write(csvString)
