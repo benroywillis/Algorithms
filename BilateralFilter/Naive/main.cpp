@@ -19,7 +19,7 @@ int main(int argc, char** argv)
 	input = readImage(argv[3]);
 	output = (PRECISION*)calloc(image_width*image_height, sizeof(PRECISION));
 
-	__TIMINGLIB_benchmark(10, 10, [&]{ BilateralFilter(input, output); });
+	__TIMINGLIB_benchmark([&]{ BilateralFilter(input, output); });
 //	__TIMINGLIB_start_time();
 //	BilateralFilter(input, output);
 //	__TIMINGLIB_end_time();
