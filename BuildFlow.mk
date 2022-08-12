@@ -28,6 +28,13 @@ else
 	GC=$(GXX)
 endif
 
+# TimingLib benchmarking parameters
+# samples are number of samples taken of the program. A sample is a trial of TIMINGLIB_ITERATIONS averaged together
+TIMINGLIB_SAMPLES?=1
+# iterations are number of runs of a program averages together to form a sample
+TIMINGLIB_ITERATIONS?=1
+CFLAGS += -DTIMINGLIB_SAMPLES=$(TIMINGLIB_SAMPLES) -DTIMINGLIB_ITERATIONS=$(TIMINGLIB_ITERATIONS)
+
 # polly flags
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
 OPFLAG?=-O3
@@ -44,7 +51,7 @@ POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-bran
 # maximizes vector code generation
 POLLY_VECTORIZE=-mllvm -polly-vectorizer=stripmine
 # turns on omp code generation and parallelization
-POLLY_THREADS=1
+POLLY_THREADS?=1
 POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS)
 # contains all flags that will be passed to polly opt pass
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
@@ -61,7 +68,6 @@ POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
 
 all: memory_$(SOURCE).dot
 
-HALIDE_THREADS?=1
 ADDSOURCE_GENERATE?=
 # Halide generator rules
 # In order for this variable to work, your run files need to be named
@@ -77,7 +83,7 @@ $(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
 # Halide needs to be built a special way
 ifeq ($(HALIDE),1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) -DHALIDE_THREADS=$(HALIDE_THREADS) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
