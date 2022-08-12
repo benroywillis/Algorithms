@@ -32,3 +32,6 @@ nohup.out
 *.gv
 # memory footprint files from memory pass
 MemoryFootprints_*.csv
+# speedup experiments
+*_speedup.csv
+*_speedup.json
