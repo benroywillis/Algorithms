@@ -10,12 +10,12 @@ using namespace std;
 
 int main( int argc, char** argv )
 {
-	setNumThreads(0);
-	if( argc != 4 )
+	if( argc != 5 )
 	{
-		cout << "Please specify (float)alpha, input image path and output image path" << endl;
+		cout << "Please specify (float)alpha, input image path, output image path, and number of threads" << endl;
 		return EXIT_FAILURE;
 	}
+	setNumThreads(atoi(argv[4]));
 	float alpha = std::strtof(argv[1], NULL);
 	Mat src = imread( argv[2] );
 	Mat dst;
