@@ -4,8 +4,8 @@
 #include "BilateralFilter.h"
 #include "TimingLib.h"
 
-#define IMAGE_HEIGHT 240
-#define IMAGE_WIDTH  239
+//#define IMAGE_HEIGHT 240
+//#define IMAGE_WIDTH  239
 
 void transpose(struct Pixel* image, unsigned int num_rows, unsigned int num_cols)
 {
@@ -71,8 +71,8 @@ int main(int argc, char** argv)
 	}
 	float alpha = strtof(argv[1], NULL);
 	struct Pixel* input  = readImage(argv[2]);
-	image_width  = IMAGE_WIDTH;
-	image_height = IMAGE_HEIGHT;
+	//image_width  = IMAGE_WIDTH;
+	//image_height = IMAGE_HEIGHT;
 	struct Pixel* output = (struct Pixel*)calloc(image_width*image_height, sizeof(struct Pixel));
 	printf("Image size: %d x %d\n", image_height, image_width);
 
