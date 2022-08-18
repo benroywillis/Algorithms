@@ -4,7 +4,7 @@ import subprocess as sp
 import json
 import re
 
-OPFLAGS = ["-O0", "-O1", "-O2", "-O3" ]
+OPFLAGS = ["O0", "O1", "O2", "O3" ]
 THREADS = [1, 2, 4, 8, 16]
 
 def parseArgs():
@@ -13,6 +13,8 @@ def parseArgs():
 	arg_parser.add_argument("-o", "--output", default="Speedup", help="Specify output file name.")
 	arg_parser.add_argument("-s", "--samples", default=15, help="Specify number of samples taken for each timing experiment.")
 	arg_parser.add_argument("-i", "--iterations", default=15, help="Specify number of iterations taken for each sample.")
+	arg_parser.add_argument("-mi", "--milliseconds", action="store_true", help="Output timings in milliseconds (default: seconds).")
+	arg_parser.add_argument("-sf", "--sig-figs", default=3, help="Output number of significant figures.")
 	return arg_parser.parse_args()
 
 def getExecutionTime(inString):
@@ -45,7 +47,7 @@ def buildProject(opflag, args, polly=False, halide=False, threads=1):
 	else:
 		build += "make run "
 	build += "TIMINGLIB_SAMPLES="+str(args.samples)+" TIMINGLIB_ITERATIONS="+str(args.iterations)+" "
-	build += "OPFLAG="+opflag+" "
+	build += "OPFLAG=-"+opflag+" "
 	if polly:
 		build += "POLLY_THREADS="+str(threads)+" "
 	elif halide:
@@ -73,7 +75,10 @@ for key in timeMap:
 				output = buildProject(op, args, halide=True, threads=thread)
 			else:
 				output = buildProject(op, args, threads=thread)
-			timeMap[key][op][thread] = getExecutionTime(output)
+			if args.milliseconds:
+				timeMap[key][op][thread] = getExecutionTime(output)*1000
+			else:
+				timeMap[key][op][thread] = getExecutionTime(output)
 
 with open(args.output+".json", "w") as f:
 	json.dump(timeMap, f, indent=4)
@@ -90,3 +95,18 @@ with open(args.output+".csv", "w") as f:
 			csvString += "\n"
 		csvString += "\n"
 	f.write(csvString)
+
+with open(args.output+".tex", "w") as f:
+	csvString = ""
+	for key in timeMap:
+		csvString += key+"\n"
+		csvString += "OpFlag & "+" & ".join(str(x) for x in THREADS)+" \\\\\n"
+		for op in timeMap[key]:
+			csvString += op
+			for thread in timeMap[key][op]:
+				format = '%.'+str(args.sig_figs)+'g'
+				csvString += " & "+'%s' % float(format % timeMap[key][op][thread] )
+			csvString += " \\\\\n"
+		csvString += "\n"
+	f.write(csvString)
+
