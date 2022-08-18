@@ -22,9 +22,10 @@ $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibpng.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a
 
 ALPHA=0.9
-INPUT_IMAGE=../../BilateralFilter/Data/john.bmp
-OUTPUT_IMAGE=../../BilateralFilter/Data/filtered_john.bmp
-RARGS=$(ALPHA) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
+INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
+OUTPUT_IMAGE=../../Data/Output/IIRBlur_OpenCV_sample_1920_1280.bmp
+OPENCV_THREADS?=1
+RARGS=$(ALPHA) $(INPUT_IMAGE) $(OUTPUT_IMAGE) $(OPENCV_THREADS)
 
 POLLY_SHOW=
 

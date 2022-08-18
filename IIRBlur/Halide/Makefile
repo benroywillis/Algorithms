@@ -11,8 +11,8 @@ SUFFIX=.cpp
 
 D_LINKS=-ljpeg -lpng -lpthread
 
-INPUT_IMAGE=../../BilateralFilter/Data/john.png
-OUTPUT_IMAGE=../../BilateralFilter/Data/filteredjohn.png
+INPUT_IMAGE=../../Data/Input/sample_1920_1280.jpg
+OUTPUT_IMAGE=../../Data/Output/IIRBlur_Halide_sample_1920_1280.jpg
 RARGS= $(INPUT_IMAGE) $(OUTPUT_IMAGE) $(HALIDE_THREADS)
 
 AUTOSCHEDULE=0

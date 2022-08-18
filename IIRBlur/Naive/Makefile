@@ -10,8 +10,8 @@ CFLAGS += -DPRECISION=$(PRECISION)
 
 # runtime args
 ALPHA=0.5
-INPUT_IMAGE=../../BilateralFilter/Data/john.bmp
-OUTPUT_IMAGE=../../BilateralFilter/Data/filtered_john.bmp
+INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
+OUTPUT_IMAGE=../../Data/Output/IIRBlur_Naive_sample_1920_1280.bmp
 RARGS=$(ALPHA) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 D_LINKS=-lm
 INCLUDE=-I$(TRACEATLAS_ROOT)include/ -I../../BilateralFilter/Naive/
