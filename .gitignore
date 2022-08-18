@@ -35,7 +35,16 @@ MemoryFootprints_*.csv
 # speedup experiments
 *_speedup.csv
 *_speedup.json
-*speedup.tex
+*_speedup.tex
+*_speedup.svg
+*_speedup.eps
+*_speedup.png
+Speedup.csv
+Speedup.json
+Speedup.tex
+Speedup.svg
+Speedup.eps
+Speedup.png
 # nfs temporaries
 *.nfs*
 # output filter files
