@@ -4,6 +4,7 @@ import argparse
 import subprocess as sp
 import json
 import re
+import math
 
 # plot parameters
 figDim = (6,6) # in inches
@@ -156,12 +157,23 @@ def plotOpLevel_scatter(normalized, opLevel, args):
 	halide = ax.scatter(THREADS, [x for x in normalized["Halide"][opLevel].values()], label="Halide")
 	ax.set_title(opLevel+" Speedup", fontsize=titleFont)
 	ax.set_xlabel("Threads", fontsize=axisFont)
-	#plt.xscale("log", base=2)
+	plt.xscale("log", base=2)
 	ax.set_ylabel("Speedup", fontsize=axisFont)
 	plt.yscale("log", base=2)
-	#ax.set_ylim(bottom=0)
+	# draw dashed lines one each of the y-axis ticks
+	ymax   = -1000000
+	ymin   =  1000000
+	yticks = []
+	for type in normalized:
+		for thread in normalized[type][opLevel]:
+			if math.log2(normalized[type][opLevel][thread]) > ymax:
+				ymax = math.log2(normalized[type][opLevel][thread])
+			if math.log2(normalized[type][opLevel][thread]) < ymin:
+				ymin = math.log2(normalized[type][opLevel][thread])
+	for exp in range(math.floor(ymin), math.ceil(ymax)+1):
+		if (exp % 2) == 0:
+			plt.axhline(y=2**exp, color="black", linestyle="dashed")
 	ax.legend(frameon=False)
-	#plt.xticks(ticks=[x for x in range(len(xticklabels))], labels=xticklabels, fontsize=axisFont, rotation=xtickRotation)
 	PrintFigure(plt, opLevel+"_"+args.output)
 
 def plotOpLevel_bar(normalized, opLevel, args):
