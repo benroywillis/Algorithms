@@ -66,37 +66,29 @@ def getExecutionTime(inString):
 		print("Error while trying to read execution time: "+str(e))
 		return -1
 
-def plotOpLevel(normalized, opLevel, args):
-	fig = plt.figure(figsize=figDim, dpi=figDPI, frameon=False)
-	ax = fig.add_subplot(1, 1, 1, frameon=False)
-	xticklabels = THREADS
-	naive = ax.bar([x - barWidth for x in range(len(xticklabels))], [x for x in normalized["Naive"][opLevel].values()], barWidth, label="Naive")
-	polly = ax.bar([x for x in range(len(xticklabels))], [x for x in normalized["Polly"][opLevel].values()], barWidth, label="Polly")
-	halide = ax.bar([x + barWidth for x in range(len(xticklabels))], [x for x in normalized["Halide"][opLevel].values()], barWidth, label="Halide")
-	ax.set_title(opLevel+" Speedup", fontsize=titleFont)
-	ax.set_ylabel("Dilation", fontsize=axisFont)
-	ax.set_xlabel("Threads", fontsize=axisFont)
-	ax.set_ylim(bottom=0)
-	ax.legend(frameon=False)
-	# ax.bar_label(naive, padding=3) -> not available until matplotlib 3.4
-	plt.xticks(ticks=[x for x in range(len(xticklabels))], labels=xticklabels, fontsize=axisFont, rotation=xtickRotation)
-	PrintFigure(plt, opLevel+"_"+args.output)
-
-def plotNormalizedSpeedup(timeMap, args):
-	"""
-	All times are normalized by the naive implementation
-	"""
-	normalized = {}
-	for type in timeMap:
-		normalized[type] = {}
-		for oplevel in timeMap[type]:
-			normalized[type][oplevel] = {} 
-			for thread in timeMap[type][oplevel]:
-				normalized[type][oplevel][thread] = timeMap[type][oplevel][thread] / timeMap["Naive"][oplevel][thread]
-	for op in OPFLAGS: 
-		plotOpLevel(normalized, op, args)
-	if args.show:
-		plt.show()
+def retrieveData(args):
+	timeMap = { "Naive": {}, "Polly": {}, "Halide": {} }
+	try:
+		j = json.load( open(args.output+".json", "r") )
+		timeMap = j
+	except FileNotFoundError:
+		print("Could not find data file "+args.output_file+".json. Running collection algorithms...")
+		for key in timeMap:
+			for op in OPFLAGS:
+				timeMap[key][op] = {}
+				for thread in THREADS:
+					if key == "Polly":
+						output = buildProject(op, args, polly=True, threads=thread)
+					elif key == "Halide":
+						output = buildProject(op, args, halide=True, threads=thread)
+					else:
+						output = buildProject(op, args, threads=thread)
+					if args.milliseconds:
+						timeMap[key][op][thread] = getExecutionTime(output)*1000
+					else:
+						timeMap[key][op][thread] = getExecutionTime(output)
+					outputData(timeMap, args)
+	return timeMap
 
 def outputData(timeMap, args):
 	with open(args.output+".json", "w") as f:
@@ -155,29 +147,57 @@ def buildProject(opflag, args, polly=False, halide=False, threads=1):
 		output += check.stdout.read().decode("utf-8")
 	return output
 
-def retrieveData(args):
-	timeMap = { "Naive": {}, "Polly": {}, "Halide": {} }
-	try:
-		j = json.load( open(args.output+".json", "r") )
-		timeMap = j
-	except FileNotFoundError:
-		print("Could not find data file "+args.output_file+".json. Running collection algorithms...")
-		for key in timeMap:
-			for op in OPFLAGS:
-				timeMap[key][op] = {}
-				for thread in THREADS:
-					if key == "Polly":
-						output = buildProject(op, args, polly=True, threads=thread)
-					elif key == "Halide":
-						output = buildProject(op, args, halide=True, threads=thread)
-					else:
-						output = buildProject(op, args, threads=thread)
-					if args.milliseconds:
-						timeMap[key][op][thread] = getExecutionTime(output)*1000
-					else:
-						timeMap[key][op][thread] = getExecutionTime(output)
-					outputData(timeMap, args)
-	return timeMap
+def plotOpLevel_scatter(normalized, opLevel, args):
+	fig = plt.figure(figsize=figDim, dpi=figDPI, frameon=False)
+	ax = fig.add_subplot(1, 1, 1, frameon=False)
+	xticklabels = THREADS
+	naive = ax.scatter(THREADS, [x for x in normalized["Naive"][opLevel].values()], label="Naive")
+	polly = ax.scatter(THREADS, [x for x in normalized["Polly"][opLevel].values()], label="Polly")
+	halide = ax.scatter(THREADS, [x for x in normalized["Halide"][opLevel].values()], label="Halide")
+	ax.set_title(opLevel+" Speedup", fontsize=titleFont)
+	ax.set_xlabel("Threads", fontsize=axisFont)
+	#plt.xscale("log", base=2)
+	ax.set_ylabel("Speedup", fontsize=axisFont)
+	plt.yscale("log", base=2)
+	#ax.set_ylim(bottom=0)
+	ax.legend(frameon=False)
+	#plt.xticks(ticks=[x for x in range(len(xticklabels))], labels=xticklabels, fontsize=axisFont, rotation=xtickRotation)
+	PrintFigure(plt, opLevel+"_"+args.output)
+
+def plotOpLevel_bar(normalized, opLevel, args):
+	fig = plt.figure(figsize=figDim, dpi=figDPI, frameon=False)
+	ax = fig.add_subplot(1, 1, 1, frameon=False)
+	xticklabels = THREADS
+	naive = ax.bar([x - barWidth for x in range(len(xticklabels))], [x for x in normalized["Naive"][opLevel].values()], barWidth, label="Naive")
+	polly = ax.bar([x for x in range(len(xticklabels))], [x for x in normalized["Polly"][opLevel].values()], barWidth, label="Polly")
+	halide = ax.bar([x + barWidth for x in range(len(xticklabels))], [x for x in normalized["Halide"][opLevel].values()], barWidth, label="Halide")
+	ax.set_title(opLevel+" Speedup", fontsize=titleFont)
+	ax.set_ylabel("Speedup", fontsize=axisFont)
+	ax.set_xlabel("Threads", fontsize=axisFont)
+	ax.set_ylim(bottom=0)
+	ax.legend(frameon=False)
+	# ax.bar_label(naive, padding=3) -> not available until matplotlib 3.4
+	plt.xticks(ticks=[x for x in range(len(xticklabels))], labels=xticklabels, fontsize=axisFont, rotation=xtickRotation)
+	PrintFigure(plt, opLevel+"_"+args.output)
+
+def plotNormalizedSpeedup(timeMap, args, scatter=True, bar=False):
+	"""
+	All times are normalized by the polly -O3 implementation
+	"""
+	normalized = {}
+	for type in timeMap:
+		normalized[type] = {}
+		for oplevel in timeMap[type]:
+			normalized[type][oplevel] = {} 
+			for thread in timeMap[type][oplevel]:
+				normalized[type][oplevel][thread] = timeMap["Polly"]["O3"]["1"] /timeMap[type][oplevel][thread]
+	for op in OPFLAGS: 
+		if scatter:
+			plotOpLevel_scatter(normalized, op, args)
+		elif bar:
+			plotOpLevel_bar(normalized, op, args)
+	if args.show:
+		plt.show()
 
 args = parseArgs()
 timeMap = retrieveData(args)
