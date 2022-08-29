@@ -451,9 +451,7 @@ int main(int argc, char** argv)
 	Image im = Image(input, image_height, image_width);
     printf("Image size: %d x %d\n", image_height, image_width);
 	
-	__TIMINGLIB_start_time();
-	bilateral(im, sigma_s, sigma_r);
-	__TIMINGLIB_end_time();
+	__TIMINGLIB_benchmark( [&] { bilateral(im, sigma_s, sigma_r); } );
 
     writeImage((struct Pixel*)im.image, argv[4]);
 	free(input);
