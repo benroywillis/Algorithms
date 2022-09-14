@@ -45,6 +45,7 @@ MemoryFootprints_*.csv
 *Speedup.svg
 *Speedup.eps
 *Speedup.png
+*Speedup.log
 # nfs temporaries
 *.nfs*
 # output filter files
