@@ -68,16 +68,18 @@ def getExecutionTime(inString):
 		return -1
 
 def retrieveData(args):
+	logFile = ""
 	timeMap = { "Naive": {}, "Polly": {}, "Halide": {} }
 	try:
 		j = json.load( open(args.output+".json", "r") )
 		timeMap = j
 	except FileNotFoundError:
-		print("Could not find data file "+args.output_file+".json. Running collection algorithms...")
+		print("Could not find data file "+args.output+".json. Running collection algorithms...")
 		for key in timeMap:
 			for op in OPFLAGS:
 				timeMap[key][op] = {}
 				for thread in THREADS:
+					logFile += str(key)+","+str(op)+","+str(thread)+":\n"
 					if key == "Polly":
 						output = buildProject(op, args, polly=True, threads=thread)
 					elif key == "Halide":
@@ -85,10 +87,14 @@ def retrieveData(args):
 					else:
 						output = buildProject(op, args, threads=thread)
 					if args.milliseconds:
-						timeMap[key][op][thread] = getExecutionTime(output)*1000
+						timeMap[key][op][str(thread)] = getExecutionTime(output)*1000
 					else:
-						timeMap[key][op][thread] = getExecutionTime(output)
+						timeMap[key][op][str(thread)] = getExecutionTime(output)
 					outputData(timeMap, args)
+					logFile += output+"\n"
+		logFile += "\n\n"
+	with open(args.output+".log", "w") as f:
+		f.write(logFile)
 	return timeMap
 
 def outputData(timeMap, args):
