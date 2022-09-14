@@ -87,7 +87,7 @@ void conv(PRECISION* grey)
 			fft_1[i*image_height + j] = SCALE*fft_1[i*image_height + j];
 		}
 	}
-	// ifft(X) = (1/N) * conj(FFT(conj(X)))
+	// 2d_ifft(X) = (1/N) * conj(FFT(conj(X)))
 	array_conj(fft_1, image_width, image_height);
 	for( unsigned i = 0; i < image_width; i++ )
 	{
@@ -97,7 +97,6 @@ void conv(PRECISION* grey)
 			fft_2[i*image_height + j] = 1.0 / (PRECISION)image_height * fft_2[i*image_height + j];
 		}
 	}
-	array_conj(fft_2, image_width, image_height);
 	transpose(fft_2, image_width, image_height);
 	for( unsigned i = 0; i < image_height; i++ )
 	{
@@ -107,6 +106,8 @@ void conv(PRECISION* grey)
 			fft_2[i*image_width + j] = 1.0 / (PRECISION)image_width * fft_2[i*image_width + j];
 		}
 	}
+	array_conj(fft_3, image_height, image_width);
+	// output assignment
 	for( unsigned i = 0; i < image_height; i++ )
 	{
 		for( unsigned j = 0; j < image_width; j++ )
