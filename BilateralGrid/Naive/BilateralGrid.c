@@ -61,6 +61,11 @@ PRECISION* buildGrid(struct Pixel* image)
 	return grid;
 }
 
+void GaussianKernel(PRECISION* grid, float sigma_s, float sigma_r, float sigma_c)
+{
+	
+}
+
 int main(int argc, char** argv)
 {
 	if( argc != 5 )
