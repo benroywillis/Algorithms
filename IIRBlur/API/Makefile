@@ -7,9 +7,9 @@ CFLAGS+= -Wno-everything
 OPFLAG?=-O0
 
 ifeq ($(OPFLAG), -O0)
-	OPENCV_PATH=$(OPENCV_ROOT)debug/
+	OPENCV_PATH=$(DASH_ROOT)../debug/opencv/
 else
-	OPENCV_PATH=$(OPENCV_ROOT)release/
+	OPENCV_PATH=$(DASH_ROOT)../release/opencv/
 endif
 
 SOURCE=IIRBlur
@@ -31,7 +31,8 @@ $(OPENCV_PATH)lib/opencv4/3rdparty/libIlmImf.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/liblibjpeg-turbo.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/liblibopenjp2.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/liblibpng.a\
-$(OPENCV_PATH)lib/opencv4/3rdparty/libzlib.a
+$(OPENCV_PATH)lib/opencv4/3rdparty/libzlib.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/libtbb.a
 
 ALPHA=0.9
 INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
