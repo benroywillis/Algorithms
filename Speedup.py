@@ -67,9 +67,39 @@ def getExecutionTime(inString):
 		print("Error while trying to read execution time: "+str(e))
 		return -1
 
+def buildProject(opflag, args, polly=False, api = False, halide=False, threads=1):
+	if halide:
+		build = "cd Halide ; "
+	elif api:
+		build = "cd API ; "
+	else:
+		build = "cd Naive ; "
+	build += "make clean ; "
+	if polly:
+		build += "make run_polly "
+	else:
+		build += "make run "
+	build += "TIMINGLIB_SAMPLES="+str(args.samples)+" TIMINGLIB_ITERATIONS="+str(args.iterations)+" "
+	build += "OPFLAG=-"+opflag+" "
+	if api:
+		build += "NUM_THREADS="+str(threads)+" "
+	elif polly:
+		build += "POLLY_THREADS="+str(threads)+" "
+	elif halide:
+		build += "HALIDE_THREADS="+str(threads)+" "
+	else:
+		build += "NUM_THREADS="+str(threads)+" "
+
+	output = ""
+	print(build)
+	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
+	while check.poll() is None:
+		output += check.stdout.read().decode("utf-8")
+	return output
+
 def retrieveData(args):
 	logFile = ""
-	timeMap = { "Naive": {}, "Polly": {}, "Halide": {} }
+	timeMap = { "API": {}, "Naive": {}, "Polly_Naive": {}, "Polly_API": {}, "Halide": {} }
 	try:
 		j = json.load( open(args.output+".json", "r") )
 		timeMap = j
@@ -80,10 +110,14 @@ def retrieveData(args):
 				timeMap[key][op] = {}
 				for thread in THREADS:
 					logFile += str(key)+","+str(op)+","+str(thread)+":\n"
-					if key == "Polly":
+					if key == "Polly_Naive":
 						output = buildProject(op, args, polly=True, threads=thread)
+					elif key == "Polly_API":
+						output = buildProject(op, args, api=True, polly=True, threads=thread)
 					elif key == "Halide":
 						output = buildProject(op, args, halide=True, threads=thread)
+					elif key == "API":
+						output = buildProject(op, args, api=True, threads=thread)
 					else:
 						output = buildProject(op, args, threads=thread)
 					if args.milliseconds:
@@ -128,39 +162,15 @@ def outputData(timeMap, args):
 			csvString += "\n"
 		f.write(csvString)
 
-def buildProject(opflag, args, polly=False, halide=False, threads=1):
-	if halide:
-		build = "cd Halide ; "
-	else:
-		build = "cd Naive ; "
-	build += "make clean ; "
-	if polly:
-		build += "make run_polly "
-	else:
-		build += "make run "
-	build += "TIMINGLIB_SAMPLES="+str(args.samples)+" TIMINGLIB_ITERATIONS="+str(args.iterations)+" "
-	build += "OPFLAG=-"+opflag+" "
-	if polly:
-		build += "POLLY_THREADS="+str(threads)+" "
-	elif halide:
-		build += "HALIDE_THREADS="+str(threads)+" "
-	else:
-		build += "NUM_THREADS="+str(threads)+" "
-
-	output = ""
-	print(build)
-	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
-	while check.poll() is None:
-		output += check.stdout.read().decode("utf-8")
-	return output
-
 def plotOpLevel_scatter(normalized, opLevel, args):
 	fig = plt.figure(figsize=figDim, dpi=figDPI, frameon=False)
 	ax = fig.add_subplot(1, 1, 1, frameon=False)
 	xticklabels = THREADS
-	naive = ax.scatter(THREADS, [x for x in normalized["Naive"][opLevel].values()], label="Naive")
-	polly = ax.scatter(THREADS, [x for x in normalized["Polly"][opLevel].values()], label="Polly")
-	halide = ax.scatter(THREADS, [x for x in normalized["Halide"][opLevel].values()], label="Halide")
+	naive       = ax.scatter(THREADS, [x for x in normalized["Naive"][opLevel].values()], label="Naive")
+	polly_naive = ax.scatter(THREADS, [x for x in normalized["Polly_Naive"][opLevel].values()], label="Polly Naive")
+	api         = ax.scatter(THREADS, [x for x in normalized["API"][opLevel].values()], label="API")
+	polly_api   = ax.scatter(THREADS, [x for x in normalized["Polly_API"][opLevel].values()], label="Polly API")
+	halide      = ax.scatter(THREADS, [x for x in normalized["Halide"][opLevel].values()], label="Halide")
 	ax.set_title(opLevel+" Speedup", fontsize=titleFont)
 	ax.set_xlabel("Threads", fontsize=axisFont)
 	plt.xscale("log", base=2)
@@ -208,7 +218,8 @@ def plotNormalizedSpeedup(timeMap, args, scatter=True, bar=False):
 		for oplevel in timeMap[type]:
 			normalized[type][oplevel] = {} 
 			for thread in timeMap[type][oplevel]:
-				normalized[type][oplevel][thread] = timeMap["Polly"]["O3"]["1"] /timeMap[type][oplevel][thread]
+				#normalized[type][oplevel][thread] = timeMap["Polly_Naive"]["O3"]["1"] /timeMap[type][oplevel][thread]
+				normalized[type][oplevel][thread] = timeMap["Polly_API"]["O1"]["1"] /timeMap[type][oplevel][thread]
 	for op in OPFLAGS: 
 		if scatter:
 			plotOpLevel_scatter(normalized, op, args)
