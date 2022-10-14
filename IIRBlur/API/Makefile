@@ -1,31 +1,43 @@
 include ../../Environment.mk 
 
+TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build_relwithdebinfo/
+
+CFLAGS+= -Wno-everything
+
+OPFLAG?=-O0
+
+ifeq ($(OPFLAG), -O0)
+	OPENCV_PATH=$(OPENCV_ROOT)debug/
+else
+	OPENCV_PATH=$(OPENCV_ROOT)release/
+endif
+
 SOURCE=IIRBlur
 SUFFIX=.cpp
 # we need to include jpeg here even though we have the static archive for it because that archive is missing a symbol "qtable"
-D_LINKS=-lpthread -ldl $(OPENCV_ROOT)lib/opencv4/3rdparty/libippicv.a
-INCLUDE=-I$(OPENCV_ROOT)include/opencv4/
+D_LINKS=-lpthread -ldl $(OPENCV_PATH)lib/opencv4/3rdparty/libippicv.a
+INCLUDE=-I$(OPENCV_PATH)include/opencv4/
 LIBRARIES=\
-$(OPENCV_ROOT)lib/libopencv_imgproc.a\
-$(OPENCV_ROOT)lib/libopencv_ximgproc.a\
-$(OPENCV_ROOT)lib/libopencv_imgcodecs.a\
-$(OPENCV_ROOT)lib/libopencv_core.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/libittnotify.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/libippiw.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/liblibtiff.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/liblibwebp.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/liblibopenjp2.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/libIlmImf.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/liblibjpeg-turbo.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/liblibopenjp2.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/liblibpng.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a
+$(OPENCV_PATH)lib/libopencv_imgproc.a\
+$(OPENCV_PATH)lib/libopencv_ximgproc.a\
+$(OPENCV_PATH)lib/libopencv_imgcodecs.a\
+$(OPENCV_PATH)lib/libopencv_core.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/libittnotify.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/libippiw.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/liblibtiff.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/liblibwebp.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/liblibopenjp2.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/libIlmImf.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/liblibjpeg-turbo.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/liblibopenjp2.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/liblibpng.a\
+$(OPENCV_PATH)lib/opencv4/3rdparty/libzlib.a
 
 ALPHA=0.9
 INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
 OUTPUT_IMAGE=../../Data/Output/IIRBlur_OpenCV_sample_1920_1280.bmp
-OPENCV_THREADS?=1
-RARGS=$(ALPHA) $(INPUT_IMAGE) $(OUTPUT_IMAGE) $(OPENCV_THREADS)
+NUM_THREADS?=1
+RARGS=$(ALPHA) $(INPUT_IMAGE) $(OUTPUT_IMAGE) $(NUM_THREADS)
 
 POLLY_SHOW=
 
