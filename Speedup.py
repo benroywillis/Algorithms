@@ -81,20 +81,32 @@ def buildProject(opflag, args, polly=False, api = False, halide=False, threads=1
 		build += "make run "
 	build += "TIMINGLIB_SAMPLES="+str(args.samples)+" TIMINGLIB_ITERATIONS="+str(args.iterations)+" "
 	build += "OPFLAG=-"+opflag+" "
-	if api:
-		build += "NUM_THREADS="+str(threads)+" "
-	elif polly:
-		build += "POLLY_THREADS="+str(threads)+" "
-	elif halide:
-		build += "HALIDE_THREADS="+str(threads)+" "
-	else:
-		build += "NUM_THREADS="+str(threads)+" "
+	build += "NUM_THREADS="+str(threads)+" POLLY_THREADS="+str(threads)+" HALIDE_THREADS="+str(threads)+" "
 
 	output = ""
 	print(build)
 	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
 	while check.poll() is None:
 		output += check.stdout.read().decode("utf-8")
+	return output
+
+def callProject(timeMap, key, op, thread, args):
+	output = ""
+	if key == "Polly_Naive":
+		output = buildProject(op, args, polly=True, threads=thread)
+	elif key == "Polly_API":
+		output = buildProject(op, args, api=True, polly=True, threads=thread)
+	elif key == "Halide":
+		output = buildProject(op, args, halide=True, threads=thread)
+	elif key == "API":
+		output = buildProject(op, args, api=True, threads=thread)
+	else:
+		output = buildProject(op, args, threads=thread)
+	if args.milliseconds:
+		timeMap[key][op][str(thread)] = getExecutionTime(output)*1000
+	else:
+		timeMap[key][op][str(thread)] = getExecutionTime(output)
+	outputData(timeMap, args)
 	return output
 
 def retrieveData(args):
@@ -105,28 +117,21 @@ def retrieveData(args):
 		timeMap = j
 	except FileNotFoundError:
 		print("Could not find data file "+args.output+".json. Running collection algorithms...")
-		for key in timeMap:
-			for op in OPFLAGS:
+	for key in timeMap:
+		for op in OPFLAGS:
+			if timeMap[key].get(op) is None:
 				timeMap[key][op] = {}
-				for thread in THREADS:
-					logFile += str(key)+","+str(op)+","+str(thread)+":\n"
-					if key == "Polly_Naive":
-						output = buildProject(op, args, polly=True, threads=thread)
-					elif key == "Polly_API":
-						output = buildProject(op, args, api=True, polly=True, threads=thread)
-					elif key == "Halide":
-						output = buildProject(op, args, halide=True, threads=thread)
-					elif key == "API":
-						output = buildProject(op, args, api=True, threads=thread)
-					else:
-						output = buildProject(op, args, threads=thread)
-					if args.milliseconds:
-						timeMap[key][op][str(thread)] = getExecutionTime(output)*1000
-					else:
-						timeMap[key][op][str(thread)] = getExecutionTime(output)
-					outputData(timeMap, args)
+			for thread in THREADS:
+				logFile += str(key)+","+str(op)+","+str(thread)+":\n"
+				if timeMap[key][op].get(str(thread)) is None:
+					output  = callProject(timeMap, key, op, thread, args)
 					logFile += output+"\n"
-		logFile += "\n\n"
+				elif timeMap[key][op][str(thread)] < 0:
+					output  = callProject(timeMap, key, op, thread, args)
+					logFile += output+"\n"
+				else:
+					logFile += "Exists\n"
+	logFile += "\n\n"
 	with open(args.output+".log", "w") as f:
 		f.write(logFile)
 	return timeMap
