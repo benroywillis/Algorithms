@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+// in general, the way to break epoch boundaries is to build large loops with many high-frequency shared functions and low-frequency loops in them.
+// this will create a kernel "hierarchy" that was segmented out of order, creating entrances and exits from all over hell
+// it may also create a node that has many small loops stemming out of it
+// both of these things create recipes for blurry epoch boundaries
+
 void print1(int arg)
 {
 	while( arg )
