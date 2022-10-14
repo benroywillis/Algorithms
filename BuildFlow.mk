@@ -45,7 +45,8 @@ POLLY_OPT_FLAGS+=-polly-simplify -polly-optree -polly-delicm -polly-simplify -po
 # turn polly on in compilation pass
 POLLY_C_FLAGS+=-mllvm -polly
 # have polly output a bunch of dots that it then attempts to open with libreoffice
-POLLY_SHOW?=-mllvm -polly-show-only
+POLLY_SHOW?=
+#POLLY_SHOW?=-mllvm -polly-show-only
 # set this to blank if you don't want polly to consider non-affine structures
 POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-branches -mllvm -polly-allow-nonaffine-loops
 # maximizes vector code generation
@@ -55,6 +56,8 @@ POLLY_THREADS?=1
 POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS)
 # contains all flags that will be passed to polly opt pass
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
+# contains all flags that will be passed to clang for polly optimization
+POLLY_CLANG_FLAGS = -mllvm -polly $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL) $(POLLY_SHOW)
 
 ## breakdown polly transformation steps
 # transforms the input program to a canonical form polly can understand
@@ -165,17 +168,23 @@ $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
 endif
 
 run : $(SOURCE).elf
-	./$(SOURCE).elf $(RARGS)
+	./$< $(RARGS)
 
-$(SOURCE).bc_polly : $(SOURCE).bc
-	$(OPT) $(POLLY_OPT_FLAGS) $< -o $@
-#	$(OPT) --basicaa -polly-ast -analyze -polly-use-llvm-names -polly-process-unprofitable $< -o $@
+ifeq ($(HALIDE),1)
+$(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
+else
+$(SOURCE).elf_polly : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(POLLY_CLANG_FLAGS) $^ -o $@
+endif
 
-elf_polly : $(SOURCE).bc $(SOURCE).bc_polly
-	$(C) $(LLD) $(D_LINKS) $(OPFLAG) $(DEBUG) $(POLLY_C_FLAGS) $< -o $(SOURCE).elf_polly
+#$(SOURCE).bc_polly : $(SOURCE).bc
+#	$(OPT) $(POLLY_OPT_FLAGS) $< -o $@
+#elf_polly : $(SOURCE).bc_polly
+#	$(C) $(LLD) $(D_LINKS) $(OPFLAG) $(DEBUG) $(POLLY_C_FLAGS) $< -o $(SOURCE).elf_polly
 
-run_polly : elf_polly
-	./$(SOURCE).elf_polly $(RARGS)
+run_polly : $(SOURCE).elf_polly
+	./$< $(RARGS)
 
 gprof_$(SOURCE).elf : $(SOURCE)$(SUFFIX)
 	$(GC) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result  $< -o gprof_$(SOURCE).obj
