@@ -86,7 +86,7 @@ $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOU
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(LIBRARIES) $^ -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(LIBRARIES) $(CFLAGS) $^ -o $@
 endif
 
 # TraceAtlas pipeline rules
@@ -105,13 +105,13 @@ $(SOURCE).memory.native : $(SOURCE).memory.bc
 $(SOURCE).bin : $(SOURCE).markov.native
 	$(SO_PATH) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
-memory_$(SOURCE).dot : $(SOURCE).memory.native kernel_$(SOURCE).json
-	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
-
 kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json: $(SOURCE).bin
 	$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
-SourceMap_$(SOURCE).json : memory_$(SOURCE).dot
+memory_$(SOURCE).dot : $(SOURCE).memory.native kernel_$(SOURCE).json
+	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
+
+SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
 
 # regular tik
@@ -155,10 +155,16 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
 
 # just builds the source code into elf form
-elf : $(SOURCE).bc
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(LIBRARIES) $^ -o $(SOURCE).elf
+# Halide needs to be built a special way
+ifeq ($(HALIDE),1)
+$(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+else
+$(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $^ -o $@ 
+endif
 
-run : elf
+run : $(SOURCE).elf
 	./$(SOURCE).elf $(RARGS)
 
 $(SOURCE).bc_polly : $(SOURCE).bc
