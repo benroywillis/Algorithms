@@ -25,5 +25,5 @@ DASH_SOURCES_ROOT=/mnt/nobackup-09/Dash/Sources/alib/
 BWILLI_ROOT=/mnt/heorot-10/bwilli46/Installs/
 GSL_ROOT=$(DASH_ROOT)gsl/
 FFTW_ROOT=$(DASH_ROOT)fftw/
-OPENCV_ROOT=$(BWILLI_ROOT)opencv/
-SRSRAN_ROOT=$(BWILLI_ROOT)srsran/debug/
+OPENCV_ROOT=$(DASH_ROOT)opencv/
+SRSRAN_ROOT=$(DASH_ROOT)srsran/
