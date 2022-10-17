@@ -78,14 +78,20 @@ ADDSOURCE_GENERATE?=
 # and your generator (-g <generator_name>) needs to match this variable
 $(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE_GENERATE)
 	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
-$(SOURCE)_autoschedule_false_generated: $(SOURCE)_generated.exec
-	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp target=host auto_schedule=false
-$(SOURCE)_autoschedule_true_generated: $(SOURCE)_generated.exec
-	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $@ -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_mullapudi2016.so -s Mullapudi2016 target=host auto_schedule=true machine_params=32,16777216,40
+
+ifeq ($(HALIDE_AUTOSCHEDULE),1)
+$(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_true_generated.h $(SOURCE)_autoschedule_true_generated.halide_generated.cpp : $(SOURCE)_generated.exec
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_mullapudi2016.so -s Mullapudi2016 target=host auto_schedule=true machine_params=32,16777216,40
+endif
+$(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated.h $(SOURCE)_autoschedule_false_generated.halide_generated.cpp : $(SOURCE)_generated.exec
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_false_generated -e bitcode,h,cpp target=host auto_schedule=false
 
 # Halide needs to be built a special way
-ifeq ($(HALIDE),1)
-$(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
+ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
+$(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
+$(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
@@ -159,8 +165,11 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 
 # just builds the source code into elf form
 # Halide needs to be built a special way
-ifeq ($(HALIDE),1)
-$(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
+ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
+$(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
+$(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
@@ -170,9 +179,12 @@ endif
 run : $(SOURCE).elf
 	./$< $(RARGS)
 
-ifeq ($(HALIDE),1)
-$(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated $(ADDSOURCE)
+ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
+$(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
+else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
+$(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).elf_polly : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(POLLY_CLANG_FLAGS) $^ -o $@
