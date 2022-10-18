@@ -16,21 +16,22 @@
 using namespace Halide::Tools;
 
 int main(int argc, char **argv) {
-    if (argc < 3) {
-        printf("Usage: %s in out\n", argv[0]);
+    if (argc != 5) {
+        printf("Usage: %s alpha input_image output_image threads\n", argv[0]);
         return 1;
     }
-	if( argc == 4 )
-	{
-		int threads = atoi(argv[3]);
-		printf("Setting thread count to %d\n", threads);
-		halide_set_num_threads(threads);
-	}
+	float alpha = strtof(argv[1], NULL);
 
-    Halide::Runtime::Buffer<float> input = load_and_convert_image(argv[1]);
+	int threads = atoi(argv[4]);
+	printf("Setting thread count to %d\n", threads);
+	halide_set_num_threads(threads);
+
+    Halide::Runtime::Buffer<float> input = load_and_convert_image(argv[2]);
     Halide::Runtime::Buffer<float> output(input.width(), input.height(), input.channels());
 
-    double best_manual = __TIMINGLIB_benchmark( [&](){ iir_blur_autoschedule_false_generated(input, 0.5f, output); } );
+    double best_manual = __TIMINGLIB_benchmark( [&](){ iir_blur_autoschedule_false_generated(input, alpha, output); output.device_sync(); } );
+	// the autoschedule takes about twice as much time as the default halide schedule
+    //best_manual = __TIMINGLIB_benchmark( [&](){ iir_blur_autoschedule_true_generated(input, alpha, output); output.device_sync(); } );
 
 	/*
     double best_auto = benchmark([&]() {
@@ -40,7 +41,7 @@ int main(int argc, char **argv) {
     printf("Auto-scheduled time: %gs\n", best_auto);
 	*/
 
-    convert_and_save_image(output, argv[2]);
+    convert_and_save_image(output, argv[3]);
 
     printf("Success!\n");
     return 0;

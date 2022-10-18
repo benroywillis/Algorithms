@@ -6,7 +6,7 @@
 using namespace Halide;
 using namespace Halide::BoundaryConditions;
 
-Var x, y, c;
+Var x("x"), y("y"), c("c");
 
 // Defines a func to blur the columns of an input with a first order low
 // pass IIR filter, followed by a transpose.
