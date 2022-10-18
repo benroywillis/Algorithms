@@ -34,7 +34,7 @@ $(OPENCV_PATH)lib/opencv4/3rdparty/liblibpng.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/libzlib.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/libtbb.a
 
-ALPHA=0.9
+ALPHA=0.5
 INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
 OUTPUT_IMAGE=../../Data/Output/IIRBlur_OpenCV_sample_1920_1280.bmp
 NUM_THREADS?=1

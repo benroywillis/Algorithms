@@ -20,7 +20,10 @@ int main( int argc, char** argv )
 	Mat src = imread( argv[2] );
 	Mat dst;
 	float iirKernel[2][1] = { {1-alpha}, {alpha} };
-	Mat K(2, 1, CV_32FC1, &iirKernel);
+	Mat K(1, 2, CV_32FC1, &iirKernel);
+	auto anchor = Point(1, 0);
+	//float iirKernel[3][3] = { {0.11f, 0.11f, 0.11f}, {0.11f, 0.11f, 0.11f}, {0.11f, 0.11f, 0.11f} };
+	//Mat K(3, 3, CV_32FC1, &iirKernel);
 
 	// IIR filter takes the previous row and filters it with the current row, along the columns
 	// Algorithm:
@@ -30,10 +33,12 @@ int main( int argc, char** argv )
 	// 4. transpose again
 	// source, dest, output image depth (-1 means same as the input image), filter, filtered point position, pixel offset, border
 	__TIMINGLIB_benchmark( [&]() { 
-  	filter2D( src, dst, -1, K, Point(0,1), 0, BORDER_REPLICATE ); // border replicate -> aaa | abc | ccc
-  	transpose( dst, dst );
-  	filter2D( dst, dst, -1, K, Point(0,1), 0, BORDER_REPLICATE );
-  	transpose( dst, dst );
+		Mat blur0;
+  		filter2D( src, blur0, -1, K, anchor, 0, BORDER_REPLICATE ); // border replicate -> aaa | abc | ccc
+  		blur0 = blur0.t();
+		Mat blur1;
+  		filter2D( blur0, blur1, -1, K, anchor, 0, BORDER_REPLICATE );
+  		dst = blur1.t();
 	} );
 
 	imwrite(argv[3], dst);
