@@ -179,6 +179,9 @@ endif
 run : $(SOURCE).elf
 	./$< $(RARGS)
 
+gdb : $(SOURCE).elf
+	gdb --args $< $(RARGS)
+
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
