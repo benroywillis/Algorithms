@@ -85,7 +85,7 @@ struct Pixel* readImage(char* file)
 	struct Pixel* in = (struct Pixel*)malloc( image_width*image_height*sizeof(struct Pixel) );
 	//output = (PRECISION*)malloc( width*height*sizeof(PRECISION) );
 	// 3. read image data
-	// it is all encoded in 3-word rgb data
+	// it is all encoded in 3-byte rgb data
 	fseek(f, (long)offset+1, SEEK_SET);
 	uint8_t newPixel[3];
 	for( unsigned int i = 0; i < image_height; i++ )
@@ -93,16 +93,24 @@ struct Pixel* readImage(char* file)
 		for( unsigned int j = 0; j < image_width; j++ )
 		{
 			fread(&newPixel, sizeof(uint8_t), 3, f);
-			(in + i*image_height + j)->r = newPixel[0];
-			(in + i*image_height + j)->g = newPixel[1];
-			(in + i*image_height + j)->b = newPixel[2];
+			// this grouping below reads a clean image to about 3/4 of the columns, then skips to the next row
+			/*in[i*image_height + j].b = newPixel[0];
+			in[i*image_height + j].g = newPixel[1];
+			in[i*image_height + j].r = newPixel[2];*/
+			// this grouping creates a really random image
+			in[i*image_width+ j].b = newPixel[0];
+			in[i*image_width+ j].g = newPixel[1];
+			in[i*image_width+ j].r = newPixel[2];
 			if( bitsPerPixel > 24 ) 
 			{
+				printf("bitPerPixel is greater than 24!\n");
 				fread(&buffer[0], sizeof(uint8_t), (bitsPerPixel-24)/8, f);
 			}
 		}
 		// read "end-of-line" mark between each line
 		fread(&buffer, sizeof(uint8_t), image_width % 4, f);
+		// this line below seems to shift the rows downward
+		//fseek(f, image_width, SEEK_CUR);//&buffer, sizeof(uint8_t), image_height % 4, f);
 	}
 	fclose(f);
 	return in;
@@ -167,9 +175,9 @@ void writeImage(struct Pixel* out, char* file)
 	{
 		for( unsigned int j = 0; j < image_width; j++ )
 		{
-			newPixel.r = (out + i*image_height + j)->r;
-			newPixel.g = (out + i*image_height + j)->g;
-			newPixel.b = (out + i*image_height + j)->b;
+			newPixel.r = (out + i*image_width + j)->r;
+			newPixel.g = (out + i*image_width + j)->g;
+			newPixel.b = (out + i*image_width + j)->b;
 			fwrite(&newPixel.r, sizeof(uint8_t), 1, f);
 			fwrite(&newPixel.g, sizeof(uint8_t), 1, f);
 			fwrite(&newPixel.b, sizeof(uint8_t), 1, f);
