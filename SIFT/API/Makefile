@@ -34,10 +34,14 @@ $(OPENCV_PATH)lib/opencv4/3rdparty/liblibpng.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/libzlib.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/libtbb.a
 
+OCTAVES=3
+THRESHOLDS=4
+CUR_THR=10
+CON_THR=0.09
 INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
 OUTPUT_IMAGE=../../Data/Output/SIFT_OpenCV_sample_1920_1280.bmp
 NUM_THREADS?=1
-RARGS=$(INPUT_IMAGE) $(OUTPUT_IMAGE) $(NUM_THREADS)
+RARGS=$(OCTAVES) $(THRESHOLDS) $(CUR_THR) $(CON_THR) $(INPUT_IMAGE) $(OUTPUT_IMAGE) $(NUM_THREADS)
 
 POLLY_SHOW=
 
