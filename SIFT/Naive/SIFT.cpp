@@ -281,7 +281,7 @@ int main(int argc, char** argv)
 
 	// convert to floating point grayscale
 	int num_channels = 3;
-	float* in = (float*)malloc(image_height*image_width*num_channels*sizeof(float));
+	float* in = (float*)aligned_alloc(32, image_height*image_width*num_channels*sizeof(float));
 	for( unsigned y = 0; y < image_height; y++ )
 	{
 		for( unsigned x = 0; x < image_width; x++ )
@@ -304,7 +304,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	uint8_t* out = (uint8_t*)malloc(image_height*image_width*sizeof(uint8_t));
+	uint8_t* out = (uint8_t*)aligned_alloc(32, image_height*image_width*sizeof(uint8_t));
 	__TIMINGLIB_benchmark( [&]() { sift(in, out, image_width, image_height, octaves, intervals, curve_thr, contr_thr); } );
 
 	// output pixels are either 1 or 0, so multiply everything by 255 to highlight the 1 pixels
@@ -315,10 +315,18 @@ int main(int argc, char** argv)
 			output[y*image_width + x].r = out[y*image_width + x]*255;
 			output[y*image_width + x].g = out[y*image_width + x]*255;
 			output[y*image_width + x].b = out[y*image_width + x]*255;
+			/*if( out[y*image_width + x] )
+			{
+				printf("Non-zero pixel at %d,%d\n", y, x);
+			}*/
 		}
 	}
 
 	writeImage(output, argv[6]);
 
+	free(input);
+	free(output);
+	free(in);
+	free(out);
 	return 0;
 }
