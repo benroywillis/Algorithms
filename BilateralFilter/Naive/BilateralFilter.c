@@ -93,11 +93,6 @@ struct Pixel* readImage(char* file)
 		for( unsigned int j = 0; j < image_width; j++ )
 		{
 			fread(&newPixel, sizeof(uint8_t), 3, f);
-			// this grouping below reads a clean image to about 3/4 of the columns, then skips to the next row
-			/*in[i*image_height + j].b = newPixel[0];
-			in[i*image_height + j].g = newPixel[1];
-			in[i*image_height + j].r = newPixel[2];*/
-			// this grouping creates a really random image
 			in[i*image_width+ j].b = newPixel[0];
 			in[i*image_width+ j].g = newPixel[1];
 			in[i*image_width+ j].r = newPixel[2];

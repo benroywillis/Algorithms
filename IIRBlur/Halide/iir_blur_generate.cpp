@@ -21,12 +21,10 @@ Func blur_cols_transpose(Func input, Expr height, Expr alpha, bool skip_schedule
     blur(x, 0, c) = input(x, 0, c);
     // Update 1: run the IIR filter down the columns.
     RDom ry(1, height - 1);
-    blur(x, ry, c) =
-        (1 - alpha) * blur(x, ry - 1, c) + alpha * input(x, ry, c);
+    blur(x, ry, c) = (1 - alpha) * blur(x, ry - 1, c) + alpha * input(x, ry, c);
     // Update 2: run the IIR blur up the columns.
     Expr flip_ry = height - ry - 1;
-    blur(x, flip_ry, c) =
-        (1 - alpha) * blur(x, flip_ry + 1, c) + alpha * blur(x, flip_ry, c);
+    blur(x, flip_ry, c) = (1 - alpha) * blur(x, flip_ry + 1, c) + alpha * blur(x, flip_ry, c);
 
     // Transpose the blur.
     Func transpose("transpose");
