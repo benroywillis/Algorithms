@@ -50,3 +50,5 @@ MemoryFootprints_*.csv
 *.nfs*
 # output filter files
 Data/Output/
+# don't care about vscode
+.vscode/
