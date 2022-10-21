@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	halide_set_num_threads(threads);
 
     Halide::Runtime::Buffer<float> input = load_and_convert_image(argv[5]);
-    Halide::Runtime::Buffer<float> output(input.width(), input.height(), input.channels());
+    Halide::Runtime::Buffer<uint8_t> output(input.width(), input.height());
 
     double best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_false_generated(input, cur_thr, con_thr, output); output.device_sync(); } );
 	// the autoschedule takes about twice as much time as the default halide schedule
