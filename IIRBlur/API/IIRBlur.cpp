@@ -20,7 +20,6 @@ int main( int argc, char** argv )
 	Mat src = imread( argv[2] );
 	Mat dst;
 	float iirKernel[2][1] = { {1-alpha}, {alpha} };
-	float iirKernel[2][1] = { {1-alpha}, {alpha} };
 	Mat K(1, 2, CV_32FC1, &iirKernel);
 	// anchor for going down columns
 	auto anchor_down = Point(1, 0);
