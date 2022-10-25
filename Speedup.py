@@ -187,10 +187,13 @@ def plotOpLevel_scatter(normalized, opLevel, args):
 	yticks = []
 	for type in normalized:
 		for thread in normalized[type][opLevel]:
-			if math.log2(normalized[type][opLevel][thread]) > ymax:
-				ymax = math.log2(normalized[type][opLevel][thread])
-			if math.log2(normalized[type][opLevel][thread]) < ymin:
-				ymin = math.log2(normalized[type][opLevel][thread])
+			try:
+				if math.log2(normalized[type][opLevel][thread]) > ymax:
+					ymax = math.log2(normalized[type][opLevel][thread])
+				if math.log2(normalized[type][opLevel][thread]) < ymin:
+					ymin = math.log2(normalized[type][opLevel][thread])
+			except Exception as e:
+				print("Could not find logarithm of number: "+str(normalized[type][opLevel][thread])+" - "+str(e))
 	for exp in range(math.floor(ymin), math.ceil(ymax)+1):
 		if (exp % 2) == 0:
 			plt.axhline(y=2**exp, color="black", linestyle="dashed")
