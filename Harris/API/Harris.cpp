@@ -30,20 +30,20 @@ int main( int argc, char** argv )
     	int apertureSize = 3;
     	double k = 0.04;
     	cornerHarris( src_gray, dst, blockSize, apertureSize, k );
-    	Mat dst_norm, dst_norm_scaled;
-    	normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
-    	convertScaleAbs( dst_norm, dst_norm_scaled );
-    	for( int i = 0; i < dst_norm.rows ; i++ )
-    	{
-        	for( int j = 0; j < dst_norm.cols; j++ )
-        	{
-            	if( (int) dst_norm.at<float>(i,j) > thresh )
-            	{
-                	circle( dst_norm_scaled, Point(j,i), 5,  Scalar(0), 2, 8, 0 );
-            	}
-        	}
-    	}
 	} );
+   	Mat dst_norm, dst_norm_scaled;
+   	normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
+   	convertScaleAbs( dst_norm, dst_norm_scaled );
+   	for( int i = 0; i < dst_norm.rows ; i++ )
+   	{
+       	for( int j = 0; j < dst_norm.cols; j++ )
+       	{
+           	if( (int) dst_norm.at<float>(i,j) > thresh )
+           	{
+               	circle( dst_norm_scaled, Point(j,i), 5,  Scalar(0), 2, 8, 0 );
+           	}
+       	}
+   	}
 
 	imwrite(argv[2], dst);
 	
