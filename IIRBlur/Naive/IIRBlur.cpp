@@ -4,9 +4,6 @@
 #include "BilateralFilter.h"
 #include "TimingLib.h"
 
-//#define IMAGE_HEIGHT 240
-//#define IMAGE_WIDTH  239
-
 void IIR_Blur_cols(struct Pixel* input, struct Pixel* output, float alpha, unsigned int num_rows, unsigned int num_cols)
 {
 	// set the first row of the output to the input
@@ -29,9 +26,6 @@ void IIR_Blur_cols(struct Pixel* input, struct Pixel* output, float alpha, unsig
 	{
 		for( int y = num_rows - 2; y >= 0; y-- )
 		{
-			//output[y*num_cols + x].r = (1-alpha)*input[(y+1)*num_cols + x].r + alpha*input[y*num_cols + x].r;
-			//output[y*num_cols + x].g = (1-alpha)*input[(y+1)*num_cols + x].g + alpha*input[y*num_cols + x].g;
-			//output[y*num_cols + x].b = (1-alpha)*input[(y+1)*num_cols + x].b + alpha*input[y*num_cols + x].b;
 			output[y*num_cols + x].r = (1-alpha)*output[(y+1)*num_cols + x].r + alpha*output[y*num_cols + x].r;
 			output[y*num_cols + x].g = (1-alpha)*output[(y+1)*num_cols + x].g + alpha*output[y*num_cols + x].g;
 			output[y*num_cols + x].b = (1-alpha)*output[(y+1)*num_cols + x].b + alpha*output[y*num_cols + x].b;
@@ -61,9 +55,6 @@ void IIR_Blur_rows(struct Pixel* input, struct Pixel* output, float alpha, unsig
 	{
 		for( int x = num_cols-2; x >= 0; x-- )
 		{
-			//output[y*num_cols + x].r = (1-alpha)*input[y*num_cols + (x+1)].r + alpha*input[y*num_cols + x].r;
-			//output[y*num_cols + x].g = (1-alpha)*input[y*num_cols + (x+1)].g + alpha*input[y*num_cols + x].g;
-			//output[y*num_cols + x].b = (1-alpha)*input[y*num_cols + (x+1)].b + alpha*input[y*num_cols + x].b;
 			output[y*num_cols + x].r = (1-alpha)*output[y*num_cols + (x+1)].r + alpha*output[y*num_cols + x].r;
 			output[y*num_cols + x].g = (1-alpha)*output[y*num_cols + (x+1)].g + alpha*output[y*num_cols + x].g;
 			output[y*num_cols + x].b = (1-alpha)*output[y*num_cols + (x+1)].b + alpha*output[y*num_cols + x].b;
@@ -89,8 +80,6 @@ int main(int argc, char** argv)
 	}
 	float alpha = strtof(argv[1], NULL);
 	struct Pixel* input  = readImage(argv[2]);
-	//image_width  = IMAGE_WIDTH;
-	//image_height = IMAGE_HEIGHT;
 	struct Pixel* output = (struct Pixel*)calloc(image_width*image_height, sizeof(struct Pixel));
 	printf("Image size: %d x %d\n", image_height, image_width);
 
