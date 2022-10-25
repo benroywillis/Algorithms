@@ -8,7 +8,8 @@
 *.exec
 Loopfile*
 BlockInfo*
-kernel*
+kernel_*
+*instances*.json
 Instance_*
 SourceMap_*
 *.dot
@@ -46,6 +47,7 @@ MemoryFootprints_*.csv
 *Speedup.eps
 *Speedup.png
 *Speedup.log
+*Speedup_*
 # nfs temporaries
 *.nfs*
 # output filter files
