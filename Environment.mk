@@ -2,6 +2,7 @@ ALGORITHMS_DIR=/home/bwilli46/Algorithms/
 
 LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM9/release/
 #LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM12/release/
+#LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM14/release/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build/
 #TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build_relwithdebinfo/
 TRACEATLAS_ROOT=/mnt/heorot-10/bwilli46/Installs/TraceAtlas/relwithdebinfo/
