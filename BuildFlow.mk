@@ -69,7 +69,7 @@ POLLY_OPTFLAGS2.1=-polly-process-unprofitable
 # Highlight detected scops in the CFG of the program
 POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
 
-all: memory_$(SOURCE).dot
+all: instances_$(SOURCE).json
 
 ADDSOURCE_GENERATE?=
 # Halide generator rules
@@ -114,11 +114,11 @@ $(SOURCE).memory.native : $(SOURCE).memory.bc
 $(SOURCE).bin : $(SOURCE).markov.native
 	$(SO_PATH) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
-kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json: $(SOURCE).bin
+kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json : $(SOURCE).bin
 	$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
-memory_$(SOURCE).dot : $(SOURCE).memory.native kernel_$(SOURCE).json
-	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
+instances_$(SOURCE).json TaskGraph_$(SOURCE).dot Memory_$(SOURCE).dot MemoryFootprints_$(SOURCE).csv : $(SOURCE).memory.native kernel_$(SOURCE).json
+	$(SO_PATH) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
