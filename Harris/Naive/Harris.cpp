@@ -1,3 +1,4 @@
+// code powering the backend processing algorithms taken from https://github.com/bnosac/image
 
 #include "harris.h"
 
