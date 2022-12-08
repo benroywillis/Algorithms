@@ -13,6 +13,7 @@ kernel_*
 Instance_*
 SourceMap_*
 *.dot
+*.dot_taskonly
 *.gcda
 *.gcno
 *.gcov
