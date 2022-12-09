@@ -180,13 +180,8 @@ public:
 
         DECL_FUNC(interp_contr);
         interp_contr(o, i, x, y) = interp_xx(o, i, x, y) * dx(o, i, x, y) + interp_xy(o, i, x, y) * dy(o, i, x, y) + interp_xs(o, i, x, y) * ds(o, i, x, y);
-		RDom over(0, octaves, 1, intervals+1);
-		out(x, y) = Halide::cast<uint8_t>(0);
-		out(x, y) = Halide::cast<uint8_t>(interp_contr(over.x, over.y, x, y));
 
-		// the key function is problematic
-		// it either makes the algorithm take no time at all or take too long (in order they are defined, uncomment to see each case)
-        /*DECL_FUNC(key);
+        DECL_FUNC(key);
         key(o, i, x, y) = Halide::cast<bool>(is_extremum(o, i, x, y)) &&
           				  (pc_det(o, i, x, y) > 0.0f) &&
                        	  ( (pc_tr(o, i, x, y) * pc_tr(o, i, x, y) / pc_det(o, i, x, y)) < 
@@ -195,25 +190,16 @@ public:
                       	  (dx(o, i, x, y) < 1.0f) &&
                       	  (dy(o, i, x, y) < 1.0f) &&
                       	  (ds(o, i, x, y) < 1.0f); 
-        key(o, i, x, y) = is_extremum(o, i, x, y) +
-          				  (pc_det(o, i, x, y) > 0.0f) +
-                       	  ( (pc_tr(o, i, x, y) * pc_tr(o, i, x, y) / pc_det(o, i, x, y)) < 
-						    (( curv_thr + 1.0f )*( curv_thr + 1.0f ) / curv_thr) ) +
-                      	  (abs(interp_contr(o, i, x, y)) > (contr_thr / intervals)) +
-                      	  (dx(o, i, x, y) < 1.0f) +
-                      	  (dy(o, i, x, y) < 1.0f) +
-                      	  (ds(o, i, x, y) < 1.0f);
-
-
+		
         // combine the results across octaves and intervals
 		RDom over(0, octaves, 1, intervals+1);
 		DECL_FUNC(expr_comb);
 		expr_comb(x, y) = Halide::cast<bool>(0);
-        expr_comb(x, y) = select( x % (1 << over.x) == 0 && y % (1 << over.x) == 0, (key(over.x, over.y, x / (1 << over.x), y / (1 << over.x)) || expr_comb(x, y)), expr_comb(x, y));
+        expr_comb(x, y) = select( ((x % (1 << over.x)) == 0) && ((y % (1 << over.x)) == 0), (key(over.x, over.y, x / (1 << over.x), y / (1 << over.x)) || expr_comb(x, y)), expr_comb(x, y));
 
         Func comb_ext;
         comb_ext(x,y) = 255 * cast<uint8_t>(expr_comb(x, y));
-        out(x, y) = comb_ext(x, y);*/
+        out(x, y) = comb_ext(x, y);
 
 		// Schedule
 		// gaussian schedule allows halide to stop inlining this expensive calculation everywhere
@@ -244,6 +230,9 @@ public:
 		interp_xy.compute_root().parallel(y).vectorize(x, 4);
 		interp_xs.compute_root().parallel(y).vectorize(x, 4);
 		interp_contr.compute_root().parallel(y).vectorize(x, 4);
+		key.compute_root().parallel(y).vectorize(x, 4);
+		comb_ext.compute_root().parallel(y).vectorize(x, 4);
+		//expr_comb.compute_root();
 
     }
 };
