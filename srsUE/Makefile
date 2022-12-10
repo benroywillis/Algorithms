@@ -4,7 +4,7 @@ OPFLAG?=-O0
 
 ifeq ($(OPFLAG), -O0)
 	SRSRAN_PATH=$(DASH_ROOT)../debug/srsran/
-	BOOTH_PATH =$(DASH_ROOT)../debug/boost/
+	BOOST_PATH =$(DASH_ROOT)../debug/boost/
 	FFTW_PATH  =$(DASH_ROOT)../debug/fftw/
 	SCTP_PATH  =$(DASH_ROOT)../debug/lksctp/
 	CONFIG_PATH=$(DASH_ROOT)../debug/libconfig/
@@ -41,10 +41,10 @@ $(SRSRAN_PATH)lib/libsrsran_phy.a\
 $(SRSRAN_PATH)lib/libsrsran_radio.a\
 $(SRSRAN_PATH)lib/libsrsran_rlc.a\
 $(SRSRAN_PATH)lib/libsrsran_upper.a\
-$(SRSRAN_PATH)lib/work/libsrsran_common.a\
+$(SRSRAN_PATH)lib/libsrsran_common.a\
 $(SRSRAN_PATH)lib/libsupport.a\
 $(SRSRAN_PATH)lib/libsystem.a\
-$(BOOTH_PATH)lib/libboost_program_options.a\
+$(BOOST_PATH)lib/libboost_program_options.a\
 $(FFTW_PATH)lib/libfftw3f.a\
 $(SCTP_PATH)lib/libsctp.a\
 $(CONFIG_PATH)lib/libconfig.a\
