@@ -10,6 +10,7 @@
 #include <float.h>
 #include "BilateralFilter.h"
 #include "TimingLib.h"
+#include <iostream>
 
 inline static int clamp(int x, int low, int high)
 {
@@ -251,7 +252,12 @@ sift (float const * __restrict__ _input,
                         dy < 1.0f &&
                         ds < 1.0f;
 
-              if (ok) OUTPUT(x << o, y << o) = 1;
+              if (ok) 
+			  {
+				//OUTPUT(x << o, y << o) = 1;
+				OUTPUT(x, y) = 1;
+			    //std::cout << "Pixel " << x << "," << y << " is an interest point" << std::endl;
+			  }
             }
       }
 
@@ -279,35 +285,38 @@ int main(int argc, char** argv)
 	struct Pixel* output = (struct Pixel*)calloc(image_width*image_height, sizeof(struct Pixel));
 	printf("Image size: %d x %d\n", image_height, image_width);
 
-	// convert to floating point grayscale
 	int num_channels = 3;
 	float* in = (float*)aligned_alloc(32, image_height*image_width*num_channels*sizeof(float));
-	for( unsigned y = 0; y < image_height; y++ )
-	{
-		for( unsigned x = 0; x < image_width; x++ )
+	uint8_t* out = (uint8_t*)aligned_alloc(32, image_height*image_width*sizeof(uint8_t));
+	__TIMINGLIB_benchmark( [&]() { 
+		// convert to floating point grayscale
+		for( unsigned y = 0; y < image_height; y++ )
 		{
-			for( unsigned c = 0; c < num_channels; c++ )
+			for( unsigned x = 0; x < image_width; x++ )
 			{
-				if( c == 0 )
+				for( unsigned c = 0; c < num_channels; c++ )
 				{
-					in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].r;
+					if( c == 0 )
+					{
+						in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].r;
+					}
+					else if( c == 1 )
+					{
+						in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].g;
+					}
+					else
+					{
+						in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].b;
+					} 
 				}
-				else if( c == 1 )
-				{
-					in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].g;
-				}
-				else
-				{
-					in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].b;
-				} 
 			}
 		}
-	}
 
-	uint8_t* out = (uint8_t*)aligned_alloc(32, image_height*image_width*sizeof(uint8_t));
-	__TIMINGLIB_benchmark( [&]() { sift(in, out, image_width, image_height, octaves, intervals, curve_thr, contr_thr); } );
+		sift(in, out, image_width, image_height, octaves, intervals, curve_thr, contr_thr); 
+	} );
 
 	// output pixels are either 1 or 0, so multiply everything by 255 to highlight the 1 pixels
+	unsigned keypoints = 0;
 	for( unsigned y = 0; y < image_height; y++ )
 	{
 		for( unsigned x = 0; x < image_width; x++ )
@@ -315,12 +324,14 @@ int main(int argc, char** argv)
 			output[y*image_width + x].r = out[y*image_width + x]*255;
 			output[y*image_width + x].g = out[y*image_width + x]*255;
 			output[y*image_width + x].b = out[y*image_width + x]*255;
-			/*if( out[y*image_width + x] )
+			if( out[y*image_width + x] )
 			{
-				printf("Non-zero pixel at %d,%d\n", y, x);
-			}*/
+				keypoints++;
+				//printf("Non-zero pixel at %d,%d\n", y, x);
+			}
 		}
 	}
+	printf("Found %d keypoints\n", keypoints);
 
 	writeImage(output, argv[6]);
 
