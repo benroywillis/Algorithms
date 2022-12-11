@@ -22,15 +22,16 @@ int main( int argc, char** argv )
 	float contrast_threshold = strtof(argv[4], NULL);
 	Mat src = imread( argv[5] );
 	Mat gray;
-	cv::cvtColor(src, gray, COLOR_BGR2GRAY);
 	Mat dst;
-
+	Ptr<SIFT> sift;
+	vector<KeyPoint> keys;
 	__TIMINGLIB_benchmark( [&]() { 
-		auto sift = SIFT::create( 0, octaves, contrast_threshold, curve_threshold);
-		auto keys = vector<KeyPoint>();
+		cv::cvtColor(src, gray, COLOR_BGR2GRAY);
+		sift = SIFT::create( 0, octaves, contrast_threshold, curve_threshold);
 		sift->detect(gray, keys);
-		drawKeypoints(gray, keys, dst);  
 	} );
+	cout << "Detected " << keys.size() << " interest points" << endl;
+	drawKeypoints(gray, keys, dst);  
 
 	imwrite(argv[6], dst);
 	
