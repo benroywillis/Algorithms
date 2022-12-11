@@ -13,11 +13,11 @@ D_LINKS=-ljpeg -lpng -lpthread
 
 SIGMA_S=1.0
 SIGMA_R=1.0
-INPUT_IMAGE=../Data/john.png
-OUTPUT_IMAGE=../Data/filteredjohn.png
+INPUT_IMAGE=../../Data/Input/john.png
+OUTPUT_IMAGE=../../Data/Output/Halide_BilateralFilter_john.png
 RARGS=$(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
-AUTOSCHEDULE=0
+HALIDE_AUTOSCHEDULE=0
 HALIDE=1
 
 POLLY_SHOW=

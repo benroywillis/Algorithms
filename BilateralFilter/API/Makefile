@@ -18,7 +18,8 @@ $(OPENCV_ROOT)lib/opencv4/3rdparty/libIlmImf.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibjpeg-turbo.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibopenjp2.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibpng.a\
-$(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a
+$(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a\
+$(OPENCV_ROOT)lib/opencv4/3rdparty/libtbb.a
 
 # for building the project with the old install of OpenCV
 #DASH_ROOT=/mnt/nobackup-09/Dash/Sources/
@@ -56,8 +57,8 @@ $(OPENCV_DIR)libittnotify.a\
 
 SIGMA_S=10.0
 SIGMA_R=10.0
-INPUT_IMAGE=../Data/john.bmp
-OUTPUT_IMAGE=../Data/filtered_john.bmp
+INPUT_IMAGE=../../Data/Input/john.bmp
+OUTPUT_IMAGE=../../Data/Output/OpenCV_BilateralFilter_john.bmp
 RARGS=$(SIGMA_S) $(SIGMA_R) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 POLLY_SHOW=
