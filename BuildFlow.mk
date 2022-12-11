@@ -1,25 +1,57 @@
 
-GCC=gcc
-GXX=g++
-GLD=ld
-
+## compiler variables
+# LLVM compiler is the default
 CC=$(LLVM_INSTALL)bin/clang
 CXX=$(LLVM_INSTALL)bin/clang++
 OPT=$(LLVM_INSTALL)bin/opt
 LLD=-fuse-ld=$(LLVM_INSTALL)bin/ld.lld
 LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
-#LDFLAGS?=-c -emit-llvm -g3 -O0
+#LDFLAGS?=-c -emit-llvm -g3 -O0 // these flags do not work if linking in static bitcode libraries
+# GNU compiler is used for GNU tools
+GCC=gcc
+GXX=g++
+GLD=ld
 
-SOURCE?=test
-SOURCE_PATH?=
-ADDSOURCE?=
-SUFFIX?=.c
-D_LINKS?=-lm
-DEBUG?=-g0
+## compile-time configuration flags
+# C and C++ flags
 CFLAGS?=
-INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/
+CXXFLAGS?=
+# optimization flag passed to CC/CXX. Defaults to maximum optimization possible.
+OPFLAG?=-O3
+# debug flag passed to CC/CXX. Defaults to no debug symbols at all
+DEBUG?=-g0
+
+## Source file configuration variables
+# name of the source file with main in it
+SOURCE?=test
+# suffix of the file with main in it
+SUFFIX?=.c
+# extra path to find this file (relative path from the relative Makefile)
+SOURCE_PATH?=
+# extra sources to compile
+ADDSOURCE?=
+# extra sources for compiling Halide
+ADDSOURCE_GENERATE?=
+# static libraries for compilation phase
 LIBRARIES?=
+# dynamic links to use in the link phase
+D_LINKS?=-lm
+# path to any special dynamic libraries. This should only be a path and contain no white spaces anywhere. For multiple paths, separate with a colon ex. D_LINKS_PATH=/path/to/first/:/path/to/second/
+D_LINKS_PATH?=
+# include paths for compilation phase. The timinglib header is automatically appended to save redundant stuff in Makefiles
+INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/
+
+## Runtime variables
+# environment variables to set before running a binary. LD_LIBRARY_PATH cannot be in this variable
+BIN_VARS?=
+# this concatenates all dynamic library paths into LD_LIBRARY_PATH
+D_PATH=LD_LIBRARY_PATH="$(SO_PATH):$(D_LINKS_PATH)"
+# concatenates all environment variables for running a binary together into a single string
+BIN_ENV=$(BIN_VARS) $(D_PATH)
+# runtime args to pass to the binary
 RARGS?=
+
+# sets the compiler based on the suffix of the main() source file
 ifeq ($(SUFFIX),.c)
 	C=$(CC)
 	GC=$(GCC)
@@ -35,13 +67,11 @@ TIMINGLIB_SAMPLES?=1
 TIMINGLIB_ITERATIONS?=1
 CFLAGS += -DTIMINGLIB_SAMPLES=$(TIMINGLIB_SAMPLES) -DTIMINGLIB_ITERATIONS=$(TIMINGLIB_ITERATIONS)
 
-# polly flags
+## LLVM-Polly flags
 # possibly helpful link: https://groups.google.com/g/polly-dev/c/k5s4dRiZ8rc?pli=1
-OPFLAG?=-O3
 # polly pass flags
 #POLLY_OPT_FLAGS+=-polly-simplify -polly-optree -polly-delicm -polly-simplify -polly-prune-unprofitable -polly-use-llvm-names -polly-export-jscop -polly-process-unprofitable
 POLLY_OPT_FLAGS+=-polly-simplify -polly-optree -polly-delicm -polly-simplify -polly-prune-unprofitable -polly-opt-isl -polly-codegen
-
 # turn polly on in compilation pass
 POLLY_C_FLAGS+=-mllvm -polly
 # have polly output a bunch of dots that it then attempts to open with libreoffice
@@ -58,24 +88,24 @@ POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_T
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
 # contains all flags that will be passed to clang for polly optimization
 POLLY_CLANG_FLAGS = -mllvm -polly $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL) $(POLLY_SHOW)
-
 ## breakdown polly transformation steps
 # transforms the input program to a canonical form polly can understand
 POLLY_OPTFLAGS1=-S -polly-canonicalize
 # print detected scops
 POLLY_OPTFLAGS2.0=-polly-use-llvm-names -polly-allow-nonaffine-loops -polly-allow-nonaffine-branches -basicaa -polly-scops -analyze
 POLLY_OPTFLAGS2.1=-polly-process-unprofitable 
-
 # Highlight detected scops in the CFG of the program
 POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
 
-all: instances_$(SOURCE).json
+## Rules
+# default rule runs the entire Cyclebyte pipeline, through the memory pass
+all : instances_$(SOURCE).json
 
-ADDSOURCE_GENERATE?=
 # Halide generator rules
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
 # and your generator (-g <generator_name>) needs to match this variable
+# See GEMM/Halide/ and its Makefile for an example
 $(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE_GENERATE)
 	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 
@@ -98,7 +128,7 @@ $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(LIBRARIES) $(CFLAGS) $^ -o $@
 endif
 
-# TraceAtlas pipeline rules
+# Cyclebyte pipeline rules
 $(SOURCE).markov.bc Loopfile_$(SOURCE).json: $(SOURCE).bc
 	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Markov $< -o $@
 
@@ -112,13 +142,13 @@ $(SOURCE).memory.native : $(SOURCE).memory.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
-	$(SO_PATH) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
+	$(BIN_ENV) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
 kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json : $(SOURCE).bin
-	$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
+	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
 instances_$(SOURCE).json TaskGraph_$(SOURCE).dot Memory_$(SOURCE).dot MemoryFootprints_$(SOURCE).csv : $(SOURCE).memory.native kernel_$(SOURCE).json
-	$(SO_PATH) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
+	$(BIN_ENV) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
@@ -163,7 +193,7 @@ $(SOURCE).canonical.bc : $(SOURCE).bc
 $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
 
-# just builds the source code into elf form
+# builds the source code into elf form, no instrumentation
 # Halide needs to be built a special way
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
@@ -177,7 +207,7 @@ $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
 endif
 
 run : $(SOURCE).elf
-	./$< $(RARGS)
+	$(BIN_ENV) ./$< $(RARGS)
 
 gdb : $(SOURCE).elf
 	gdb --args $< $(RARGS)
@@ -199,7 +229,7 @@ endif
 #	$(C) $(LLD) $(D_LINKS) $(OPFLAG) $(DEBUG) $(POLLY_C_FLAGS) $< -o $(SOURCE).elf_polly
 
 run_polly : $(SOURCE).elf_polly
-	./$< $(RARGS)
+	$(BIN_ENV) ./$< $(RARGS)
 
 gprof_$(SOURCE).elf : $(SOURCE)$(SUFFIX)
 	$(GC) $(INCLUDE) $(OPFLAG) $(DEBUG) -c -pg -Wno-unused-result  $< -o gprof_$(SOURCE).obj
@@ -249,9 +279,9 @@ clean_oprofile:
 #	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 #Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
-#	$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
+#	LD_LIBRARY_PATH=$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
 
 #lastwriter_$(SOURCE).dot : $(SOURCE).lastwriter.native Instance_$(SOURCE).json
-#	$(SO_PATH) INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
+#	LD_LIBRARY_PATH=$(SO_PATH) INSTANCE_FILE=Instance_$(SOURCE).json ./$< $(RARGS)
 
 
