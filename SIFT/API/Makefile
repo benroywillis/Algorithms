@@ -34,8 +34,8 @@ $(OPENCV_PATH)lib/opencv4/3rdparty/liblibpng.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/libzlib.a\
 $(OPENCV_PATH)lib/opencv4/3rdparty/libtbb.a
 
-OCTAVES=3
-THRESHOLDS=4
+OCTAVES=4
+THRESHOLDS=5
 CUR_THR=10
 CON_THR=0.09
 INPUT_IMAGE=../../Data/Input/sample_1920_1280.bmp
