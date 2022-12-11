@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     Halide::Runtime::Buffer<float> input = load_and_convert_image(argv[5]);
     Halide::Runtime::Buffer<uint8_t> output(input.width(), input.height());
 
-    double best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_false_generated(input, cur_thr, con_thr, output); output.device_sync(); } );
+    double best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_false_generated(input, cur_thr, con_thr, output); } );
 	// the autoschedule takes about twice as much time as the default halide schedule
     //best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_true_generated(input, alpha, output); output.device_sync(); } );
 
@@ -44,6 +44,19 @@ int main(int argc, char **argv) {
     printf("Auto-scheduled time: %gs\n", best_auto);
 	*/
 
+	unsigned points = 0;
+	for( unsigned y = 0; y < input.height(); y++ )
+	{
+		for( unsigned x = 0; x < input.width(); x++ )
+		{
+			if( output(x, y) )
+			{
+				points++;
+			}
+		}
+	}
+	printf("Found %d keypoints\n", points);
+	
     convert_and_save_image(output, argv[6]);
 
     printf("Success!\n");

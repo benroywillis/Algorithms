@@ -57,7 +57,6 @@ public:
         sigma(i) = Halide::sqrt( Halide::pow( p(i), i - 1 )*p(i) * Halide::pow( p(i), i - 1 )*p(i) - Halide::pow( p(i), i - 1 ) * SIGMA * Halide::pow( p(i), i - 1 ) * SIGMA );
         gaussian(x, i) = Halide::exp( -(x/sigma(i))*(x/sigma(i))*0.5f );
 
-        //DECL_FUNC(radius)
         DECL_FUNC(normalized);
         DECL_FUNC(blurx);
         DECL_FUNC(blury);
@@ -195,7 +194,8 @@ public:
 		RDom over(0, octaves, 1, intervals+1);
 		DECL_FUNC(expr_comb);
 		expr_comb(x, y) = Halide::cast<bool>(0);
-        expr_comb(x, y) = select( ((x % (1 << over.x)) == 0) && ((y % (1 << over.x)) == 0), (key(over.x, over.y, x / (1 << over.x), y / (1 << over.x)) || expr_comb(x, y)), expr_comb(x, y));
+        //expr_comb(x, y) = select( ((x % (1 << over.x)) == 0) && ((y % (1 << over.x)) == 0), (key(over.x, over.y, x / (1 << over.x), y / (1 << over.x)) || expr_comb(x, y)), expr_comb(x, y));
+        expr_comb(x, y) = key(over.x, over.y, x, y);
 
         Func comb_ext;
         comb_ext(x,y) = 255 * cast<uint8_t>(expr_comb(x, y));
