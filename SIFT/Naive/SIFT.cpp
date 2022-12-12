@@ -69,8 +69,8 @@ sift (float const * __restrict__ _input,
   for(int o = 0; o < octaves; o++ )
     for(int i = 0; i < intervals + 3; i++ )
       {
-        const int W = width  >> o;
-        const int H = height >> o;
+        const int W = (width  >> o);
+        const int H = (height >> o);
 
         posix_memalign((void **) &gauss_pyr[o][i], 32, W * H * sizeof(float));
 
@@ -157,8 +157,8 @@ sift (float const * __restrict__ _input,
 
   for(int o = 0; o < octaves; o++ )
     for(int i = 0; i < intervals + 2; i++ ) {
-      const int W = width  >> o;
-      const int H = height >> o;
+      const int W = (width  >> o);
+      const int H = (height >> o);
 
       posix_memalign((void **) &dog_pyr[o][i], 32, W * H * sizeof(float));
 
@@ -171,8 +171,8 @@ sift (float const * __restrict__ _input,
   for(int o = 0; o < octaves; o++ )
     for(int i = 1; i <= intervals; i++ )
       {
-        const int W = width  >> o;
-        const int H = height >> o;
+        const int W = (width  >> o);
+        const int H = (height >> o);
 
         #pragma omp parallel for
         for(int y=0; y<H; y++)
@@ -245,18 +245,18 @@ sift (float const * __restrict__ _input,
               const float interp_contr = interp_x * dx + interp_y * dy + interp_s * ds;
 
               bool ok = is_extremum &&
-                        pc_det > 0.0f;
-                        (pc_tr * pc_tr / pc_det < ( curv_thr + 1.0f )*( curv_thr + 1.0f ) / curv_thr) &&
-                        fabs(interp_contr) > contr_thr / intervals &&
-                        dx < 1.0f &&
-                        dy < 1.0f &&
-                        ds < 1.0f;
+                        (pc_det > 0.0f) &&
+                        ((pc_tr * pc_tr / pc_det) < (( curv_thr + 1.0f )*( curv_thr + 1.0f ) / curv_thr)) &&
+                        (fabs(interp_contr) > contr_thr / intervals) &&
+                        (dx < 1.0f) &&
+                        (dy < 1.0f) &&
+                        (ds < 1.0f);
 
               if (ok) 
 			  {
-				//OUTPUT(x << o, y << o) = 1;
-				OUTPUT(x, y) = 1;
-			    //std::cout << "Pixel " << x << "," << y << " is an interest point" << std::endl;
+				OUTPUT((x << o), (y << o)) = 1;
+				//OUTPUT(x, y) = 1;
+			    std::cout << "Pixel " << y << "->" << (y << o) << "," << x << "->" << (x << o) << " is an interest point" << std::endl;
 			  }
             }
       }
@@ -298,15 +298,15 @@ int main(int argc, char** argv)
 				{
 					if( c == 0 )
 					{
-						in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].r;
+						in[y*image_width*num_channels + x*num_channels + c] = 0.299f*(float)input[y*image_width + x].r;
 					}
 					else if( c == 1 )
 					{
-						in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].g;
+						in[y*image_width*num_channels + x*num_channels + c] = 0.587f*(float)input[y*image_width + x].g;
 					}
 					else
 					{
-						in[y*image_width*num_channels + x*num_channels + c] = (float)input[y*image_width + x].b;
+						in[y*image_width*num_channels + x*num_channels + c] = 0.114f*(float)input[y*image_width + x].b;
 					} 
 				}
 			}
@@ -317,15 +317,26 @@ int main(int argc, char** argv)
 
 	// output pixels are either 1 or 0, so multiply everything by 255 to highlight the 1 pixels
 	unsigned keypoints = 0;
+	// create image as a dimmed background of the interest points
 	for( unsigned y = 0; y < image_height; y++ )
 	{
 		for( unsigned x = 0; x < image_width; x++ )
 		{
-			output[y*image_width + x].r = out[y*image_width + x]*255;
-			output[y*image_width + x].g = out[y*image_width + x]*255;
-			output[y*image_width + x].b = out[y*image_width + x]*255;
+			output[y*image_width + x].r = (input[y*image_width + x].r >> 1);
+			output[y*image_width + x].g = (input[y*image_width + x].g >> 1);
+			output[y*image_width + x].b = (input[y*image_width + x].b >> 1);
+		}
+	}
+	
+	for( unsigned y = 0; y < image_height; y++ )
+	{
+		for( unsigned x = 0; x < image_width; x++ )
+		{
 			if( out[y*image_width + x] )
 			{
+				output[y*image_width + x].r = out[y*image_width + x]*255;
+				output[y*image_width + x].g = out[y*image_width + x]*255;
+				output[y*image_width + x].b = out[y*image_width + x]*255;
 				keypoints++;
 				//printf("Non-zero pixel at %d,%d\n", y, x);
 			}
