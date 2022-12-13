@@ -256,7 +256,7 @@ sift (float const * __restrict__ _input,
 			  {
 				OUTPUT((x << o), (y << o)) = 1;
 				//OUTPUT(x, y) = 1;
-			    std::cout << "Pixel " << y << "->" << (y << o) << "," << x << "->" << (x << o) << " is an interest point" << std::endl;
+			    //std::cout << "Pixel " << y << "->" << (y << o) << "," << x << "->" << (x << o) << " is an interest point" << std::endl;
 			  }
             }
       }
