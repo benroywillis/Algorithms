@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "BilateralFilter.h"
@@ -22,6 +22,7 @@ void move(PRECISION* in, PRECISION* out, unsigned int height, unsigned int width
 			OUT(y, x) = IN(y, x);
 		}
 	}
+	memset(out, 0, height*width*sizeof(PRECISION));
 }
 
 void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int width)
@@ -43,9 +44,9 @@ void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int wid
 		{
 			// the target pixel is in the middle of the filter, therefore we go from -K/2,-L/2 to K/2,L/2
 			// for boundary conditions, we reflect the image -> cba | abcdef | fed
-			for( int k = -K/2; k < (K/2)+1; k++ )
+			for( int k = -K/2; k <= (K/2); k++ )
 			{
-				for( int l = -L/2; l < (L/2)+1; l++ )
+				for( int l = -L/2; l <= (L/2); l++ )
 				{
 					int row = abs(y + k);
 					int col = abs(x + l);
