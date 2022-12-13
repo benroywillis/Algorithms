@@ -37,8 +37,10 @@ int main( int argc, char** argv )
 
 	// source, dest, output image depth (-1 means same as the input image), filter, filtered point position, pixel offset, border
 	__TIMINGLIB_benchmark( [&]() { 
+		Mat gray;
+        cv::cvtColor(src, gray, COLOR_BGR2GRAY);
 		Mat blur0;
-  		filter2D( src, blur0, -1, K, filter_anchor, 0, BORDER_REPLICATE ); // border replicate -> aaa | abc | ccc
+  		filter2D( gray, blur0, -1, K, filter_anchor, 0, BORDER_REPLICATE ); // border replicate -> aaa | abc | ccc
 		Mat blur1;
   		filter2D( blur0, blur1, -1, K, filter_anchor, 0, BORDER_REPLICATE ); // border replicate -> aaa | abc | ccc
 		Mat blur2;
