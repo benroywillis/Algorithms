@@ -34,12 +34,7 @@ public:
 
         for (int s = 0; s < (int)stencils; s++) {
             Func f("stage_" + std::to_string(s));
-            Expr e = Halide::cast<uint8_t>(0);
-            /*for (int i = -2; i <= 2; i++) {
-                for (int j = -2; j <= 2; j++) {
-                    e += ((i + 3) * (j + 3)) * stages.back()(x + i, y + j);
-                }
-            }*/
+            Expr e = 0.0f;
             for (int i = -2; i <= 2; i++) {
                 for (int j = -2; j <= 2; j++) {
                     e += filter[i + 3][j + 3] * stages.back()(x + i, y + j);
@@ -49,7 +44,7 @@ public:
             stages.push_back(f);
         }
 
-        output(x, y) = Halide::cast<uint8_t>(stages.back()(x, y));
+        output(x, y) = Halide::cast<uint8_t>(255*stages.back()(x, y));
 
         /* ESTIMATES */
         // (This can be useful in conjunction with RunGen and benchmarks as well
