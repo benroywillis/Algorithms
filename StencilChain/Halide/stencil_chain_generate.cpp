@@ -39,7 +39,7 @@ public:
             Expr e = 0.0f;
             for (int i = -2; i <= 2; i++) {
                 for (int j = -2; j <= 2; j++) {
-                    e += filter[i + 3][j + 3] * stages.back()(x + i, y + j);
+                    e += filter[i + 2][j + 2] * stages.back()(x + i, y + j);
                 }
             }
             f(x, y) = e;
@@ -129,7 +129,7 @@ public:
             // floating-point ones. My CPU seems to hover at 3.5GHz on
             // this workload.
 
-            const int vec = natural_vector_size<uint8_t>();
+            const int vec = natural_vector_size<float>();
 
 			// added by Benjamin Willis Monday, December 12th, 2022
 			gray.compute_root().parallel(y);//.vectorize(x, vec);

@@ -37,7 +37,7 @@ void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int wid
 									 {4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f}, 
 									 {1.0f / 273.0f,  4.0f / 273.0f,  7.0f / 273.0f,  4.0f / 273.0f, 1.0f / 273.0f} 
 								   };
-
+//#pragma scop
 	for( int y = 0; y < height; y++ )
 	{
 		for( int x = 0; x < width; x++ )
@@ -48,13 +48,16 @@ void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int wid
 			{
 				for( int l = -L/2; l <= (L/2); l++ )
 				{
-					int row = abs(y + k);
-					int col = abs(x + l);
+					//int row = abs(y + k);
+					//int col = abs(x + l);
+					int row = y + k < 0 ? 0 : y + k;
+					int col = x + l < 0 ? 0 : x + l;
 					OUT(y, x) += IN(row, col) * filter[k + K/2][l + L/2];
 				}
 			}
 		}
 	}
+//#pragma endscop
 }
 
 int main(int argc, char** argv)
@@ -65,6 +68,8 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
     struct Pixel* input  = readImage(argv[1]);
+	image_height = 1280;
+	image_width  = 1920;
     struct Pixel* output = (struct Pixel*)calloc(image_width*image_height, sizeof(struct Pixel));
     printf("Image size: %d x %d\n", image_height, image_width);
 
