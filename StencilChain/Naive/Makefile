@@ -15,5 +15,5 @@ RARGS=$(INPUT_IMAGE) $(OUTPUT_IMAGE)
 D_LINKS=-lm
 INCLUDE=-I$(TRACEATLAS_ROOT)include/ -I../../BilateralFilter/Naive/
 
-POLLY_SHOW=
+POLLY_SHOW=-mllvm -polly-show-only
 include ../../BuildFlow.mk
