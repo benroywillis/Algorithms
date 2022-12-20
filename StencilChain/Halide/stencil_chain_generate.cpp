@@ -6,6 +6,8 @@
 
 namespace {
 
+#define STENCILS 5
+
 // 2D gaussian filter approximation with mu = 0 and sigma = 1.0
 const PRECISION filter[5][5] = {
                                  {1.0f / 273.0f,  4.0f / 273.0f,  7.0f / 273.0f,  4.0f / 273.0f, 1.0f / 273.0f},
@@ -18,7 +20,7 @@ const PRECISION filter[5][5] = {
 class StencilChain : public Halide::Generator<StencilChain> {
 public:
     //GeneratorParam<int> stencils{"stencils", 32, 1, 100};
-    GeneratorParam<int> stencils{"stencils", 5};
+    GeneratorParam<int> stencils{"stencils", STENCILS};
 
     Input<Buffer<float>> input{"input", 3};
     Output<Buffer<uint8_t>> output{"output", 2};
@@ -37,7 +39,7 @@ public:
             Expr e = 0.0f;
             for (int i = -2; i <= 2; i++) {
                 for (int j = -2; j <= 2; j++) {
-                    e += filter[i + 3][j + 3] * stages.back()(x + i, y + j);
+                    e += filter[i + 2][j + 2] * stages.back()(x + i, y + j);
                 }
             }
             f(x, y) = e;
@@ -127,13 +129,13 @@ public:
             // floating-point ones. My CPU seems to hover at 3.5GHz on
             // this workload.
 
-            const int vec = natural_vector_size<uint8_t>();
+            const int vec = natural_vector_size<float>();
 
 			// added by Benjamin Willis Monday, December 12th, 2022
 			gray.compute_root().parallel(y);//.vectorize(x, vec);
 
             // How many stencils in between each compute-root
-            const int group_size = 11;
+            const int group_size = STENCILS;
             Var yi, yo, xo, xi, t;
 
             const int last_stage_idx = (int)stages.size() - 1;
