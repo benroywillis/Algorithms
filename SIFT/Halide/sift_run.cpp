@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     Halide::Runtime::Buffer<float> input = load_and_convert_image(argv[5]);
     Halide::Runtime::Buffer<uint8_t> output(input.width(), input.height());
 
+    //double best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_false_generated(input, octaves, thresholds, cur_thr, con_thr, output); } );
     double best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_false_generated(input, cur_thr, con_thr, output); } );
 	// the autoschedule takes about twice as much time as the default halide schedule
     //best_manual = __TIMINGLIB_benchmark( [&](){ sift_autoschedule_true_generated(input, alpha, output); output.device_sync(); } );
