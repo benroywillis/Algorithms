@@ -52,8 +52,8 @@ public:
         // (This can be useful in conjunction with RunGen and benchmarks as well
         // as auto-schedule, so we do it in all cases.)
         {
-            const int width = 1536;
-            const int height = 2560;
+            const int width = 1280;
+            const int height = 1920;
             // Provide estimates on the input image
             input.set_estimates({{0, width}, {0, height}, {0, 3}});
             // Provide estimates on the pipeline output
@@ -144,8 +144,8 @@ public:
 
                 const int stages_to_output = last_stage_idx - j;
                 const int expansion = 4 * stages_to_output;
-                const int w = 1536 + expansion;
-                const int h = 2560 + expansion;
+                const int w = 1280 + expansion;
+                const int h = 1920 + expansion;
 
                 out.compute_root()
                     // Break into 16 tiles for our 16 threads
