@@ -39,12 +39,12 @@ public:
         DECL_FUNC(downx)
         DECL_FUNC(downy)
 
-        downx(x, y) = (gray(2*x-1, y) + 3.0f * (gray(2*x, y) + gray(2*x+1, y)) + gray(2*x+2, y)) / 8.0f;
-        downy(x, y) = (downx(x, 2*y-1) + 3.0f * (downx(x, 2*y) + downx(x, 2*y+1)) + downx(x, 2*y+2)) / 8.0f;
+        downx(x, y) = (gray(2*x-1, y) + 3.0f * (gray(2*x, y) + 3.0f * gray(2*x+1, y)) + gray(2*x+2, y)) / 8.0f;
+        downy(x, y) = (downx(x, 2*y-1) + 3.0f * (downx(x, 2*y) + 3.0f * downx(x, 2*y+1)) + downx(x, 2*y+2)) / 8.0f;
 
 		int vec_size = natural_vector_size<float>();
         downx.compute_at(downy, y).parallel(y).vectorize(x, vec_size);
-        //downy.compute_root().parallel(y).vectorize(x, vec_size);
+        downy.compute_root().parallel(y);
         return downy;
     }
 
@@ -71,7 +71,6 @@ public:
         //blurx.compute_at(blury, y).update().parallel(y).vectorize(x, vec_size);
         blurx.compute_root().update().parallel(y).vectorize(x, vec_size);
         blury.compute_root().update().parallel(y).vectorize(x, vec_size);
-
         return blury;
     }
 
@@ -131,7 +130,7 @@ public:
             }
         }
 
-        DECL_FUNC(comb);
+        /*DECL_FUNC(comb);
         comb(x, y) = Halide::cast<bool>(false);
         {
             for(int o = 0; o < octaves; o++ )
@@ -141,7 +140,7 @@ public:
                     comb(x, y) = select( ((x % (1 << o)) == 0) && ((y % (1 << o)) == 0), ( Halide::cast<bool>( (dog_pyr[o][i](x / (1 << o), y / (1 << o))) > 0.0f ) || Halide::cast<bool>(comb(x, y)) ), Halide::cast<bool>(comb(x, y)));
                 }
             }
-        }
+        }*/
 
         // part 2, max DoG and hessians
         Func key[octaves][intervals];
@@ -161,7 +160,6 @@ public:
                                 dog_pyr[o][i-1](x+r.x,y+r.y)));
 
                 DECL_FUNC(dog_max);
-                //dog_max(x,y) = maximum(dmax); /* can't set schedule */
                 dog_max(x,y) = -FLT_MAX;
                 dog_max(x,y) = max(dog_max(x,y), dmax);
 
@@ -248,32 +246,57 @@ public:
                 key[o][i-1](x,y) = is_valid;
 
 
+				// schedule
+				// task communication
+				// (clamped, downsample, blur) -> gauss_pyr
+				// gauss_pyr -> dog_pyr
+				// dog_pyr -> (dog_min, dog_max, dx, dy, ds, dxx, dyy, dss, dxy, dxs, dys)
+				// (dog_min, dog_max) -> is_extremum
+				// (dxx, dyy, dss, dxy, dxs, dys) -> hessian
+				// hessian -> (pc_det, pc_tr, invdet, inv)
+				// invdet  -> inv
+				// (inv, dx, dy, ds) -> interp
+				// (interp, dx, dy, ds) -> interp_contr
+				// (is_extremum, pc_det, pc_tr, interp_contr, dx, dy, dx) -> key[o][i]
+
+				// in general, computing and storing these kinds of whole-data-structure tasks is profitable
                 dog_min.compute_root().parallel(y).vectorize(x, vec_size);
                 dog_max.compute_root().parallel(y).vectorize(x, vec_size);
 
+				// hessian contains many expensive look ups and calculations
+				// it also has many consumers
+				// so storing and reading its result is profitable
                 hessian.compute_root().parallel(y).vectorize(x, vec_size);
-                pc_det.compute_root().parallel(y).vectorize(x, vec_size);
-                pc_tr.compute_root().parallel(y).vectorize(x, vec_size);
-                invdet.compute_root().parallel(y).vectorize(x, vec_size);
-                inv.compute_root().parallel(y).vectorize(x, vec_size);
-                interp.compute_root().parallel(y).vectorize(x, vec_size);
-                interp_contr.compute_root().parallel(y).vectorize(x, vec_size);
+               
+				// these operations are better served computing locally because
+				// 1. their computations are cheap
+				// 2. their inputs are common to their consumer (thus saving an access)
+				pc_det.compute_at(key[o][i-1], y).parallel(y).vectorize(x, vec_size);
+				pc_tr.compute_at(key[o][i-1], y).parallel(y).vectorize(x, vec_size);
+                
+				// these operations are serial pipe stages that have the same producer, so compute_at() everywhere
+				invdet.compute_at(inv, y).parallel(y).vectorize(x, vec_size);
+                inv.compute_at(interp, y).parallel(y).vectorize(x, vec_size);
+                interp.compute_at(interp_contr, y).parallel(y).vectorize(x, vec_size);
+                interp_contr.compute_at(key[o][i-1], y).parallel(y).vectorize(x, vec_size);
+
+				// final processing stage 
+            	key[o][i-1].compute_root().parallel(y).vectorize(x, vec_size);
             }
         }
-        gray.compute_root().parallel(y).vectorize(x, vec_size);
+        //gray.compute_root().parallel(y).vectorize(x, vec_size);
+        gray.compute_at(clamped, y).parallel(y).vectorize(x, vec_size);
+        //clamped.compute_root().parallel(y).vectorize(x, vec_size);
 
         for(int o = 0; o < octaves; o++ )
         {
             for(int i = 0; i < intervals + 2; i++ )
         	{
               gauss_pyr[o][i].compute_root().parallel(y).vectorize(x, vec_size);
+              //gauss_pyr[o][i].compute_at(dog_pyr[o][i], y).parallel(y).vectorize(x, vec_size);
               dog_pyr[o][i].compute_root().parallel(y).vectorize(x, vec_size);
         	}
       	}
-
-        for(int o = 0; o < octaves; o++ )
-          for(int i = 1; i <= intervals; i++ )
-            key[o][i-1].compute_root().parallel(y);// -- segfault... god knows why
 
       	DECL_FUNC(expr_comb);
         expr_comb(x, y) = Halide::cast<bool>(false);
