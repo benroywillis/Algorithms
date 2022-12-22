@@ -107,22 +107,17 @@ sift (float const * __restrict__ _input,
         }
         /* blur the current octave's last image to create the next one */
         else {
+          #define BLUR(x,y) blur[x + W * y]
           float * __restrict__ blur;
-
+          float sum = 0.0f;
+          const int radius = int(3*sig[i] + 1.0f);
+          float gaussian_mask[3 * radius + 1];
           posix_memalign((void **) &blur, 32, W * H * sizeof(float));
 
-          #define BLUR(x,y) blur[x + W * y]
-
-          float sum = 0.0f;
-
-          const int radius = int(3*sig[i] + 1.0f);
-
-          float gaussian_mask[2 * radius + 1];
-
-          for (int i=-radius; i<=radius; i++)
+          for (int i=-radius; i< 2*radius+1; i++)
             sum += gaussian_mask[i+radius] = exp(-(float(i)/sig[i])*(float(i)/sig[i])*0.5f);
 
-          for (int i=-radius; i<=radius; i++)
+          for (int i=-radius; i< 2*radius+1; i++)
             gaussian_mask[i+radius] /= sum;
 
           #pragma omp parallel for
@@ -130,7 +125,7 @@ sift (float const * __restrict__ _input,
             for(int x=0; x<W; x++) {
               float v = 0.0f;
 
-              for(int r=-radius; r <= radius; r++)
+              for(int r=-radius; r < 2*radius+1; r++)
                 v += gaussian_mask[r+radius] * GAUSS_PYR(o,i-1,clamp(x+r, 0, W-1),clamp(y+r, 0, H-1));
 
               BLUR(x,y) = v;
@@ -141,7 +136,7 @@ sift (float const * __restrict__ _input,
             for(int x=0; x<W; x++) {
               float v = 0.0f;
 
-              for(int r=-radius; r <= radius; r++)
+              for(int r=-radius; r < 2*radius+1; r++)
                 v += gaussian_mask[r+radius] * BLUR(clamp(x+r, 0, W-1),clamp(y+r, 0, H-1));
 
               GAUSS_PYR(o,i,x,y) = v;
@@ -210,8 +205,8 @@ sift (float const * __restrict__ _input,
               const float prelim_contr_thr = 0.5f * contr_thr / intervals;
 
               const bool is_extremum = ((fabs(vcc) > prelim_contr_thr) &&
-                                        ((vcc <= 0.0f && vcc == dmin) ||
-                                         (vcc >  0.0f && vcc == dmax)));
+                                        (( (vcc <= 0.0f) && (vcc == dmin)) ||
+                                         ( (vcc >  0.0f) && (vcc == dmax))));
 
               const float dxx = v[1][1][2] + v[1][1][0] - 2.0f * vcc;
               const float dyy = v[1][2][1] + v[1][0][1] - 2.0f * vcc;
