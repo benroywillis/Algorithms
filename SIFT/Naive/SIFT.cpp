@@ -93,14 +93,14 @@ sift (float const * __restrict__ _input,
           for(int y=0; y<2*H; y++)
             for(int x=0; x<W; x++)
               DOWN(x, y) = (GAUSS_PYR(o-1,i, max(2*x-1, 0), y) +
-                            3.0f * (GAUSS_PYR(o-1,i, 2*x, y) + GAUSS_PYR(o-1,i, min(2*x+1, 2*W-1), y)) +
+                            3.0f * (GAUSS_PYR(o-1,i, 2*x, y) + 3.0f * GAUSS_PYR(o-1,i, min(2*x+1, 2*W-1), y)) +
                             GAUSS_PYR(o-1,i, min(2*x+2, 2*W-1), y)) / 8.0f;
 
           #pragma omp parallel for
           for(int y=0; y<H; y++)
             for(int x=0; x<W; x++)
               GAUSS_PYR(o,i,x,y) = (DOWN(x, max(2*y-1, 0)) +
-                                    3.0f * (DOWN(x, 2*y) + DOWN(x, min(2*y+1, H-1))) +
+                                    3.0f * (DOWN(x, 2*y) + 3.0f * DOWN(x, min(2*y+1, H-1))) +
                                     DOWN(x, min(2*y+2, H-1))) / 8.0f;
 
           free(down);
