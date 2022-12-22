@@ -248,15 +248,17 @@ public:
 
 				// schedule
 				// task communication
-				// (clamped, downsample, blur) -> gauss_pyr
-				// gauss_pyr -> dog_pyr
-				// dog_pyr -> (dog_min, dog_max, dx, dy, ds, dxx, dyy, dss, dxy, dxs, dys)
-				// (dog_min, dog_max) -> is_extremum
-				// (dxx, dyy, dss, dxy, dxs, dys) -> hessian
-				// hessian -> (pc_det, pc_tr, invdet, inv)
-				// invdet  -> inv
-				// (inv, dx, dy, ds) -> interp
-				// (interp, dx, dy, ds) -> interp_contr
+				// clamped	 						-> downsample
+				// (clamped, downsample, blur) 		-> blur
+				// (clamped, downsample, blur) 		-> gauss_pyr
+				// gauss_pyr 						-> dog_pyr
+				// dog_pyr 							-> (dog_min, dog_max, dx, dy, ds, dxx, dyy, dss, dxy, dxs, dys)
+				// (dog_min, dog_max) 				-> is_extremum
+				// (dxx, dyy, dss, dxy, dxs, dys) 	-> hessian
+				// hessian 							-> (pc_det, pc_tr, invdet, inv)
+				// invdet  							-> inv
+				// (inv, dx, dy, ds) 				-> interp
+				// (interp, dx, dy, ds) 			-> interp_contr
 				// (is_extremum, pc_det, pc_tr, interp_contr, dx, dy, dx) -> key[o][i]
 
 				// in general, computing and storing these kinds of whole-data-structure tasks is profitable
