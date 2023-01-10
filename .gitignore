@@ -11,6 +11,7 @@ BlockInfo*
 kernel_*
 *instances*.json
 Instance_*
+KernelGrammar_*
 SourceMap_*
 *.dot
 *.dot_taskonly
