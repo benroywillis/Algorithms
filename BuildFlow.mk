@@ -150,6 +150,9 @@ kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_H
 instances_$(SOURCE).json TaskGraph_$(SOURCE).dot Memory_$(SOURCE).dot MemoryFootprints_$(SOURCE).csv : $(SOURCE).memory.native kernel_$(SOURCE).json
 	$(BIN_ENV) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
+KernelGrammar_$(SOURCE).json : instances_$(SOURCE).json
+	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -k $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
+
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
 
