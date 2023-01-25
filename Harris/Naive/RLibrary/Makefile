@@ -2,7 +2,7 @@ include ../../Environment.mk
 
 SOURCE=Harris
 SUFFIX=.cpp
-ADDSOURCE=../../BilateralFilter/Naive/BilateralFilter.c
+ADDSOURCE=gaussian.cpp gradient.cpp harris.cpp interpolation.cpp zoom.cpp ../../BilateralFilter/Naive/BilateralFilter.c
 INCLUDE=-I../../BilateralFilter/Naive/
 
 # runtime args
