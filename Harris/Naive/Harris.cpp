@@ -90,16 +90,19 @@ void cornerResponse(PRECISION* Ixx, PRECISION* Iyy, PRECISION* Ixy, vector<struc
 	// parameters for corner response and non-maximum suppression
 	PRECISION k = (PRECISION)0.04; // coefficient to regulate corner response function
 	PRECISION Th = (PRECISION)1; // threshold to determine corner responses that are too low
-	int radius  = 3; // corner window radius
+	int radius  = 5; // corner window radius
 
 	// array of corner responses
-	PRECISION R[height*width];
+	PRECISION* R = (PRECISION*)calloc(height*width, sizeof(PRECISION));
 	for( unsigned i = 0; i < height*width; i++ )
 	{
+		PRECISION xx = Ixx[i];
+		PRECISION yy = Iyy[i];
+		PRECISION xy = Ixy[i];
 		R[i] = (Ixx[i]*Ixy[i] - Iyy[i]*Iyy[i]) - k*(Ixx[i]+Ixy[i])*(Ixx[i]+Ixy[i]); // det(Ixx) - k*trace*trace
 	}
 
-    int skip[height*width];
+    int* skip = (int*)calloc(height*width, sizeof(int));
   
     // skip values under the threshold
     #ifdef _OPENMP
@@ -117,49 +120,48 @@ void cornerResponse(PRECISION* Ixx, PRECISION* Iyy, PRECISION* Ixy, vector<struc
     #ifdef _OPENMP
     #pragma omp parallel for
     #endif
-    for(int i=radius; i< height-radius; i++)
+    for(int i = radius; i < height-radius; i++)
     {
     	int j=radius;
-    
     	// avoid the downhill at the beginning
-    	while(j<width-radius && (skip[i*width+j] || R[i*width+j-1]>=R[i*width+j]))
+    	while( (j < width-radius) && (skip[i*width+j] || R[i*width+j-1] >= R[i*width+j]) )
 		{
       		j++;
 		}
       
-    	while(j<width-radius)
+    	while( j < width-radius )
     	{
       		// find the next peak 
-      		while(j<width-radius && (skip[i*width+j] || R[i*width+j+1]>=R[i*width+j]))
+      		while( (j < width-radius) && (skip[i*width + j] || R[i*width + j+1] >= R[i*width + j]) )
 			{
         		j++;
 			}
       
-      		if(j<width-radius)
+      		if( j < width-radius )
       		{
-        		int p1=j+2;
+        		int p1 = j+2;
         		// find a bigger value on the right
-        		while(p1<=j+radius && R[i*width+p1]<R[i*width+j]) 
+        		while( (p1 <= j+radius) && (R[i*width + p1] < R[i*width + j]) ) 
         		{
-          			skip[i*width+p1]=1;
+          			skip[i*width + p1] = 1;
           			p1++;
         		}
         		// if not found
-        		if(p1>j+radius)
+        		if( p1 > j+radius )
         		{  
-          			int p2=j-1;
+          			int p2 = j-1;
           			// find a bigger value on the left
-          			while(p2>=j-radius && R[i*width+p2]<=R[i*width+j])
+          			while( (p2 >= j-radius) && (R[i*width + p2] <= R[i*width + j]) )
 					{
             			p2--;
 					}
           			// if not found, check the 2D region
-          			if(p2<j-radius)
+          			if( p2 < j-radius )
           			{
             			int      k = i + radius; 
             			bool found = false;
             			// first check the bottom region (backwards)
-            			while(!found && k>i)
+            			while( !found && (k > i) )
             			{
               				int l = j + radius;
               				while(!found && l>=j-radius)
@@ -208,6 +210,9 @@ void cornerResponse(PRECISION* Ixx, PRECISION* Iyy, PRECISION* Ixy, vector<struc
   	// copy row corners to the output list
   	for(int i=0; i< height - 2*radius; i++)
    		corners.insert(corners.end(), corners_row[i].begin(), corners_row[i].end());
+
+	free(R);
+	free(skip);
 
 }
 
@@ -263,10 +268,38 @@ int main(int argc, char** argv)
 			output[y*image_width + x].b = input[y*image_width + x].b;
 		}
 	}
+	cout << "Detected " << corners.size() << " corners." << endl;
 	// draw corners
-	/*for( const auto& corner : corners )
+	for( const auto& corner : corners )
 	{
-	}*/
+		// draw a 3x3 box around each corner
+		int row = corner.y;
+		int col = corner.x;
+		output[(row-1)*image_width + col-1].r = 255;
+		output[(row-1)*image_width + col-1].g = 255;
+		output[(row-1)*image_width + col-1].b = 255;
+		output[(row-1)*image_width + col  ].r = 255;
+		output[(row-1)*image_width + col  ].g = 255;
+		output[(row-1)*image_width + col  ].b = 255;
+		output[(row-1)*image_width + col+1].r = 255;
+		output[(row-1)*image_width + col+1].g = 255;
+		output[(row-1)*image_width + col+1].b = 255;
+		output[row*image_width + col-1].r = 255;
+		output[row*image_width + col-1].g = 255;
+		output[row*image_width + col-1].b = 255;
+		output[row*image_width + col+1].r = 255;
+		output[row*image_width + col+1].g = 255;
+		output[row*image_width + col+1].b = 255;
+		output[(row+1)*image_width + col-1].r = 255;
+		output[(row+1)*image_width + col-1].g = 255;
+		output[(row+1)*image_width + col-1].b = 255;
+		output[(row+1)*image_width + col  ].r = 255;
+		output[(row+1)*image_width + col  ].g = 255;
+		output[(row+1)*image_width + col  ].b = 255;
+		output[(row+1)*image_width + col+1].r = 255;
+		output[(row+1)*image_width + col+1].g = 255;
+		output[(row+1)*image_width + col+1].b = 255;
+	}
 
 	writeImage(output, argv[2]);
 
