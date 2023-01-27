@@ -98,8 +98,8 @@ POLLY_OPTFLAGS2.1=-polly-process-unprofitable
 POLLY_OPTFLAGS3=-polly-use-llvm-names -basicaa#-view-scops # -disable-output
 
 ## Rules
-# default rule runs the entire Cyclebyte pipeline, through the memory pass
-all : instances_$(SOURCE).json
+# default rule runs the entire Cyclebyte pipeline, through the kernel grammar tool
+all : KernelGrammar_$(SOURCE).json
 
 # Halide generator rules
 # In order for this variable to work, your run files need to be named
@@ -129,7 +129,7 @@ $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 endif
 
 # Cyclebyte pipeline rules
-$(SOURCE).markov.bc Loopfile_$(SOURCE).json: $(SOURCE).bc
+$(SOURCE).markov.bc : $(SOURCE).bc
 	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Markov $< -o $@
 
 $(SOURCE).memory.bc : $(SOURCE).bc
@@ -144,14 +144,14 @@ $(SOURCE).memory.native : $(SOURCE).memory.bc
 $(SOURCE).bin : $(SOURCE).markov.native
 	$(BIN_ENV) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
-kernel_$(SOURCE).json kernel_$(SOURCE).json_HotCode.json kernel_$(SOURCE).json_HotLoop.json : $(SOURCE).bin
+kernel_$(SOURCE).json : $(SOURCE).bin
 	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
-instances_$(SOURCE).json TaskGraph_$(SOURCE).dot Memory_$(SOURCE).dot MemoryFootprints_$(SOURCE).csv : $(SOURCE).memory.native kernel_$(SOURCE).json
+instances_$(SOURCE).json : kernel_$(SOURCE).json
 	$(BIN_ENV) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 KernelGrammar_$(SOURCE).json : instances_$(SOURCE).json
-	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -k $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
+	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
