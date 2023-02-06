@@ -1,0 +1,7 @@
+project = libnvision-tests
+
+using version
+using test
+using config
+using install
+using dist
