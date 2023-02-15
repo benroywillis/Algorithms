@@ -51,6 +51,4 @@ int main(int argc, const char **argv)
     nvision::imsave(argv[2], src);
 
     return 0;
-
-    return 0;
 }
