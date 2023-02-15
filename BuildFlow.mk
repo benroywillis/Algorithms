@@ -37,7 +37,7 @@ LIBRARIES?=
 # dynamic links to use in the link phase
 D_LINKS?=-lm
 # path to any special dynamic libraries. This should only be a path and contain no white spaces anywhere. For multiple paths, separate with a colon ex. D_LINKS_PATH=/path/to/first/:/path/to/second/
-D_LINKS_PATH?=
+D_LINKS_PATH?=$(LLVM_INSTALL)lib/
 # include paths for compilation phase. The timinglib header is automatically appended to save redundant stuff in Makefiles
 INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/
 
@@ -83,7 +83,7 @@ POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-bran
 POLLY_VECTORIZE=-mllvm -polly-vectorizer=stripmine
 # turns on omp code generation and parallelization
 POLLY_THREADS?=1
-POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS)
+POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -fopenmp
 # contains all flags that will be passed to polly opt pass
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
 # contains all flags that will be passed to clang for polly optimization
@@ -107,7 +107,7 @@ all : KernelGrammar_$(SOURCE).json
 # and your generator (-g <generator_name>) needs to match this variable
 # See GEMM/Halide/ and its Makefile for an example
 $(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE_GENERATE)
-	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
+	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) $(CXXFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 
 ifeq ($(HALIDE_AUTOSCHEDULE),1)
 $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_true_generated.h $(SOURCE)_autoschedule_true_generated.halide_generated.cpp : $(SOURCE)_generated.exec
@@ -119,13 +119,13 @@ $(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated
 # Halide needs to be built a special way
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(LIBRARIES) $(CFLAGS) $^ -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@
 endif
 
 # Cyclebyte pipeline rules
@@ -147,14 +147,15 @@ $(SOURCE).bin : $(SOURCE).markov.native
 kernel_$(SOURCE).json : $(SOURCE).bin
 	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
-instances_$(SOURCE).json : kernel_$(SOURCE).json
+instances_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
 	$(BIN_ENV) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 KernelGrammar_$(SOURCE).json : instances_$(SOURCE).json
 	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
-	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k kernel_$(SOURCE).json -o $@
+	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k $< -o SourceMap_$(SOURCE)_kernel.json
+	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instances_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
@@ -171,7 +172,7 @@ ts_$(SOURCE)_run : ts_$(SOURCE).exec
 
 # tik with polly
 tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
-	$(C) $(LDFLAGS) $(OPFLAG) $(CFLAGS) $(POLLYFLAGS) -S $(LIBRARIES) $< -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(POLLYFLAGS) -S $(LIBRARIES) $< -o $@
 
 ts_polly_$(SOURCE).bc : tik_polly_$(SOURCE).bc $(SOURCE).bc
 	$(TRACEATLAS_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
@@ -200,13 +201,13 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 # Halide needs to be built a special way
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $^ -o $@ 
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@ 
 endif
 
 run : $(SOURCE).elf
@@ -217,13 +218,13 @@ gdb : $(SOURCE).elf
 
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).elf_polly : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(POLLY_CLANG_FLAGS) $^ -o $@
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $^ -o $@
 endif
 
 #$(SOURCE).bc_polly : $(SOURCE).bc
