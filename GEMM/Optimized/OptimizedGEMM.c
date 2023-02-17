@@ -4,9 +4,10 @@
 #include <math.h>
 #include <time.h>
 #include <x86intrin.h>
+#include <omp.h>
 
 #define PRECISION 	double
-#define SIZE 		256
+#define SIZE 		1024
 #define BLOCKSIZE 	32
 #define UNROLL 		(4)
 
@@ -42,14 +43,15 @@ void do_block( int n, int si, int sj, int sk, PRECISION* A, PRECISION* B, PRECIS
 int main()
 {
 	// if we malloc our arrays the _mm256_load_pd() operations segfault
-	PRECISION* A = (PRECISION* )aligned_alloc( 32, SIZE*SIZE*sizeof(PRECISION) );
-	PRECISION* B = (PRECISION* )aligned_alloc( 32, SIZE*SIZE*sizeof(PRECISION) );
-	PRECISION* C = (PRECISION* )aligned_alloc( 32, SIZE*SIZE*sizeof(PRECISION) );
+	PRECISION* A = (PRECISION*)aligned_alloc( BLOCKSIZE, SIZE*SIZE*sizeof(PRECISION) );
+	PRECISION* B = (PRECISION*)aligned_alloc( BLOCKSIZE, SIZE*SIZE*sizeof(PRECISION) );
+	PRECISION* C = (PRECISION*)aligned_alloc( BLOCKSIZE, SIZE*SIZE*sizeof(PRECISION) );
 	//PRECISION A[SIZE][SIZE];
 	//PRECISION B[SIZE][SIZE];
 	//PRECISION C[SIZE][SIZE];
 	struct timespec start, end;
 	while( clock_gettime(CLOCK_MONOTONIC, &start) ) {}
+	#pragma omp parallel for
 	for( int i = 0; i < SIZE; i += BLOCKSIZE )
 	{
 		for( int j = 0; j < SIZE; j += BLOCKSIZE )
