@@ -153,6 +153,18 @@ instances_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
 KernelGrammar_$(SOURCE).json : instances_$(SOURCE).json
 	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
+# render the resulting DOT files with graphviz install
+KDFG_DOTS  = $(wildcard DFG_kernel*.dot)
+KDFG_NAMES = $(patsubst %.dot,%,$(KDFG_DOTS))
+KDFG_ENUM  = $(foreach d, $(KDFG_NAMES), $d.svg)
+define DOT_RENDER_RULE = 
+$(1).svg : 
+	$(DOT) -Tsvg -o $(1).svg $(1).dot
+endef
+dots :$(KDFG_ENUM) KernelGrammar_$(SOURCE).json
+$(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE, $d)) )
+
+# map tasks back to the source code with debug symbols
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k $< -o SourceMap_$(SOURCE)_kernel.json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instances_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
