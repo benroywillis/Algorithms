@@ -156,13 +156,13 @@ KernelGrammar_$(SOURCE).json : instances_$(SOURCE).json
 # render the resulting DOT files with graphviz install
 KDFG_DOTS  = $(wildcard DFG_kernel*.dot)
 KDFG_NAMES = $(patsubst %.dot,%,$(KDFG_DOTS))
-KDFG_ENUM  = $(foreach d, $(KDFG_NAMES), $d.svg)
+KDFG_ENUM  = $(foreach d,$(KDFG_NAMES),$d.svg)
 define DOT_RENDER_RULE = 
 $(1).svg : 
 	$(DOT) -Tsvg -o $(1).svg $(1).dot
 endef
 dots :$(KDFG_ENUM) KernelGrammar_$(SOURCE).json
-$(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE, $d)) )
+$(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE,$d)) )
 
 # map tasks back to the source code with debug symbols
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
