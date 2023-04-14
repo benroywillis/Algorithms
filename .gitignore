@@ -9,7 +9,7 @@
 Loopfile*
 BlockInfo*
 kernel_*
-*instances*.json
+*instance*.json
 Instance_*
 KernelGrammar_*
 SourceMap_*
