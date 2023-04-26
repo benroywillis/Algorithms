@@ -23,11 +23,15 @@ LIBRARIES=\
 $(LIBJPEG_PATH)lib/libjpeg.a\
 $(LIBPNG_PATH)lib/libpng.a
 
-# if you use the latter input for this application it has a bad alloc (likely caused by static array somewhere)
-INPUT_IMAGE=../../../Data/Input/CheckerBoard.bmp
+# used to generate results for the Cyclebyte publication
+#INPUT_IMAGE=../../../Data/Input/CheckerBoard.bmp
+#OUTPUT_IMAGE=../../../Data/Output/Harris_NVision_CheckerBoard.bmp
+# if you use this input for this application it has a bad alloc (likely caused by static array somewhere)
 #INPUT_IMAGE=../../../Data/Input/sample_1920_1280.bmp
-OUTPUT_IMAGE=../../../Data/Output/CheckerBoard.bmp
 #OUTPUT_IMAGE=../../../Data/Output/Harris_OpenCV_sample_1920_1280.bmp
+# used for testing (its small and therefore fast in debug mode)
+INPUT_IMAGE=../../../Data/Input/CheckerBoard_small.bmp
+OUTPUT_IMAGE=../../../Data/Output/Harris_NVision_CheckerBoard_small.bmp
 RARGS=$(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 POLLY_SHOW=
