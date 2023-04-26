@@ -42,13 +42,13 @@ int main(int argc, const char **argv)
     std::cout << "Detect features" << std::endl;
     detector(gray, keypoints);
 
-    std::cout << "Draw " << keypoints.cols() << " keypoints" << std::endl;
-    nvision::image::draw(src, keypoints, nvision::Marker::Circle, nvision::color::red<RGBf>());
+    //std::cout << "Draw " << keypoints.cols() << " keypoints" << std::endl;
+    //nvision::image::draw(src, keypoints, nvision::Marker::Circle, nvision::color::red<RGBf>());
 
     // Save the image to a file. The file type is determined by the extension
     // of the file.
-    std::cout << "Save " << argv[2] << std::endl;
-    nvision::imsave(argv[2], src);
+    //std::cout << "Save " << argv[2] << std::endl;
+    //nvision::imsave(argv[2], src);
 
     return 0;
 }
