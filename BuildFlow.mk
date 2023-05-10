@@ -147,10 +147,10 @@ $(SOURCE).bin : $(SOURCE).markov.native
 kernel_$(SOURCE).json : $(SOURCE).bin
 	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
-instances_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
-	$(BIN_ENV) INSTANCE_FILE=instances_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
+instance_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
+	$(BIN_ENV) INSTANCE_FILE=instance_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
-KernelGrammar_$(SOURCE).json : instances_$(SOURCE).json
+KernelGrammar_$(SOURCE).json : instance_$(SOURCE).json
 	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
 # render the resulting DOT files with graphviz install
@@ -167,7 +167,17 @@ $(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE,$d)) )
 # map tasks back to the source code with debug symbols
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k $< -o SourceMap_$(SOURCE)_kernel.json
-	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instances_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
+	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instance_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
+
+# Precision Analysis pass
+$(SOURCE).precision.bc : $(SOURCE).bc
+	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Precision $< -o $@
+
+$(SOURCE).precision.native : $(SOURCE).precision.bc
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+
+precision.json : $(SOURCE).precision.native instance_$(SOURCE).json
+	$(BIN_ENV) INSTANCE_FILE=instance_$(SOURCE).json ./$< $(RARGS)
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
@@ -270,9 +280,10 @@ operf : elf
 	sudo time -p operf ./$(SOURCE).elf
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
-ll : $(SOURCE).markov.bc $(SOURCE).memory.bc
+ll : $(SOURCE).markov.bc $(SOURCE).memory.bc $(SOURCE).precision.bc
 	llvm-dis-9 $(SOURCE).markov.bc
 	llvm-dis-9 $(SOURCE).memory.bc
+	llvm-dis-9 $(SOURCE).precision.bc
 
 .PHONY:
 
