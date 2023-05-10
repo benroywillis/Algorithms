@@ -1,5 +1,4 @@
 
-#include "Trace.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -10,39 +9,22 @@
 #define TRACING 0
 #endif
 
-#define SIZE 	512
+#define SIZE 	64
+//#define SIZE 	512
 //const int SIZE = 512;
 
 void GEMM(int (*in0)[SIZE], int (*in1)[SIZE], int (*out)[SIZE])
 {
-#if TRACING
-   TraceAtlasMarkovKernelEnter("MatrixMultiply,Outer");
-#endif
     for (int i = 0; i < SIZE; i++)
     {
-#if TRACING
-        TraceAtlasMarkovKernelEnter("MatrixMultiply,Inner");
-#endif
         for (int j = 0; j < SIZE; j++)
         {
-#if TRACING
-            TraceAtlasMarkovKernelEnter("MatrixMultiply,Mul");
-#endif
             for (int k = 0; k < SIZE; k++)
             {
                 out[i][j] += in0[i][k] * in1[k][j];
             }
-#if TRACING
-            TraceAtlasMarkovKernelExit("MatrixMultiply,Mul");
-#endif
         }
-#if TRACING
-        TraceAtlasMarkovKernelExit("MatrixMultiply,Inner");
-#endif
     }
-#if TRACING
-    TraceAtlasMarkovKernelExit("MatrixMultiply,Outer");
-#endif
 }
 
 int main()
