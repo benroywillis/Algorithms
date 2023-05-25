@@ -151,7 +151,7 @@ instance_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
 	$(BIN_ENV) INSTANCE_FILE=instance_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 KernelGrammar_$(SOURCE).json : instance_$(SOURCE).json
-	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelFunction -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
+	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelGrammar -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
 # render the resulting DOT files with graphviz install
 KDFG_DOTS  = $(wildcard DFG_kernel*.dot)
