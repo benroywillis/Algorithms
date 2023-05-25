@@ -35,6 +35,8 @@ nohup.out
 *.gv
 # memory footprint files from memory pass
 MemoryFootprints_*.csv
+# histograms from the precision pass
+hist*.csv
 # speedup experiments
 *_speedup.csv
 *_speedup.json
@@ -54,3 +56,5 @@ MemoryFootprints_*.csv
 *.nfs*
 # don't care about vscode
 .vscode/
+# don't track prior result folders
+priorResults/
