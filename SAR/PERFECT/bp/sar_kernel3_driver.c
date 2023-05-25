@@ -78,17 +78,17 @@
 #define ENABLE_CORRECTNESS_CHECKING
 
 #if INPUT_SIZE == INPUT_SIZE_SMALL
-    static const char *output_filename = "small_kernel3_output.bin";
-    static const char *golden_output_filename = "small_golden_kernel3_output.bin";
-    static const char *input_filename = "small_kernel3_input.bin";
+    static const char *output_filename = "Output/small_kernel3_output.bin";
+    static const char *golden_output_filename = "Output/small_golden_kernel3_output.bin";
+    static const char *input_filename = "Input/small_kernel3_input.bin";
 #elif INPUT_SIZE == INPUT_SIZE_MEDIUM
-    static const char *output_filename = "medium_kernel3_output.bin";
-    static const char *golden_output_filename = "medium_golden_kernel3_output.bin";
-    static const char *input_filename = "medium_kernel3_input.bin";
+    static const char *output_filename = "Output/medium_kernel3_output.bin";
+    static const char *golden_output_filename = "Output/medium_golden_kernel3_output.bin";
+    static const char *input_filename = "Input/medium_kernel3_input.bin";
 #elif INPUT_SIZE == INPUT_SIZE_LARGE
-    static const char *output_filename = "large_kernel3_output.bin";
-    static const char *golden_output_filename = "large_golden_kernel3_output.bin";
-    static const char *input_filename = "large_kernel3_input.bin";
+    static const char *output_filename = "Output/large_kernel3_output.bin";
+    static const char *golden_output_filename = "Output/large_golden_kernel3_output.bin";
+    static const char *input_filename = "Input/large_kernel3_input.bin";
 #else
     #error "Unhandled value for INPUT_SIZE"
 #endif
@@ -183,9 +183,9 @@ int main(int argc, char **argv)
 	{
 		for( int j = 0; j < BP_NPIX_X; j++)
 		{
-			printf("%.2f + j%.2f, ", data[i][j].re, data[i][j].im);
+			/*printf("%.2f + j%.2f, ", data[i][j].re, data[i][j].im);
 			printf("%.2f + j%.2f, ", image[i][j].re, image[i][j].im);
-			printf("%.2f + j%.2f\n", gold_image[i][j].re, gold_image[i][j].im);
+			printf("%.2f + j%.2f\n", gold_image[i][j].re, gold_image[i][j].im);*/
 		}
 	}
 

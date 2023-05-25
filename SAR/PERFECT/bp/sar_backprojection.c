@@ -102,7 +102,7 @@ void sar_backprojection(
                     xdiff*xdiff + ydiff*ydiff + zdiff*zdiff);
                 /* convert to a range bin index */
                 const double bin = (R-R0)*dR_inv;
-				printf("%g\n", ydiff);
+				//printf("%g\n", ydiff);
                 if (bin >= 0 && bin <= N_RANGE_UPSAMPLED-2)
                 {
                     complex sample, matched_filter, prod;
