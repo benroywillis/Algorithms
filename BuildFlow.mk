@@ -177,7 +177,7 @@ $(SOURCE).precision.native : $(SOURCE).precision.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
 
 precision.json : $(SOURCE).precision.native instance_$(SOURCE).json
-	$(BIN_ENV) INSTANCE_FILE=instance_$(SOURCE).json ./$< $(RARGS)
+	$(BIN_ENV) KERNEL_FILE=instance_$(SOURCE).json ./$< $(RARGS)
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
