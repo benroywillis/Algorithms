@@ -13,6 +13,7 @@ kernel_*
 Instance_*
 KernelGrammar_*
 SourceMap_*
+ExclusivityMap.json
 *.dot
 *.dot_taskonly
 *.gcda
@@ -58,3 +59,4 @@ hist*.csv
 .vscode/
 # don't track prior result folders
 priorResults/
+
