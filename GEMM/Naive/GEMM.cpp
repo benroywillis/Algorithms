@@ -9,11 +9,10 @@
 #define TRACING 0
 #endif
 
-#define SIZE 	64
-//#define SIZE 	512
-//const int SIZE = 512;
+#define PRECISION 	float
+#define SIZE 		64
 
-void GEMM(int (*in0)[SIZE], int (*in1)[SIZE], int (*out)[SIZE])
+void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE])
 {
     for (int i = 0; i < SIZE; i++)
     {
@@ -29,9 +28,9 @@ void GEMM(int (*in0)[SIZE], int (*in1)[SIZE], int (*out)[SIZE])
 
 int main()
 {
-    int(*in0)[SIZE] = (int (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
-    int(*in1)[SIZE] = (int (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
-    int(*out)[SIZE] = (int (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
+    PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
+    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
+    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
 
     for (int i = 0; i < SIZE; i++)
     {
