@@ -1,7 +1,7 @@
 include ../../Environment.mk
 
 PERFECT_LIB_PATH=../../lib/PERFECT/
-SOURCE=main
+SOURCE=HistEq
 SUFFIX=.c
 ADDSOURCE=histeq$(SUFFIX) $(PERFECT_LIB_PATH)xmem/xmalloc$(SUFFIX) $(PERFECT_LIB_PATH)timing/timer$(SUFFIX) $(PERFECT_LIB_PATH)octave/octave$(SUFFIX)
 CFLAGS=-DINPUT_SIZE=1 -DBATCH_SIZE=1
