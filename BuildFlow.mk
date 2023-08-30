@@ -130,28 +130,28 @@ endif
 
 # Cyclebyte pipeline rules
 $(SOURCE).markov.bc : $(SOURCE).bc
-	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Markov $< -o $@
+	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Markov $< -o $@
 
 $(SOURCE).memory.bc : $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Memory $< -o $@
+	$(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Memory $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).memory.native : $(SOURCE).memory.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
 
 $(SOURCE).bin : $(SOURCE).markov.native
 	$(BIN_ENV) BLOCK_FILE=BlockInfo_$(SOURCE).json MARKOV_FILE=$(SOURCE).bin ./$< $(RARGS)
 
 kernel_$(SOURCE).json : $(SOURCE).bin
-	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
+	LD_LIBRARY_PATH=$(SO_PATH) $(CYCLEBITE_ROOT)bin/newCartographer -i $< -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -d dot_$(SOURCE).dot -h -l Loopfile_$(SOURCE).json -o $@
 
 instance_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
 	$(BIN_ENV) INSTANCE_FILE=instance_$(SOURCE).json TASKGRAPH_FILE=TaskGraph_$(SOURCE).dot MEMORY_DOTFILE=Memory_$(SOURCE).dot CSV_FILE=MemoryFootprints_$(SOURCE).csv KERNEL_FILE=kernel_$(SOURCE).json ./$< $(RARGS)
 
 KernelGrammar_$(SOURCE).json : instance_$(SOURCE).json
-	LD_LIBRARY_PATH=$(SO_PATH) $(TRACEATLAS_ROOT)bin/KernelGrammar -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
+	LD_LIBRARY_PATH=$(SO_PATH) $(CYCLEBITE_ROOT)bin/KernelGrammar -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
 # render the resulting DOT files with graphviz install
 KDFG_DOTS  = $(wildcard DFG_kernel*.dot)
@@ -166,25 +166,25 @@ $(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE,$d)) )
 
 # map tasks back to the source code with debug symbols
 SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
-	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k $< -o SourceMap_$(SOURCE)_kernel.json
-	$(TRACEATLAS_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instance_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
+	$(CYCLEBITE_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k $< -o SourceMap_$(SOURCE)_kernel.json
+	$(CYCLEBITE_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instance_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
 
 # Precision Analysis pass
 $(SOURCE).precision.bc : $(SOURCE).bc
-	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Precision $< -o $@
+	$(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Precision $< -o $@
 
 $(SOURCE).precision.native : $(SOURCE).precision.bc
-	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
 
 precision.json : $(SOURCE).precision.native instance_$(SOURCE).json
 	$(BIN_ENV) KERNEL_FILE=instance_$(SOURCE).json ./$< $(RARGS)
 
 # regular tik
 tik_$(SOURCE).bc : kernel_$(SOURCE).json $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tik -S -j $^ -o $@
+	$(CYCLEBITE_ROOT)bin/tik -S -j $^ -o $@
 
 ts_$(SOURCE).bc : tik_$(SOURCE).bc $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
+	$(CYCLEBITE_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
 
 ts_$(SOURCE).exec : ts_$(SOURCE).bc tik_$(SOURCE).bc
 	$(CXX) $(OPFLAG) $^ -o $@
@@ -197,7 +197,7 @@ tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
 	$(C) $(LDFLAGS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(POLLYFLAGS) -S $(LIBRARIES) $< -o $@
 
 ts_polly_$(SOURCE).bc : tik_polly_$(SOURCE).bc $(SOURCE).bc
-	$(TRACEATLAS_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
+	$(CYCLEBITE_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
 
 ts_polly_$(SOURCE).exec : ts_polly_$(SOURCE).bc tik_polly_$(SOURCE).bc
 	$(CXX) $(OPFLAG) $^ -o $@
@@ -218,6 +218,10 @@ $(SOURCE).canonical.bc : $(SOURCE).bc
 
 $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
+
+# polygeist test rule
+cgeist : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(CGEIST) $^ -o $(SOURCE).cgeist
 
 # builds the source code into elf form, no instrumentation
 # Halide needs to be built a special way
@@ -295,16 +299,16 @@ clean_oprofile:
 
 # [BW] these passes are deprecated as of 7/01/22
 #$(SOURCE).instance.bc : $(SOURCE).bc
-#	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -Instance $< -o $@
+#	$(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Instance $< -o $@
 
 #$(SOURCE).lastwriter.bc : $(SOURCE).bc
-#	$(OPT) -load $(TRACEATLAS_ROOT)lib/AtlasPasses.so -LastWriter $< -o $@
+#	$(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -LastWriter $< -o $@
 
 #$(SOURCE).instance.native : $(SOURCE).instance.bc
-#	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+#	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
 
 #$(SOURCE).lastwriter.native : $(SOURCE).lastwriter.bc
-#	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(TRACEATLAS_ROOT)lib/libAtlasBackend.so $< -o $@
+#	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
 
 #Instance_$(SOURCE).json : $(SOURCE).instance.native kernel_$(SOURCE).json
 #	LD_LIBRARY_PATH=$(SO_PATH) KERNEL_FILE=kernel_$(SOURCE).json INSTANCE_FILE=$@ ./$< $(RARGS)
