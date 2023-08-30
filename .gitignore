@@ -21,6 +21,8 @@ ExclusivityMap.json
 *.gcov
 *.obj
 DashAutomate.log
+# Polygeist experiments
+*.cgeist
 # open vi sessions
 *.swp
 # generated halide source files
