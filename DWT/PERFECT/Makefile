@@ -1,7 +1,7 @@
 include ../../Environment.mk
 
 PERFECT_LIB_PATH=../../lib/PERFECT/
-SOURCE=main
+SOURCE=DWT
 SUFFIX=.c
 ADDSOURCE=dwt$(SUFFIX) $(PERFECT_LIB_PATH)xmem/xmalloc$(SUFFIX) $(PERFECT_LIB_PATH)timing/timer$(SUFFIX) $(PERFECT_LIB_PATH)octave/octave$(SUFFIX)
 CFLAGS=-DINPUT_SIZE=1
