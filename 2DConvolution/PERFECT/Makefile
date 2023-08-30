@@ -1,7 +1,7 @@
 include ../../Environment.mk
 
 PERFECT_LIB_PATH=../../lib/PERFECT/
-SOURCE=main
+SOURCE=2DConv
 SUFFIX=.c
 ADDSOURCE=2dconv$(SUFFIX) $(PERFECT_LIB_PATH)xmem/xmalloc$(SUFFIX) $(PERFECT_LIB_PATH)timing/timer$(SUFFIX) $(PERFECT_LIB_PATH)octave/octave$(SUFFIX)
 CFLAGS=-DINPUT_SIZE=1
