@@ -7,11 +7,11 @@ LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM9/release/
 #LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM14/release/
 
 # Cyclebyte install
-#TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build/
-TRACEATLAS_ROOT=/home/bwilli46/TraceAtlas/build_relwithdebinfo/
-#TRACEATLAS_ROOT=/mnt/heorot-10/bwilli46/Installs/TraceAtlas/relwithdebinfo/
+#CYCLEBITE_ROOT=/home/bwilli46/Cyclebite/build/
+CYCLEBITE_ROOT=/home/bwilli46/Cyclebite/build_relwithdebinfo/
+#CYCLEBITE_ROOT=/mnt/heorot-10/bwilli46/Installs/Cyclebite/relwithdebinfo/
 # points to the shared object libraries
-SO_PATH=$(TRACEATLAS_ROOT)lib/
+SO_PATH=$(CYCLEBITE_ROOT)lib/
 
 # Halide install
 # Halide 12 install
@@ -36,3 +36,7 @@ GSL_ROOT=$(DASH_ROOT)gsl/
 FFTW_ROOT=$(DASH_ROOT)fftw/
 OPENCV_ROOT=$(DASH_ROOT)opencv/
 SRSRAN_ROOT=$(DASH_ROOT)srsran/
+
+# Polygeist compiler
+POLYGEIST_ROOT=/mnt/heorot-10/bwilli46/Installs/Polygeist/debug/
+CGEIST=$(POLYGEIST_ROOT)bin/cgeist
