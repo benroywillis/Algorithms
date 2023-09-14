@@ -102,8 +102,8 @@
 #endif
 
 #if INPUT_SIZE == INPUT_SIZE_SMALL
-#define M 640  /* columns */
-#define N 480  /* rows */
+#define M 80 /* columns */
+#define N 60 /* rows */
 #define FILENAME "input_small.mat"
 #define SIZE "small"
 
