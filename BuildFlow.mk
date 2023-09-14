@@ -130,10 +130,10 @@ endif
 
 # Cyclebyte pipeline rules
 $(SOURCE).markov.bc : $(SOURCE).bc
-	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Markov $< -o $@
+	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Markov $< -o $@
 
 $(SOURCE).memory.bc : $(SOURCE).bc
-	$(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Memory $< -o $@
+	$(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Memory $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
@@ -171,7 +171,7 @@ SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 
 # Precision Analysis pass
 $(SOURCE).precision.bc : $(SOURCE).bc
-	$(OPT) -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so -Precision $< -o $@
+	$(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Precision $< -o $@
 
 $(SOURCE).precision.native : $(SOURCE).precision.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
@@ -284,10 +284,10 @@ operf : elf
 	sudo time -p operf ./$(SOURCE).elf
 	opreport --exclude-dependent --demangle=smart --symbols --threshold=1 > opreport.out
 
-ll : $(SOURCE).markov.bc $(SOURCE).memory.bc $(SOURCE).precision.bc
-	llvm-dis-9 $(SOURCE).markov.bc
-	llvm-dis-9 $(SOURCE).memory.bc
-	llvm-dis-9 $(SOURCE).precision.bc
+ll : $(SOURCE).markov.bc $(SOURCE).memory.bc #$(SOURCE).precision.bc
+	$(DIS) $(SOURCE).markov.bc
+	$(DIS) $(SOURCE).memory.bc
+	#$(DIS) $(SOURCE).precision.bc
 
 .PHONY:
 
