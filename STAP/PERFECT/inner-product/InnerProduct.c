@@ -80,10 +80,10 @@
 #define ENABLE_CORRECTNESS_CHECKING
 
 #if INPUT_SIZE == INPUT_SIZE_SMALL
-    static const char *input_filename = "small_input.bin";
-    static const char *kernel2_output_filename = "small_kernel2_output.bin";
-    static const char *kernel3_output_filename = "small_kernel3_output.bin";
-    static const char *steering_vector_filename = "small_steering_vectors.bin";
+    static const char *input_filename = "stap_innerproduct_small.input_bin";
+    static const char *kernel2_output_filename = "stap_small_kernel2_output.input_bin";
+    static const char *kernel3_output_filename = "stap_small_kernel3_output.input_bin";
+    static const char *steering_vector_filename = "stap_small_steering_vectors.input_bin";
 #elif INPUT_SIZE == INPUT_SIZE_MEDIUM
     static const char *input_filename = "medium_input.bin";
     static const char *kernel2_output_filename = "medium_kernel2_output.bin";
