@@ -68,8 +68,10 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
     struct Pixel* input  = readImage(argv[1]);
-	image_height = 1280;
-	image_width  = 1920;
+	//image_height = 426;
+	//image_width  = 640;
+	//image_height = 1280;
+	//image_width  = 1920;
     struct Pixel* output = (struct Pixel*)calloc(image_width*image_height, sizeof(struct Pixel));
     printf("Image size: %d x %d\n", image_height, image_width);
 
