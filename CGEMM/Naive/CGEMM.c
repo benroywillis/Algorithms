@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PRECISION float
-#define SIZE 		512
+#define PRECISION 	float
+#define SIZE 		64
 
 void read_input(PRECISION* a)
 {
