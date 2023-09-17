@@ -17,7 +17,7 @@
 
 #include <string.h>
 
-#include "global.h"
+//#include "global.h"
 #include "nalu.h"
 #include "decode.h"
 

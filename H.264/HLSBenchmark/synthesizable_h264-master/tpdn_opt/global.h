@@ -307,23 +307,23 @@ typedef struct
 
 
 //3. global variables for current frame
-char intra_pred_mode[PicWidthInMBs*4][FrameHeightInMbs*4];
-unsigned char nz_coeff_luma[PicWidthInMBs*4][FrameHeightInMbs*4];
-unsigned char nz_coeff_chroma[2][PicWidthInMBs*2][FrameHeightInMbs*2];
-unsigned char Mb_prediction_type[PicWidthInMBs][FrameHeightInMbs];
+extern char intra_pred_mode[PicWidthInMBs*4][FrameHeightInMbs*4];
+extern unsigned char nz_coeff_luma[PicWidthInMBs*4][FrameHeightInMbs*4];
+extern unsigned char nz_coeff_chroma[2][PicWidthInMBs*2][FrameHeightInMbs*2];
+extern unsigned char Mb_prediction_type[PicWidthInMBs][FrameHeightInMbs];
 
 //4. frame information as decoded frame buffer
 
 
 
 
-const unsigned char QPc[52];
-const unsigned char NCBP[48][2];
-const unsigned char lentab[3][4][17];
-const unsigned char codtab[3][4][17];
-const unsigned char SNGL_SCAN[16][2];
-const unsigned char FIELD_SCAN[16][2];
-const unsigned char decode_block_scan[4][4];
+extern const unsigned char QPc[52];
+extern const unsigned char NCBP[48][2];
+extern const unsigned char lentab[3][4][17];
+extern const unsigned char codtab[3][4][17];
+extern const unsigned char SNGL_SCAN[16][2];
+extern const unsigned char FIELD_SCAN[16][2];
+extern const unsigned char decode_block_scan[4][4];
 
 //5. file declaration
 #if _N_HLS_
