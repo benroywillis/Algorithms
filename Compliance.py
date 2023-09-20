@@ -77,8 +77,25 @@ def getErrors(inString):
 		return -1
 
 def outputData(complianceMap, path, op):
+	printMap = {}
+	total = dict.fromkeys(OPFLAGS, {"Total Errors": 0, "Success": 0, "Compliance": 0.0})
+	for path in complianceMap:
+		printMap[path] = {}
+		for op in complianceMap[path]:
+			printMap[path][op] = {}
+			for error in complianceMap[path][op]:
+				printMap[path][op][error] = complianceMap[path][op][error]
+				if total[op].get(error) is None:
+					total[op][error] = 0
+				total[op][error] += complianceMap[path][op][error]
+				if error != "Success":
+					total[op]["Total Errors"] += complianceMap[path][op][error]
+			total[op]["Compliance"] = ( ( total[op]["Success"] / (total[op]["Total Errors"] + total[op]["Success"]) )\
+										if (total[op]["Total Errors"] + total[op]["Success"]) else 0.0 ) * 100
+	printMap["Total"] = total
+			
 	with open(complianceFileName, "w") as f:
-		json.dump(complianceMap, f, indent=2)
+		json.dump(printMap, f, indent=2)
 
 def buildProject(path, opflag, args, polly=False, api = False, halide=False, PERF=False):
 	build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag
@@ -141,26 +158,30 @@ def recurseIntoFolder(path, BuildNames, basePath, folderMap):
 	return folderMap
 
 def buildAndCollectData(rootFolder, buildFolders, args):
-	try:
-		with open("Data/"+complianceFileName, "r") as f:
-			dataMap = json.load(f)
-			return dataMap
-	except FileNotFoundError:
-		print("No pre-existing log info file. Running collection algorithm...")
 	# contains paths to all directories that contain files we seek 
 	# project path : opflag : error map
 	complianceMap = {}
+	priorResults  = {}
+	try:
+		with open(complianceFileName, "r") as f:
+			priorResults = json.load(f)
+	except FileNotFoundError:
+		print("No pre-existing log info file. Running collection algorithm...")
 	# determines if the data generation code needs to be run
 	recurseIntoFolder(rootFolder, buildFolders, rootFolder, complianceMap)
-	# now inject  opflags into each entry
+	# now inject opflags into each entry and any prior results
 	for path in complianceMap:
 		for op in OPFLAGS:
 			complianceMap[path][op] = {}
+			if priorResults.get(path) is not None:
+				if priorResults[path].get(op) is not None:
+					complianceMap[path][op] = priorResults[path][op]
 
-	# now we build each project
+	# now we build each project, skipping the projects in priorResults
 	for entry in complianceMap:
 		for op in complianceMap[entry]:
-			callProject(complianceMap, entry, op, args)
+			if len(complianceMap[entry][op]) == 0:
+				callProject(complianceMap, entry, op, args)
 
 	return complianceMap
 
