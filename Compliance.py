@@ -77,6 +77,7 @@ def getErrors(inString):
 		return -1
 
 def outputData(complianceMap, path, op):
+	# implement Total category
 	printMap = {}
 	total = dict.fromkeys(OPFLAGS, {"Total Errors": 0, "Success": 0, "Compliance": 0.0})
 	for path in complianceMap:
@@ -84,15 +85,40 @@ def outputData(complianceMap, path, op):
 		for op in complianceMap[path]:
 			printMap[path][op] = {}
 			for error in complianceMap[path][op]:
-				printMap[path][op][error] = complianceMap[path][op][error]
-				if total[op].get(error) is None:
-					total[op][error] = 0
-				total[op][error] += complianceMap[path][op][error]
+				prettyError = error.split(": ")[-1]
+				printMap[path][op][prettyError] = complianceMap[path][op][error]
+				if total[op].get(prettyError) is None:
+					total[op][prettyError] = 0
+				total[op][prettyError] += complianceMap[path][op][error]
 				if error != "Success":
 					total[op]["Total Errors"] += complianceMap[path][op][error]
 			total[op]["Compliance"] = ( ( total[op]["Success"] / (total[op]["Total Errors"] + total[op]["Success"]) )\
 										if (total[op]["Total Errors"] + total[op]["Success"]) else 0.0 ) * 100
+	# per-project total
+	for path in complianceMap:
+		projectName = path.split("/")[-1]
+		if total.get(projectName) is None:
+			total[projectName] = {}
+		for op in complianceMap[path]:
+			if total[projectName].get(op) is None:
+				total[projectName][op] = {}
+				total[projectName][op]["Total Errors"] = 0
+				total[projectName][op]["Success"] = 0
+				total[projectName][op]["Compliance"] = 0.0
+			for error in complianceMap[path][op]:
+				prettyError = error.split(": ")[-1]
+				if total[projectName][op].get(prettyError) is None:
+					total[projectName][op][prettyError] = 0
+				total[projectName][op][prettyError] += complianceMap[path][op][error]
+				if error != "Success":
+					total[projectName][op]["Total Errors"] += complianceMap[path][op][error]
+			total[projectName][op]["Compliance"] = ( ( total[projectName][op]["Success"] / \
+													 (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"]) )\
+										             if (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"])\
+													 else 0.0 ) * 100
+		
 	printMap["Total"] = total
+	
 			
 	with open(complianceFileName, "w") as f:
 		json.dump(printMap, f, indent=2)
