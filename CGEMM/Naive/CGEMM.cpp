@@ -1,9 +1,12 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "TimingLib.h"
 
 #define PRECISION 	float
+#ifndef SIZE
 #define SIZE 		64
+#endif SIZE
 
 void read_input(PRECISION* a)
 {
@@ -67,14 +70,16 @@ int main()
 	read_input(c);
 	read_input(d);
 
-	// e + jf = (a + jb)(c + jd) = ac - bd + j(bc + ad)
-	GEMM(a, c, scratch);
-	GEMM(b, d, e);
-	Msub(scratch, e, e);
-	memset(scratch, 0, SIZE*SIZE*sizeof(PRECISION));
-	GEMM(b, c, scratch);
-	GEMM(a, d, f);
-	Madd(scratch, f, f);
+	__TIMINGLIB_benchmark( [&] {
+		// e + jf = (a + jb)(c + jd) = ac - bd + j(bc + ad)
+		GEMM(a, c, scratch);
+		GEMM(b, d, e);
+		Msub(scratch, e, e);
+		memset(scratch, 0, SIZE*SIZE*sizeof(PRECISION));
+		GEMM(b, c, scratch);
+		GEMM(a, d, f);
+		Madd(scratch, f, f);
+	} );
 
 	free(a);
 	free(b);
