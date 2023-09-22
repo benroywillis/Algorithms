@@ -159,9 +159,10 @@ KDFG_NAMES = $(patsubst %.dot,%,$(KDFG_DOTS))
 KDFG_ENUM  = $(foreach d,$(KDFG_NAMES),$d.svg)
 define DOT_RENDER_RULE = 
 $(1).svg : 
-	$(DOT) -Tsvg -o $(1).svg $(1).dot
+	$(DOT) -Tsvg -o $(1).svg $(1).dot ; $(DOT_RENDER) $(1).svg
 endef
-dots :$(KDFG_ENUM) KernelGrammar_$(SOURCE).json
+
+dots : $(KDFG_ENUM) KernelGrammar_$(SOURCE).json
 $(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE,$d)) )
 
 # map tasks back to the source code with debug symbols
