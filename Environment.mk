@@ -22,8 +22,10 @@ OPENCV_ROOT=$(DASH_ROOT)opencv/
 SRSRAN_ROOT=$(DASH_ROOT)srsran/
 
 # Polygeist compiler
-POLYGEIST_ROOT=/mnt/heorot-10/bwilli46/Installs/Polygeist/debug/
+POLYGEIST_ROOT=
 CGEIST=$(POLYGEIST_ROOT)bin/cgeist
 
 # graphviz install for rendering DFGs and other Cyclebyte outputs (sudo apt install graphviz)
-DOT?=
+DOT=
+# set binary to render dot files (like a web browser)
+DOT_RENDER=
