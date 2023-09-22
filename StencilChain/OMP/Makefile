@@ -6,7 +6,7 @@ ADDSOURCE=../../BilateralFilter/Naive/BilateralFilter.c
 
 # complile time args
 PRECISION?=float
-CFLAGS += -DPRECISION=$(PRECISION) -fopenmp -Rpass=openmp-opt -Rpass-analysis=openmp-opt -Rpass-missed=openmp-opt
+CFLAGS += -DPRECISION=$(PRECISION) -fopenmp
 
 # runtime args
 #INPUT_IMAGE=../../Data/Input/sample_640_426.bmp
