@@ -19,7 +19,7 @@ ExclusivityMap.json
 *.gcda
 *.gcno
 *.gcov
-*.obj
+*.o*
 DashAutomate.log
 # Polygeist experiments
 *.cgeist
