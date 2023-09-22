@@ -6,7 +6,7 @@
 #define PRECISION 	float
 #ifndef SIZE
 #define SIZE 		64
-#endif SIZE
+#endif
 
 void read_input(PRECISION* a)
 {

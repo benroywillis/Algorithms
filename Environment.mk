@@ -1,37 +1,21 @@
+# set the empty variables to the installs you have on your system
+
 # install root path for the directory, helpful with modular build files in the repo for things like program timing
-ALGORITHMS_DIR=/home/bwilli46/Algorithms/
-
-# LLVM install
-LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM9/release/
-#LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM12/release/
-#LLVM_INSTALL=/mnt/heorot-10/bwilli46/Installs/LLVM14/release/
-
-# Cyclebyte install
-#CYCLEBITE_ROOT=/home/bwilli46/Cyclebite/build/
-CYCLEBITE_ROOT=/home/bwilli46/Cyclebite/build_relwithdebinfo/
-#CYCLEBITE_ROOT=/mnt/heorot-10/bwilli46/Installs/Cyclebite/relwithdebinfo/
-# points to the shared object libraries
+ALGORITHMS_DIR=
+# LLVM install to use for compilation, linking, passes, and tools. Should point to the dir with bin/ lib/ (etc)
+LLVM_INSTALL=
+# cyclebite install (should point to the dir with bin/ lib/ (etc)
+CYCLEBITE_ROOT=
 SO_PATH=$(CYCLEBITE_ROOT)lib/
 
 # Halide install
-# Halide 12 install
-#HALIDE_INSTALL_PREFIX=/mnt/heorot-10/bwilli46/Installs/Halide-install-release/
-HALIDE_INSTALL_PREFIX=/mnt/heorot-10/bwilli46/Installs/Halide10-install-release/
-#HALIDE_INSTALL_PREFIX=/mnt/heorot-10/bwilli46/Installs/Halide10-install-debug/
-#HALIDE_COMPILE_ARGS=-std=c++11 -fno-rtti
+HALIDE_INSTALL_PREFIX=
 HALIDE_COMPILE_ARGS=-fno-rtti
 HALIDE_D_LINKS=-lpthread -ldl -lpng -ljpeg
-HALIDE_INCLUDE=\
--I$(HALIDE_INSTALL_PREFIX)include/\
--I$(HALIDE_INSTALL_PREFIX)share/tools
+HALIDE_INCLUDE=-I$(HALIDE_INSTALL_PREFIX)include/ -I$(HALIDE_INSTALL_PREFIX)share/tools
 
-# graphviz install for rendering DFGs and other Cyclebyte outputs
-DOT?=/usr/local/bin/dot
-
-# some LLVM bitcode installs
-DASH_ROOT=/mnt/heorot-10/bwilli46/dash-archives/debug/
-DASH_SOURCES_ROOT=/mnt/nobackup-09/Dash/Sources/alib/
-BWILLI_ROOT=/mnt/heorot-10/bwilli46/Installs/
+# install of the dash-archives repository (only required for algorithms driven by APIs)
+DASH_ROOT=
 GSL_ROOT=$(DASH_ROOT)gsl/
 FFTW_ROOT=$(DASH_ROOT)fftw/
 OPENCV_ROOT=$(DASH_ROOT)opencv/
@@ -40,3 +24,6 @@ SRSRAN_ROOT=$(DASH_ROOT)srsran/
 # Polygeist compiler
 POLYGEIST_ROOT=/mnt/heorot-10/bwilli46/Installs/Polygeist/debug/
 CGEIST=$(POLYGEIST_ROOT)bin/cgeist
+
+# graphviz install for rendering DFGs and other Cyclebyte outputs (sudo apt install graphviz)
+DOT?=
