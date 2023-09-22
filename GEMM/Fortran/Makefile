@@ -13,4 +13,4 @@ run : $(SOURCE).fbin
 .PHONY:
 
 clean:
-	rm *.fbin
+	rm *.fbin *.o
