@@ -1,6 +1,6 @@
 include ../../../Environment.mk
 
-SOURCE=PERFECT_FFT
+SOURCE=1DFFT
 SUFFIX=.c
 ADDSOURCE=fft.c
 
