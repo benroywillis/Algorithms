@@ -1,7 +1,7 @@
 include ../../../Environment.mk
 
 PERFECT_LIB_DIR=../../../lib/PERFECT/
-SOURCE=main
+SOURCE=2DFFT
 SUFFIX=.c
 ADDSOURCE=fft$(SUFFIX) octave$(SUFFIX) $(PERFECT_LIB_DIR)timing/timer$(SUFFIX)
 
