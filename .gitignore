@@ -56,7 +56,7 @@ hist*.csv
 *Speedup.log
 *Speedup_*
 # don't care to save compliance file
-Compliance.json
+Compliance*.json
 # nfs temporaries
 *.nfs*
 # don't care about vscode
