@@ -1,3 +1,5 @@
+# we ignore changes you make to the Environment.mk script
+Environment.mk
 # files that are common outputs from the benroywillis/TraceAtlas git repository
 *tmp*
 *.bc*
