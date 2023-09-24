@@ -130,10 +130,12 @@ endif
 
 # Cyclebyte pipeline rules
 $(SOURCE).markov.bc : $(SOURCE).bc
-	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Markov $< -o $@
+	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) --load-pass-plugin $(CYCLEBITE_ROOT)lib/MarkovPass.so --passes Markov $< -o $@
+#	LOOP_FILE=Loopfile_$(SOURCE).json $(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Markov $< -o $@
 
 $(SOURCE).memory.bc : $(SOURCE).bc
-	$(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Memory $< -o $@
+	$(OPT) --load-pass-plugin $(CYCLEBITE_ROOT)lib/MemoryPass.so --passes Memory $< -o $@
+#	$(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Memory $< -o $@
 
 $(SOURCE).markov.native : $(SOURCE).markov.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
@@ -172,7 +174,8 @@ SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
 
 # Precision Analysis pass
 $(SOURCE).precision.bc : $(SOURCE).bc
-	$(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Precision $< -o $@
+	$(OPT) --load-pass-plugin $(CYCLEBITE_ROOT)lib/AtlasPasses.so --passes Precision $< -o $@
+#	$(OPT) -enable-new-pm=0 -load $(CYCLEBITE_ROOT)lib/AtlasPasses.so --Precision $< -o $@
 
 $(SOURCE).precision.native : $(SOURCE).precision.bc
 	$(CXX) $(OPFLAG) $(DEBUG) $(LLD) $(D_LINKS) $(CYCLEBITE_ROOT)lib/libAtlasBackend.so $< -o $@
