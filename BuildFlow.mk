@@ -34,10 +34,10 @@ ADDSOURCE?=
 ADDSOURCE_GENERATE?=
 # static libraries for compilation phase
 LIBRARIES?=
-# dynamic links to use in the link phase
-D_LINKS?=-lm
 # path to any special dynamic libraries. This should only be a path and contain no white spaces anywhere. For multiple paths, separate with a colon ex. D_LINKS_PATH=/path/to/first/:/path/to/second/
 D_LINKS_PATH?=$(LLVM_INSTALL)lib/
+# dynamic links to use in the link phase
+D_LINKS += -L$(D_LINKS_PATH) 
 # include paths for compilation phase. The timinglib header is automatically appended to save redundant stuff in Makefiles
 INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/
 
