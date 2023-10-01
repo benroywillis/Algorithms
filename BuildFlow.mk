@@ -4,7 +4,7 @@
 CC=$(LLVM_INSTALL)bin/clang
 CXX=$(LLVM_INSTALL)bin/clang++
 OPT=$(LLVM_INSTALL)bin/opt
-LLD=-fuse-ld=$(LLVM_INSTALL)bin/ld.lld
+LLD=--ld-path=$(LLVM_INSTALL)bin/ld.lld
 LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
 #LDFLAGS?=-c -emit-llvm -g3 -O0 // these flags do not work if linking in static bitcode libraries
 # GNU compiler is used for GNU tools
@@ -114,7 +114,7 @@ $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_true_generated.h
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_mullapudi2016.so -s Mullapudi2016 target=host auto_schedule=true machine_params=32,16777216,40
 endif
 $(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated.h $(SOURCE)_autoschedule_false_generated.halide_generated.cpp : $(SOURCE)_generated.exec
-	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_false_generated -e bitcode,h,cpp target=host auto_schedule=false
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_false_generated -e bitcode,h,cpp target=host
 
 # Halide needs to be built a special way
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
