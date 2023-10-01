@@ -7,9 +7,9 @@ CFLAGS+= -Wno-everything
 OPFLAG?=-O0
 
 ifeq ($(OPFLAG), -O0)
-	OPENCV_PATH=$(DASH_ROOT)../debug/opencv/
+	OPENCV_PATH=$(DASH_ROOT)debug/opencv/
 else
-	OPENCV_PATH=$(DASH_ROOT)../release/opencv/
+	OPENCV_PATH=$(DASH_ROOT)release/opencv/
 endif
 
 SOURCE=IIRBlur
