@@ -5,16 +5,17 @@ include ../../Environment.mk
 # and your generator (-g <generator_name>) needs to match this variable
 SOURCE=MatrixMultiply
 SUFFIX=.cpp
-ADDSOURCE_GENERATE=common.cpp
-ADDSOURCE=MatrixMultiply.cpp common_reference.cpp
-D_LINKS=-lpthread -lm
 PRECISION?=double
 SIZE?=512
 TOLERANCE?=0.001
 CFLAGS += -DPRECISION=$(PRECISION) -DSIZE=$(SIZE) -DTOLERANCE=$(TOLERANCE)
-HALIDE_THREADS=1
+CXXFLAGS += -std=c++17
 
-RARGS=$(SIZE) $(SIZE) $(SIZE)
-
+AUTOSCHEDULE=0
 HALIDE=1
+HALIDE_THREADS?=1
+HALIDE_AUTOSCHEDULE=0
+
+RARGS=$(SIZE) $(SIZE)
+
 include ../../BuildFlow.mk
