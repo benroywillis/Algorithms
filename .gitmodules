@@ -1,0 +1,3 @@
+[submodule "PrivateAlgorithms"]
+	path = PrivateAlgorithms
+	url = git@github.com:benroywillis/PrivateAlgorithms.git
