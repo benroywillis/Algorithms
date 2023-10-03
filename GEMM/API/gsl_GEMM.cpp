@@ -19,23 +19,23 @@ int main(int argc, char** argv)
   float beta = atoi(argv[5]);
   bool transpose = atoi(argv[6]) == 1 ? true : false;
 
-  gsl_matrix *A = gsl_matrix_alloc (a, b);
-  gsl_matrix *B = gsl_matrix_alloc (b, c);
-  gsl_matrix *C = gsl_matrix_alloc (a, c);
+  gsl_matrix_float *A = gsl_matrix_float_alloc (a, b);
+  gsl_matrix_float *B = gsl_matrix_float_alloc (b, c);
+  gsl_matrix_float *C = gsl_matrix_float_alloc (a, c);
 
   int ret;
   if( transpose )
   {
-	__TIMINGLIB_benchmark( [&] { gsl_blas_dgemm(CblasTrans, CblasTrans, alpha, A, B, beta, C); } );
+	__TIMINGLIB_benchmark( [&] { gsl_blas_sgemm(CblasTrans, CblasTrans, alpha, A, B, beta, C); } );
   }
   else
   {
-	__TIMINGLIB_benchmark( [&] { gsl_blas_dgemm(CblasTrans, CblasTrans, alpha, A, B, beta, C); } );
+	__TIMINGLIB_benchmark( [&] { gsl_blas_sgemm(CblasTrans, CblasTrans, alpha, A, B, beta, C); } );
   }
   printf("BLAS DGEMM successful\n");
 
-  gsl_matrix_free(A);
-  gsl_matrix_free(B);
-  gsl_matrix_free(C);
+  gsl_matrix_float_free(A);
+  gsl_matrix_float_free(B);
+  gsl_matrix_float_free(C);
   return 0;
 }
