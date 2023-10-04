@@ -8,21 +8,17 @@
 
 #include "HalideBuffer.h"
 
-#ifndef HALIDE_THREADS
-#define HALIDE_THREADS 1
-#endif
-
 int main(int argc, char **argv) {
-	printf("Setting threads to %d\n", HALIDE_THREADS);
-    halide_set_num_threads(HALIDE_THREADS);
-
-	if( argc != 3 )
+	if( argc != 4 )
 	{
-		printf("Usage: M, N\n");
+		printf("Usage: M, N, num_threads\n");
 		return 1;
 	}
 	int N = atoi(argv[1]);
 	int M = atoi(argv[2]);
+	int threads = atoi(argv[3]);
+	printf("Setting thread count to %d\n", threads);
+	halide_set_num_threads(threads);
 
 	Halide::Runtime::Buffer<float> mat_a(nullptr, N, M);
 	Halide::Runtime::Buffer<float> mat_b(nullptr, M, N);
