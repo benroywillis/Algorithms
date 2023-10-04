@@ -28,9 +28,9 @@ void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE]
 
 int main()
 {
-    PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
-    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
-    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(SIZE * sizeof(int[SIZE][SIZE]));
+    PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
+    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
+    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
 
     for (int i = 0; i < SIZE; i++)
     {
