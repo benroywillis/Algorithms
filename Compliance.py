@@ -6,6 +6,7 @@ import json
 import re
 import math
 import os
+import datetime
 
 # plot parameters
 figDim = (6,6) # in inches
@@ -30,8 +31,6 @@ colors = [
 markers = [ 'o', '^', '1', 's', '*', 'd', 'X', '>']
 barWidth = 0.3
 
-# data file to be printed
-complianceFileName = "Compliance.json"
 # install prefix of Algorithms repo
 rootPath = "/home/ben/Documents/Research/Algorithms/"
 # folders to find and build within them
@@ -47,14 +46,14 @@ def PrintFigure(plt, name):
 
 def parseArgs():
 	arg_parser = argparse.ArgumentParser()
-	arg_parser.add_argument("-d", "--directory", default="./", help="Specify root directory of project (the directory that contains Naive, Halide, API, etc.")
-	arg_parser.add_argument("-o", "--output", default="Compliance", help="Specify output file name.")
-	arg_parser.add_argument("-s", "--samples", default=15, help="Specify number of samples taken for each timing experiment.")
-	arg_parser.add_argument("-i", "--iterations", default=15, help="Specify number of iterations taken for each sample.")
-	arg_parser.add_argument("-mi", "--milliseconds", action="store_true", help="Output timings in milliseconds (default: seconds).")
-	arg_parser.add_argument("-sf", "--sig-figs", default=3, help="Output number of significant figures.")
-	arg_parser.add_argument("-sh", "--show", action="store_true", help="Render output figures.")
-	return arg_parser.parse_args()
+	arg_parser.add_argument("-i", "--input", default="Compliance", help="Specify input data file name. Defaults to Compliance_yyyy-mm-dd.json")
+	arg_parser.add_argument("-o", "--output", default="Compliance", help="Specify output file name. Defaults to Compliance_yyyy-mm-dd.json.")
+	args = arg_parser.parse_args()
+	if args.input  == "Compliance":
+		args.input  = "Compliance_"+datetime.datetime.today().strftime("%Y-%m-%d")+".json"
+	if args.output == "Compliance":
+		args.output = "Compliance_"+datetime.datetime.today().strftime("%Y-%m-%d")+".json"
+	return args
 
 def getErrors(inString):
 	"""
@@ -120,7 +119,7 @@ def outputData(complianceMap, path, op):
 	printMap["Total"] = total
 	
 			
-	with open(complianceFileName, "w") as f:
+	with open(args.output, "w") as f:
 		json.dump(printMap, f, indent=2)
 
 def buildProject(path, opflag, args, polly=False, api = False, halide=False, PERF=False):
@@ -189,7 +188,7 @@ def buildAndCollectData(rootFolder, buildFolders, args):
 	complianceMap = {}
 	priorResults  = {}
 	try:
-		with open(complianceFileName, "r") as f:
+		with open(args.input, "r") as f:
 			priorResults = json.load(f)
 	except FileNotFoundError:
 		print("No pre-existing log info file. Running collection algorithm...")
