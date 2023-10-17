@@ -10,7 +10,8 @@
 #endif
 
 #define PRECISION 	float
-#define SIZE 		512
+//#define SIZE 		512
+#define SIZE 		64
 
 void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE])
 {
@@ -28,9 +29,9 @@ void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE]
 
 int main()
 {
-    PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
-    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
-    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
+    PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(PRECISION[SIZE][SIZE]));
+    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(PRECISION[SIZE][SIZE]));
+    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(PRECISION[SIZE][SIZE]));
 
     for (int i = 0; i < SIZE; i++)
     {
