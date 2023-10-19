@@ -19,7 +19,7 @@ void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1), PRECISION (*out))
     {
         for (int j = 0; j < SIZE; j++)
         {
-            out[j] += in0[i][j] * in1[j];
+            out[i] += in0[i][j] * in1[j];
         }
     }
 }
