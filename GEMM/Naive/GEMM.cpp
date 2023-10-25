@@ -5,13 +5,10 @@
 #include <math.h>
 #include "TimingLib.h"
 
-#ifndef TRACING
-#define TRACING 0
-#endif
-
 #define PRECISION 	float
-//#define SIZE 		512
+#ifndef SIZE
 #define SIZE 		64
+#endif
 
 void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE])
 {
