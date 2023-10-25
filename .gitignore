@@ -21,6 +21,7 @@ ExclusivityMap.json
 *.gcov
 *.o*
 *.annotated_*.c*
+*.annotated_*.h
 DashAutomate.log
 # Polygeist experiments
 *.cgeist
