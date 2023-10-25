@@ -16,10 +16,10 @@ GLD=ld
 # C and C++ flags
 CFLAGS?=
 CXXFLAGS?=
-# optimization flag passed to CC/CXX. Defaults to maximum optimization possible.
-OPFLAG?=-O3
-# debug flag passed to CC/CXX. Defaults to no debug symbols at all
-DEBUG?=-g0
+# optimization flag passed to CC/CXX. Defaults to -O1 because that's what Cyclebite-Template has the best compliance with.
+OPFLAG?=-O1
+# debug flag passed to CC/CXX. Defaults to all possible debug symbols because this allows Cyclebite-Template annotate tasks
+DEBUG?=-g3
 
 ## Source file configuration variables
 # name of the source file with main in it
@@ -154,6 +154,12 @@ instance_$(SOURCE).json : $(SOURCE).memory.native kernel_$(SOURCE).json
 
 KernelGrammar_$(SOURCE).json : instance_$(SOURCE).json
 	LD_LIBRARY_PATH=$(SO_PATH) $(CYCLEBITE_ROOT)bin/KernelGrammar -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
+
+$(SOURCE).annotated_omp.native : KernelGrammar_$(SOURCE).json $(ADDSOURCE)
+	$(C) -fopenmp $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(SOURCE).annotated_omp$(SUFFIX) $(ADDSOURCE) -o $@
+
+run_annotated : $(SOURCE).annotated_omp.native
+	$(BIN_ENV) ./$< $(RARGS)
 
 # render the resulting DOT files with graphviz install
 KDFG_DOTS  = $(wildcard DFG_kernel*.dot)
