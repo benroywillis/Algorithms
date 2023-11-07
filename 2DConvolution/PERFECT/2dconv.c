@@ -124,8 +124,8 @@ conv2d (algPixel_t *in, algPixel_t *out, int nRows, int nCols, fltPixel_t *filte
   {
     {
       memcpy((void *)(tmpBuf + (row + rowOffset) * (nCols + nFilterCols) + colOffset), 
-	  (void *)(in + row * nCols), 
-	  nCols * sizeof(algPixel_t));
+	  		 (void *)(in + row * nCols), 
+	          nCols * sizeof(algPixel_t));
     }
   }
 
@@ -137,15 +137,15 @@ conv2d (algPixel_t *in, algPixel_t *out, int nRows, int nCols, fltPixel_t *filte
       m = 0;
       for (i = row - rowOffset; i <= row + rowOffset; i++)
       {
-	n = 0;
-	for (j = col - colOffset; j <= col + colOffset; j++)
-	{
-	  pxlPos = i * (nCols + nFilterCols) + j;
-	  fltPos = m * nFilterCols + n;
-	  sum += ((fltPixel_t) tmpBuf[pxlPos] * filter[fltPos]);
-	  n++;
-	}
-	m++;
+	    n = 0;
+	    for (j = col - colOffset; j <= col + colOffset; j++)
+	    {
+	      pxlPos = i * (nCols + nFilterCols) + j;
+	      fltPos = m * nFilterCols + n;
+	      sum += ((fltPixel_t) tmpBuf[pxlPos] * filter[fltPos]);
+	      n++;
+	    }
+	    m++;
       }
       out[(row - rowBegIndex) * nCols + (col - colBegIndex)] = (algPixel_t) (sum / normFactor);
     }
