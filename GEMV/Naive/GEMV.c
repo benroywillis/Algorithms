@@ -17,7 +17,7 @@ void GEMV(PRECISION (*in0)[SIZE], PRECISION (*in1), PRECISION (*out)[SIZE])
     {
         for (int j = 0; j < SIZE; j++)
         {
-            out[j] += in0[i][j] * in1[j];
+r           out[i] += in0[i][j] * in1[j];
         }
     }
 }
