@@ -5,34 +5,48 @@
 #include <omp.h>
 #include "TimingLib.h"
 
-#ifndef TRACING
-#define TRACING 0
+#ifndef PRECISION
+#define PRECISION 0
+#endif
+#if PRECISION == 0
+#define TYPE float
+#elif PRECISION == 1
+#define TYPE float
+#elif PRECISION == 2
+#define TYPE int
+#elif PRECISION == 3
+#define TYPE long
 #endif
 
-#define PRECISION 	float
+#ifndef SIZE
 #define SIZE 		512
+#endif
 
-void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE])
+void GEMM(TYPE (*in0)[SIZE], TYPE (*in1)[SIZE], TYPE (*out)[SIZE])
 {
-	#pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < SIZE; i++)
     {
-//		#pragma omp parallel for
+//#pragma omp parallel for
         for (int j = 0; j < SIZE; j++)
         {
+			TYPE sum = (TYPE)0;
+// this makes no significant difference compared to "pragma omp simd"
+#pragma omp simd reduction(+:sum)
             for (int k = 0; k < SIZE; k++)
             {
-                out[i][j] += in0[i][k] * in1[k][j];
+                sum += in0[i][k] * in1[k][j];
             }
+			out[i][j] = sum;
         }
     }
 }
 
 int main()
 {
-    PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
-    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
-    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(int[SIZE][SIZE]));
+    TYPE (*in0)[SIZE] = (TYPE (*)[SIZE])malloc(sizeof(TYPE[SIZE][SIZE]));
+    TYPE (*in1)[SIZE] = (TYPE (*)[SIZE])malloc(sizeof(TYPE[SIZE][SIZE]));
+    TYPE (*out)[SIZE] = (TYPE (*)[SIZE])malloc(sizeof(TYPE[SIZE][SIZE]));
 
     for (int i = 0; i < SIZE; i++)
     {
