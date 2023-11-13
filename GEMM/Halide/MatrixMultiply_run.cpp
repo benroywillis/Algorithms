@@ -8,6 +8,10 @@
 
 #include "HalideBuffer.h"
 
+#ifndef SIZE
+#define SIZE 512
+#endif
+
 int main(int argc, char **argv) {
 	if( argc != 4 )
 	{
@@ -16,6 +20,7 @@ int main(int argc, char **argv) {
 	}
 	int N = atoi(argv[1]);
 	int M = atoi(argv[2]);
+	N = M = SIZE;
 	int threads = atoi(argv[3]);
 	printf("Setting thread count to %d\n", threads);
 	halide_set_num_threads(threads);
