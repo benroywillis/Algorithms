@@ -56,10 +56,6 @@ def parseArgs():
 	return args
 
 def getErrors(inString):
-	"""
-	@param[in] log      Absolute path to the logfile to be read
-	@retval    time     Time of the execution as a float in seconds
-	"""
 	errors = {}
 	try:
 		stuff = re.findall("\[critical\]\s.*", inString)
@@ -75,6 +71,21 @@ def getErrors(inString):
 		print("Error while parsing execution log: "+str(e))
 		return -1
 
+def getLabels(inString):
+	labels = {}
+	try:
+		stuff = re.findall("\[info\]\sCyclebite-Template\sLabel\:\s.*", inString)
+		for entry in stuff:
+			localizedTask  = re.findall("Task\d+", entry)[0]
+			localizedLabel = re.findall("\-\>\s\w+", entry)[0][3:]
+			if labels.get(localizedLabel) is None:
+				labels[localizedLabel] = []
+			labels[localizedLabel].append(localizedTask)
+		return labels
+	except Exception as e:
+		print("Error while parsing execution log: "+str(e))
+		return -1
+
 def outputData(complianceMap, path, op):
 	# implement Total category
 	printMap = {}
@@ -82,15 +93,16 @@ def outputData(complianceMap, path, op):
 	for path in complianceMap:
 		printMap[path] = {}
 		for op in complianceMap[path]:
-			printMap[path][op] = {}
-			for error in complianceMap[path][op]:
+			printMap[path][op] = { "Labels": {}, "Results":{} }
+			printMap[path][op]["Labels"] = complianceMap[path][op]["Labels"]
+			for error in complianceMap[path][op]["Errors"]:
 				prettyError = error.split(": ")[-1]
-				printMap[path][op][prettyError] = complianceMap[path][op][error]
+				printMap[path][op]["Results"][prettyError] = complianceMap[path][op]["Errors"][error]
 				if total[op].get(prettyError) is None:
 					total[op][prettyError] = 0
-				total[op][prettyError] += complianceMap[path][op][error]
+				total[op][prettyError] += complianceMap[path][op]["Errors"][error]
 				if error != "Success":
-					total[op]["Total Errors"] += complianceMap[path][op][error]
+					total[op]["Total Errors"] += complianceMap[path][op]["Errors"][error]
 			total[op]["Compliance"] = ( ( total[op]["Success"] / (total[op]["Total Errors"] + total[op]["Success"]) )\
 										if (total[op]["Total Errors"] + total[op]["Success"]) else 0.0 ) * 100
 	# per-project total
@@ -104,13 +116,13 @@ def outputData(complianceMap, path, op):
 				total[projectName][op]["Total Errors"] = 0
 				total[projectName][op]["Success"] = 0
 				total[projectName][op]["Compliance"] = 0.0
-			for error in complianceMap[path][op]:
+			for error in complianceMap[path][op]["Errors"]:
 				prettyError = error.split(": ")[-1]
 				if total[projectName][op].get(prettyError) is None:
 					total[projectName][op][prettyError] = 0
-				total[projectName][op][prettyError] += complianceMap[path][op][error]
+				total[projectName][op][prettyError] += complianceMap[path][op]["Errors"][error]
 				if error != "Success":
-					total[projectName][op]["Total Errors"] += complianceMap[path][op][error]
+					total[projectName][op]["Total Errors"] += complianceMap[path][op]["Errors"][error]
 			total[projectName][op]["Compliance"] = ( ( total[projectName][op]["Success"] / \
 													 (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"]) )\
 										             if (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"])\
@@ -134,7 +146,8 @@ def buildProject(path, opflag, args, polly=False, api = False, halide=False, PER
 def callProject(complianceMap, path, op, args):
 	output = ""
 	output = buildProject(path, op, args)
-	complianceMap[path][op] = getErrors(output)
+	complianceMap[path][op]["Errors"] = getErrors(output)
+	complianceMap[path][op]["Labels"] = getLabels(output)
 	outputData( complianceMap, path, op )
 
 def findOffset(path, basePath):
@@ -197,15 +210,17 @@ def buildAndCollectData(rootFolder, buildFolders, args):
 	# now inject opflags into each entry and any prior results
 	for path in complianceMap:
 		for op in OPFLAGS:
-			complianceMap[path][op] = {}
+			complianceMap[path][op] = { "Labels": {}, "Errors": {} }
 			if priorResults.get(path) is not None:
 				if priorResults[path].get(op) is not None:
 					complianceMap[path][op] = priorResults[path][op]
 
 	# now we build each project, skipping the projects in priorResults
 	for entry in complianceMap:
+		if entry != "GEMM/Naive":
+			continue
 		for op in complianceMap[entry]:
-			if len(complianceMap[entry][op]) == 0:
+			if len(complianceMap[entry][op]["Errors"]) == 0:
 				callProject(complianceMap, entry, op, args)
 
 	return complianceMap
