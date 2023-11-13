@@ -15,6 +15,8 @@ HALIDE=1
 HALIDE_THREADS?=1
 HALIDE_AUTOSCHEDULE=0
 
+#INPUT_IMAGE=../../Data/Input/sample_640_426.jpg
+#OUTPUT_IMAGE=../../Data/Output/StencilChain_Halide_sample_640_426.jpg
 INPUT_IMAGE=../../Data/Input/sample_1920_1280.jpg
 OUTPUT_IMAGE=../../Data/Output/StencilChain_Halide_sample_1920_1280.jpg
 RARGS=$(INPUT_IMAGE) $(OUTPUT_IMAGE) $(HALIDE_THREADS)
