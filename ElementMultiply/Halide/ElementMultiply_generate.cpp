@@ -5,11 +5,6 @@
 #endif
 
 using Halide::Generator;
-using Halide::RVar;
-using Halide::ConciseCasts::i32;
-using Halide::ConciseCasts::u16;
-using Halide::ConciseCasts::u32;
-using Halide::ConciseCasts::u8_sat;
 
 class ElementMultiply : public Generator<ElementMultiply> {
 public:
