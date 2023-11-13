@@ -31,6 +31,8 @@ inline static int min(int a, int b)
 
 #define SIGMA 1.6f
 
+int channels = 0;
+
 void
 sift (float const * __restrict__ _input,
       unsigned char * __restrict__ _output,
@@ -41,7 +43,6 @@ sift (float const * __restrict__ _input,
       float  curv_thr,
       float  contr_thr)
 {
-  const int channels = 4;
 
   float * __restrict__ input = (float * __restrict__) __builtin_assume_aligned(_input,  32);
   unsigned char * __restrict__ output = (unsigned char * __restrict__) __builtin_assume_aligned(_output, 32);
@@ -280,8 +281,8 @@ int main(int argc, char** argv)
 	struct Pixel* output = (struct Pixel*)calloc(image_width*image_height, sizeof(struct Pixel));
 	printf("Image size: %d x %d\n", image_height, image_width);
 
-	int num_channels = 3;
-	float* in = (float*)aligned_alloc(32, image_height*image_width*num_channels*sizeof(float));
+	channels = 3;
+	float* in = (float*)aligned_alloc(32, image_height*image_width*channels*sizeof(float));
 	uint8_t* out = (uint8_t*)aligned_alloc(32, image_height*image_width*sizeof(uint8_t));
 	__TIMINGLIB_benchmark( [&]() { 
 		// convert to floating point grayscale
@@ -289,21 +290,9 @@ int main(int argc, char** argv)
 		{
 			for( unsigned x = 0; x < image_width; x++ )
 			{
-				for( unsigned c = 0; c < num_channels; c++ )
-				{
-					if( c == 0 )
-					{
-						in[y*image_width*num_channels + x*num_channels + c] = 0.299f*(float)input[y*image_width + x].r;
-					}
-					else if( c == 1 )
-					{
-						in[y*image_width*num_channels + x*num_channels + c] = 0.587f*(float)input[y*image_width + x].g;
-					}
-					else
-					{
-						in[y*image_width*num_channels + x*num_channels + c] = 0.114f*(float)input[y*image_width + x].b;
-					} 
-				}
+				in[y*image_width*channels + x*channels] += 0.299f*(float)input[y*image_width + x].r;
+				in[y*image_width*channels + x*channels] += 0.587f*(float)input[y*image_width + x].g;
+				in[y*image_width*channels + x*channels] += 0.114f*(float)input[y*image_width + x].b;
 			}
 		}
 
