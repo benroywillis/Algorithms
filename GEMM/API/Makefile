@@ -2,6 +2,7 @@ include ../../Environment.mk
 SOURCE=gsl_GEMM
 SUFFIX=.cpp
 
+CXXFLAGS += -fsplit-lto-unit
 D_LINKS=
 INCLUDE=\
 -I$(TRACEATLAS_ROOT)include/\
