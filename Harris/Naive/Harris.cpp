@@ -259,7 +259,7 @@ int main(int argc, char** argv)
 	} );
 
 	// write output image
-	for( unsigned y = 0; y < image_height; y++ )
+	/*for( unsigned y = 0; y < image_height; y++ )
 	{
 		for( unsigned x = 0; x < image_width; x++ )
 		{
@@ -301,7 +301,7 @@ int main(int argc, char** argv)
 		output[(row+1)*image_width + col+1].b = 255;
 	}
 
-	writeImage(output, argv[2]);
+	writeImage(output, argv[2]);*/
 
 	free(input);
 	free(output);
