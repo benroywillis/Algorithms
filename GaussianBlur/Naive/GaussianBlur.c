@@ -14,7 +14,7 @@ void readImage(PRECISION* in)
 	{
 		for( unsigned int j = 0; j < SIZE; j++ )
 		{
-			*(in + i*SIZE + j) = rand();
+			in[i*SIZE+j] = rand();
 		}
 	}
 }
