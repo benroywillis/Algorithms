@@ -8,7 +8,7 @@ CFLAGS+=-DDASH_DATA=\"$(DASH_DATA)\" -std=c++17
 # and your generator (-g <generator_name>) needs to match this variable
 SOURCE=HistEq
 ADDSOURCE=../../lib/PERFECT/octave/octave.c
-INCLUDE=-I../../lib/PERFECT/
+INCLUDE=-I../../lib/PERFECT/ -I../../TimingLib
 SUFFIX=.cpp
 
 D_LINKS=-ljpeg -lpng -lpthread
@@ -17,13 +17,14 @@ N_ROWS=480
 N_COLS=640
 INPUT_IMAGE=../PERFECT/input_small.mat
 OUTPUT_IMAGE=equalized.png
-RARGS=$(N_ROWS) $(N_COLS) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 AUTOSCHEDULE=0
 HALIDE=1
 HALIDE_THREADS?=1
 HALIDE_AUTOSCHEDULE=0
+HALIDE_THREADS?=1
 
+RARGS=$(N_ROWS) $(N_COLS) $(INPUT_IMAGE) $(OUTPUT_IMAGE) $(HALIDE_THREADS)
 POLLY_SHOW=
 
 include ../../BuildFlow.mk

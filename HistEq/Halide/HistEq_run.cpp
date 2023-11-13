@@ -17,16 +17,18 @@
 #include "octave/octave.h"
 #define N_BINS 1 << 16
 
+#include "TimingLib.h"
+
 using namespace Halide::Tools;
 using namespace Halide::Runtime;
 
 int main(int argc, char **argv) {
-	halide_set_num_threads(1);
-	if( argc != 5 )
+	if( argc != 6 )
 	{
-		std::cout << "Please provide n_rows, n_cols, inputFilePath, outputFilePath" << std::endl;
+		std::cout << "Please provide n_rows, n_cols, inputFilePath, outputFilePath, numThreads" << std::endl;
 		return 1;
 	}
+	halide_set_num_threads(std::stoi(argv[5]));
 	int n_rows = std::stoi(argv[1]);
 	int n_cols = std::stoi(argv[2]);
 	// file load from PERFECT benchmark tools
@@ -39,12 +41,10 @@ int main(int argc, char **argv) {
     Buffer<int> output(input.width(), input.height());
 
     // Manually-tuned version
-    int timing_iterations = 1;
-    double min_t_manual = benchmark(timing_iterations, 10, [&]() {
+    __TIMINGLIB_benchmark( [&]() {
         HistEq_autoschedule_false_generated(input, N_BINS, output);
         output.device_sync();
     });
-    printf("Manually-tuned time: %gms\n", min_t_manual * 1e3);
 
     // Auto-scheduled version
 	// Ben [9/06/20] for some reason the autoscheduled version has an improper access to the output image and fails
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     //convert_and_save_image(output, argv[4]);
 
 	// compare to PERFECT output
-	int badMatch = 0;
+	/*int badMatch = 0;
 	err = read_array_from_octave((int*)&PERFECT_answer, n_rows, n_cols, "../PERFECT/histeq_output.small.0.mat");
 	for( int i = 0; i < n_rows; i++ )
 	{
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
-	printf("%.2f%% of the output did not match\n", (float)((float)badMatch/(float)(n_rows*n_cols)*100) );
+	printf("%.2f%% of the output did not match\n", (float)((float)badMatch/(float)(n_rows*n_cols)*100) );*/
 
     return 0;
 }
