@@ -1,6 +1,6 @@
 include ../../Environment.mk
 
-SOURCE=main
+SOURCE=BilateralFilter
 SUFFIX=.cpp
 ADDSOURCE=BilateralFilter.c
 SIGMA_S=1.0
