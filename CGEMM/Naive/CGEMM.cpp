@@ -56,6 +56,10 @@ void Msub(PRECISION* a, PRECISION* b, PRECISION* c)
 	}
 }*/
 
+//_Complex PRECISION *ab;
+//_Complex PRECISION *cd;
+//_Complex PRECISION *ef;
+
 int main()
 {
 	/*PRECISION* a = (PRECISION*)calloc( SIZE*SIZE, sizeof(PRECISION) );
@@ -86,6 +90,9 @@ int main()
 	_Complex PRECISION* ab = (_Complex PRECISION*)calloc( SIZE*SIZE, sizeof(_Complex PRECISION) );
 	_Complex PRECISION* cd = (_Complex PRECISION*)calloc( SIZE*SIZE, sizeof(_Complex PRECISION) );
 	_Complex PRECISION* ef = (_Complex PRECISION*)calloc( SIZE*SIZE, sizeof(_Complex PRECISION) );
+	//ab = (_Complex PRECISION*)calloc( SIZE*SIZE, sizeof(_Complex PRECISION) );
+	//cd = (_Complex PRECISION*)calloc( SIZE*SIZE, sizeof(_Complex PRECISION) );
+	//ef = (_Complex PRECISION*)calloc( SIZE*SIZE, sizeof(_Complex PRECISION) );
 	for( unsigned i = 0; i < SIZE; i++ )
 	{
 		for( unsigned j = 0; j < SIZE; j++ )
@@ -103,7 +110,7 @@ int main()
 			{
 				for( unsigned k = 0; k < SIZE; k++ )
 				{
-					ef[i*SIZE+j] = ab[i*SIZE+k] * cd[k*SIZE+j];
+					ef[i*SIZE+j] += ab[i*SIZE+k] * cd[k*SIZE+j];
 				}
 			}
 		}
