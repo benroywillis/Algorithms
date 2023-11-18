@@ -138,6 +138,7 @@ def outputData(complianceMap, path, op):
 def buildProject(path, opflag, args, polly=False, api = False, halide=False, PERF=False):
 	build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag
 	output = ""
+	print(build)
 	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
 	while check.poll() is None:
 		output += check.stdout.read().decode("utf-8")
