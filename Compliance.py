@@ -34,15 +34,16 @@ barWidth = 0.3
 # install prefix of Algorithms repo
 rootPath = "/home/ben/Documents/Research/Algorithms/"
 # folders to find and build within them
-buildFolders = { "PERFECT","Naive" }
+#targetFolders = { "PERFECT","Naive","MachSuite" }
+targetFolders = { "MachSuite" }
 # set the opflag to what you want to test
 #OPFLAGS = ["O0", "O1", "O2", "O3" ]
 OPFLAGS = ["O1"]
 
 def PrintFigure(plt, name):
-    plt.savefig(name+".svg",format="svg")
-    plt.savefig(name+".eps",format="eps")
-    plt.savefig(name+".png",format="png")
+	plt.savefig(name+".svg",format="svg")
+	plt.savefig(name+".eps",format="eps")
+	plt.savefig(name+".png",format="png")
 
 def parseArgs():
 	arg_parser = argparse.ArgumentParser()
@@ -55,7 +56,7 @@ def parseArgs():
 		args.output = "Compliance_"+datetime.datetime.today().strftime("%Y-%m-%d")+".json"
 	return args
 
-def getErrors(inString):
+def getCompliance(inString):
 	errors = {}
 	try:
 		stuff = re.findall("\[critical\]\s.*", inString)
@@ -95,19 +96,19 @@ def outputData(complianceMap, path, op):
 		for op in complianceMap[path]:
 			printMap[path][op] = { "Labels": {}, "Results":{} }
 			printMap[path][op]["Labels"] = complianceMap[path][op]["Labels"]
-			for error in complianceMap[path][op]["Errors"]:
+			for error in complianceMap[path][op]["Results"]:
 				prettyError = error.split(": ")[-1]
-				printMap[path][op]["Results"][prettyError] = complianceMap[path][op]["Errors"][error]
+				printMap[path][op]["Results"][prettyError] = complianceMap[path][op]["Results"][error]
 				if total[op].get(prettyError) is None:
 					total[op][prettyError] = 0
-				total[op][prettyError] += complianceMap[path][op]["Errors"][error]
+				total[op][prettyError] += complianceMap[path][op]["Results"][error]
 				if error != "Success":
-					total[op]["Total Errors"] += complianceMap[path][op]["Errors"][error]
+					total[op]["Total Errors"] += complianceMap[path][op]["Results"][error]
 			total[op]["Compliance"] = ( ( total[op]["Success"] / (total[op]["Total Errors"] + total[op]["Success"]) )\
 										if (total[op]["Total Errors"] + total[op]["Success"]) else 0.0 ) * 100
 	# per-project total
 	for path in complianceMap:
-		projectName = path.split("/")[-1]
+		projectName = list(set( [x for x in path.split("/")] ).intersection(targetFolders))[0]
 		if total.get(projectName) is None:
 			total[projectName] = {}
 		for op in complianceMap[path]:
@@ -116,13 +117,13 @@ def outputData(complianceMap, path, op):
 				total[projectName][op]["Total Errors"] = 0
 				total[projectName][op]["Success"] = 0
 				total[projectName][op]["Compliance"] = 0.0
-			for error in complianceMap[path][op]["Errors"]:
+			for error in complianceMap[path][op]["Results"]:
 				prettyError = error.split(": ")[-1]
 				if total[projectName][op].get(prettyError) is None:
 					total[projectName][op][prettyError] = 0
-				total[projectName][op][prettyError] += complianceMap[path][op]["Errors"][error]
+				total[projectName][op][prettyError] += complianceMap[path][op]["Results"][error]
 				if error != "Success":
-					total[projectName][op]["Total Errors"] += complianceMap[path][op]["Errors"][error]
+					total[projectName][op]["Total Errors"] += complianceMap[path][op]["Results"][error]
 			total[projectName][op]["Compliance"] = ( ( total[projectName][op]["Success"] / \
 													 (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"]) )\
 										             if (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"])\
@@ -137,7 +138,6 @@ def outputData(complianceMap, path, op):
 def buildProject(path, opflag, args, polly=False, api = False, halide=False, PERF=False):
 	build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag
 	output = ""
-	print(build)
 	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
 	while check.poll() is None:
 		output += check.stdout.read().decode("utf-8")
@@ -146,7 +146,7 @@ def buildProject(path, opflag, args, polly=False, api = False, halide=False, PER
 def callProject(complianceMap, path, op, args):
 	output = ""
 	output = buildProject(path, op, args)
-	complianceMap[path][op]["Errors"] = getErrors(output)
+	complianceMap[path][op]["Results"] = getCompliance(output)
 	complianceMap[path][op]["Labels"] = getLabels(output)
 	outputData( complianceMap, path, op )
 
@@ -181,10 +181,11 @@ def recurseIntoFolder(path, BuildNames, basePath, folderMap):
 	currentFolder = path.split("/")[-1]
 	path += "/"
 	offset = findOffset(path, basePath)
-	
-	if currentFolder in BuildNames:
-		if folderMap.get(offset) is None:
-			folderMap[offset] = dict()
+	#if currentFolder in BuildNames:
+	if "Makefile" in set( [f for f in os.listdir(path) if os.path.isfile( path+f )] ):
+		if len( set( [x for x in path.split("/")] ).intersection(BuildNames) ):
+		    if folderMap.get(offset) is None:
+			    folderMap[offset] = dict()
 	directories = []
 	for f in os.scandir(path):
 		if f.is_dir():
@@ -210,20 +211,18 @@ def buildAndCollectData(rootFolder, buildFolders, args):
 	# now inject opflags into each entry and any prior results
 	for path in complianceMap:
 		for op in OPFLAGS:
-			complianceMap[path][op] = { "Labels": {}, "Errors": {} }
+			complianceMap[path][op] = { "Labels": {}, "Results": {} }
 			if priorResults.get(path) is not None:
 				if priorResults[path].get(op) is not None:
 					complianceMap[path][op] = priorResults[path][op]
 
 	# now we build each project, skipping the projects in priorResults
 	for entry in complianceMap:
-		if entry != "GEMM/Naive":
-			continue
 		for op in complianceMap[entry]:
-			if len(complianceMap[entry][op]["Errors"]) == 0:
+			if len(complianceMap[entry][op]["Results"]) == 0:
 				callProject(complianceMap, entry, op, args)
 
 	return complianceMap
 
 args = parseArgs()
-compliance = buildAndCollectData(rootPath, buildFolders, args)
+compliance = buildAndCollectData(rootPath, targetFolders, args)
