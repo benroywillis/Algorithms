@@ -16,9 +16,9 @@ void IIR_Blur_cols(struct Pixel* input, struct Pixel* output, float alpha, unsig
 	{
 		for( unsigned int y = 1; y < num_rows; y++ )
 		{
-			output[y*num_cols + x].r = (1-alpha)*input[(y-1)*num_cols + x].r + alpha*input[y*num_cols + x].r;
-			output[y*num_cols + x].g = (1-alpha)*input[(y-1)*num_cols + x].g + alpha*input[y*num_cols + x].g;
-			output[y*num_cols + x].b = (1-alpha)*input[(y-1)*num_cols + x].b + alpha*input[y*num_cols + x].b;
+			output[y*num_cols + x].r = (1-alpha)*output[(y-1)*num_cols + x].r + alpha*input[y*num_cols + x].r;
+			output[y*num_cols + x].g = (1-alpha)*output[(y-1)*num_cols + x].g + alpha*input[y*num_cols + x].g;
+			output[y*num_cols + x].b = (1-alpha)*output[(y-1)*num_cols + x].b + alpha*input[y*num_cols + x].b;
 		}
 	}
 	// blur up the columns
@@ -26,9 +26,9 @@ void IIR_Blur_cols(struct Pixel* input, struct Pixel* output, float alpha, unsig
 	{
 		for( int y = num_rows - 2; y >= 0; y-- )
 		{
-			output[y*num_cols + x].r = (1-alpha)*output[(y+1)*num_cols + x].r + alpha*output[y*num_cols + x].r;
-			output[y*num_cols + x].g = (1-alpha)*output[(y+1)*num_cols + x].g + alpha*output[y*num_cols + x].g;
-			output[y*num_cols + x].b = (1-alpha)*output[(y+1)*num_cols + x].b + alpha*output[y*num_cols + x].b;
+			output[y*num_cols + x].r = (1-alpha)*output[(y+1)*num_cols + x].r + alpha*input[y*num_cols + x].r;
+			output[y*num_cols + x].g = (1-alpha)*output[(y+1)*num_cols + x].g + alpha*input[y*num_cols + x].g;
+			output[y*num_cols + x].b = (1-alpha)*output[(y+1)*num_cols + x].b + alpha*input[y*num_cols + x].b;
 		}
 	}
 }
@@ -45,9 +45,9 @@ void IIR_Blur_rows(struct Pixel* input, struct Pixel* output, float alpha, unsig
 	{
 		for( unsigned int x = 1; x < num_cols; x++ )
 		{
-			output[y*num_cols + x].r = (1-alpha)*input[y*num_cols + (x-1)].r + alpha*input[y*num_cols + x].r;
-			output[y*num_cols + x].g = (1-alpha)*input[y*num_cols + (x-1)].g + alpha*input[y*num_cols + x].g;
-			output[y*num_cols + x].b = (1-alpha)*input[y*num_cols + (x-1)].b + alpha*input[y*num_cols + x].b;
+			output[y*num_cols + x].r = (1-alpha)*output[y*num_cols + (x-1)].r + alpha*input[y*num_cols + x].r;
+			output[y*num_cols + x].g = (1-alpha)*output[y*num_cols + (x-1)].g + alpha*input[y*num_cols + x].g;
+			output[y*num_cols + x].b = (1-alpha)*output[y*num_cols + (x-1)].b + alpha*input[y*num_cols + x].b;
 		}
 	}
 	// blur along the rows right to left
@@ -55,9 +55,9 @@ void IIR_Blur_rows(struct Pixel* input, struct Pixel* output, float alpha, unsig
 	{
 		for( int x = num_cols-2; x >= 0; x-- )
 		{
-			output[y*num_cols + x].r = (1-alpha)*output[y*num_cols + (x+1)].r + alpha*output[y*num_cols + x].r;
-			output[y*num_cols + x].g = (1-alpha)*output[y*num_cols + (x+1)].g + alpha*output[y*num_cols + x].g;
-			output[y*num_cols + x].b = (1-alpha)*output[y*num_cols + (x+1)].b + alpha*output[y*num_cols + x].b;
+			output[y*num_cols + x].r = (1-alpha)*output[y*num_cols + (x+1)].r + alpha*input[y*num_cols + x].r;
+			output[y*num_cols + x].g = (1-alpha)*output[y*num_cols + (x+1)].g + alpha*input[y*num_cols + x].g;
+			output[y*num_cols + x].b = (1-alpha)*output[y*num_cols + (x+1)].b + alpha*input[y*num_cols + x].b;
 		}
 	}
 }
