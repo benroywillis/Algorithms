@@ -38,7 +38,7 @@ void transpose(PRECISION _Complex* buf, unsigned height, unsigned width)
 	}
 }
 
-void _fft(PRECISION _Complex buf[], PRECISION _Complex out[], int n, int step)
+/*void _fft(PRECISION _Complex buf[], PRECISION _Complex out[], int n, int step)
 {
 	if (step < n) {
 		_fft(out, buf, n, step * 2);
@@ -51,12 +51,79 @@ void _fft(PRECISION _Complex buf[], PRECISION _Complex out[], int n, int step)
 			buf[(i + n)/2] = out[i] - t;
 		}
 	}
+}*/
+
+// taken from https://www.codeproject.com/Articles/619688/Quick-FFT, is under the code project open license
+void BitInvert( PRECISION _Complex buf[], int n )
+{
+	int k, rev, mv;
+	PRECISION _Complex a;
+	for( int i = 1; i < n; i++ )
+	{
+		k   = i;
+		mv  = n/2;
+		rev = 0;
+		while( k > 0 )
+		{
+			if( (k%2) > 0 )
+			{
+				rev += mv;
+			}
+			k  /= 2;
+			mv /= 2;
+		}
+		{
+			if( i < rev )
+			{
+				a = buf[rev];
+				buf[rev] = buf[i];
+				buf[i] = a;
+			}
+		}
+	}
 }
+
+void calcSubFFT( PRECISION _Complex buf[], int n )
+{
+	int k, m;
+	PRECISION _Complex w, v, h;
+	k = 1;
+	while( k <= n/2 )
+	{
+		m = 0;
+		while( m <= (n-2*k) )
+		{
+			for( int i = m; i < m + k; i++ )
+			{
+				w = (PRECISION)cexp(-I * M_PI * i/n);
+				h = buf[i+k] * w;
+				v = buf[i];
+				buf[i] = buf[i] + h;
+				buf[i + k] = v - h;
+			}
+			m += 2*k;
+		}
+		k *= 2;
+	}
+}
+
+void _fft_nonrecursive( PRECISION _Complex buf[] )
+{
+    int SIZE = height;
+	BitInvert(buf, SIZE);
+	calcSubFFT(buf, SIZE);
+	for( int i = 0; i < SIZE; i++ )
+	{
+		buf[i] /= ( (PRECISION)SIZE * (PRECISION)2.0 );
+	}
+	buf[0] /= 2.0;
+}
+
 
 void conv(PRECISION* grey)
 {
 	// input init
-	PRECISION _Complex* complex_grey = (PRECISION _Complex* )malloc(image_height*image_width*sizeof(PRECISION _Complex));
+	PRECISION _Complex* _Complex_grey = (PRECISION _Complex* )malloc(image_height*image_width*sizeof(PRECISION _Complex));
 	PRECISION _Complex* fft_0        = (PRECISION _Complex* )malloc(image_height*image_width*sizeof(PRECISION _Complex));
 	PRECISION _Complex* fft_1        = (PRECISION _Complex* )malloc(image_height*image_width*sizeof(PRECISION _Complex));
 	PRECISION _Complex* fft_2        = (PRECISION _Complex* )malloc(image_height*image_width*sizeof(PRECISION _Complex));
@@ -65,19 +132,19 @@ void conv(PRECISION* grey)
 	{
 		for( unsigned j = 0; j < image_width; j++ )
 		{
-			complex_grey[image_width*i + j] = grey[image_width*i + j] + I*0.0;
+			_Complex_grey[image_width*i + j] = grey[image_width*i + j] + I*0.0;
 		}
 	}
 	// 2d fft
 	for( unsigned i = 0; i < image_height; i++ )
 	{
-		_fft(&complex_grey[i*image_width], &fft_0[i*image_width], image_width, 1);
+		_fft_nonrecursive(&_Complex_grey[i*image_width], &fft_0[i*image_width], image_width, 1);
 	}
 	// transpose
 	transpose(fft_0, image_height, image_width);
 	for( unsigned i = 0; i < image_width; i++ )
 	{
-		_fft( &fft_0[i*image_height], &fft_1[i*image_height], image_height, 1);
+		_fft_nonrecursive( &fft_0[i*image_height], &fft_1[i*image_height], image_height, 1);
 	}
 	// element-wise multiply
 	for( unsigned i = 0; i < image_width; i++ )
@@ -91,7 +158,7 @@ void conv(PRECISION* grey)
 	array_conj(fft_1, image_width, image_height);
 	for( unsigned i = 0; i < image_width; i++ )
 	{
-		_fft( &fft_1[i*image_height], &fft_2[i*image_height], image_height, 1);
+		_fft_nonrecursive( &fft_1[i*image_height], &fft_2[i*image_height], image_height, 1);
 		for( unsigned j = 0; j < image_height; j++ )
 		{
 			fft_2[i*image_height + j] = 1.0 / (PRECISION)image_height * fft_2[i*image_height + j];
@@ -100,7 +167,7 @@ void conv(PRECISION* grey)
 	transpose(fft_2, image_width, image_height);
 	for( unsigned i = 0; i < image_height; i++ )
 	{
-		_fft(&fft_2[i*image_width], &fft_3[i*image_width], image_width, 1);
+		_fft_nonrecursive(&fft_2[i*image_width], &fft_3[i*image_width], image_width, 1);
 		for( unsigned j = 0; j < image_width; j++ )
 		{
 			fft_2[i*image_width + j] = 1.0 / (PRECISION)image_width * fft_2[i*image_width + j];
@@ -115,7 +182,7 @@ void conv(PRECISION* grey)
 			grey[image_width*i + j] = crealf(fft_3[i*image_width + j]);
 		}
 	}
-	free(complex_grey);
+	free(_Complex_grey);
 	free(fft_0);
 	free(fft_1);
 	free(fft_2);
