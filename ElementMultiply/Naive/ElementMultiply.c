@@ -1,6 +1,6 @@
 
-//#include <stdlib.h>
-//#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 #define SIZE 		64
 #define PRECISION 	int
@@ -40,7 +40,7 @@ int main( int argc, char** argv )
 			if( c[i*SIZE+j] > 0 )
 			{
 				// ensures the optimizer won't do away with our previous work
-				//volatile bool doNothing = true;
+				volatile bool doNothing = true;
 			}
 		}
 	}
