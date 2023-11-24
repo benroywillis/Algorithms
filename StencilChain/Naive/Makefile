@@ -1,7 +1,7 @@
 include ../../Environment.mk
 
 SOURCE=StencilChain
-SUFFIX=.cpp
+SUFFIX=.c
 ADDSOURCE=../../BilateralFilter/Naive/BilateralFilter.c
 
 # complile time args
