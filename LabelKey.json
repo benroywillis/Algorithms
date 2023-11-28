@@ -107,41 +107,51 @@
 			"Map": ["Task17","Task5"],
 			"Unknown": ["Task71"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/bfs/bulk": {
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/bfs/queue": {
+			"Foreach": ["Task10"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/fft/strided": {
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/fft/transpose": {
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/gemm/blocked": {
+			"GEMM": ["Task12"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/gemm/ncubed": {
+			"GEMM": ["Task11"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/kmp": {
+			"Map": ["Task0"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/md/grid": {
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/md/knn": {
+			"Unknown": ["Task19","Task19","Task19"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/nw": {
+			"Init": ["Task0","Task1"]
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/sort/merge": {
 		},
-		"MachSuite/": {
-			"Init": ["Task0"],
+		"MachSuite/sort/radix": {
+			"Not Parallel": ["Task3","Task15"],
+			"ZIP": ["Task16"]
 		},
+		"MachSuite/spmv/ellpack": {
+			"ZIP": ["Task11"]
+		},
+		"MachSuite/spmv/crs": {
+		},
+		"MachSuite/stencil/stencil2d": {
+			"Stencil": ["Task12"]
+		},
+		"MachSuite/stencil/stencil3d": {
+			"Stencil": ["Task13"]
+		},
+		"MachSuite/viterbi": {
+			"ZIP": ["Task3"]
+		}
 	}
 }
