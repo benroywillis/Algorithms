@@ -1,0 +1,53 @@
+{
+	"O1" {
+		"SAR/BP/PERFECT": {
+		},
+		"SAR/pfa_azimuth_interp/PERFECT": {
+		},
+		"SAR/pfa_range_interp/PERFECT": {
+		},
+		"HistEq/PERFECT": {
+			"Map": ["Task4","Task6"],
+			"Foreach": ["Task2"],
+			"Not Parallel": ["Task5"]
+		},
+		"StencilChain/Naive": {
+			"Map":     ["Task19","Task26"],
+			"Stencil": ["Task32","Task33","Task34","Task35","Task36"]
+		},
+		"inner-product/Naive": {
+			"Label": ["Task"],
+		},
+		"inner-product/PERFECT": {
+			"Label": ["Task"],
+		},
+		"BilateralGrid/Naive": {
+			"Label": ["Task"],
+		},
+		"PrivateAlgorithms/Dash-Radiocorpus/TemporalMitigation/Naive": {
+			"Label": ["Task"],
+		},
+		"Harris/Naive": {
+			"Label": ["Task"],
+		},
+		"CGEMM/Naive": {
+			"Init": ["Task2"],
+			"Map":  ["Task4"]
+		},
+		"FFT/2D/PERFECT": {
+			"Init": ["Task3"],
+		},
+		"": {
+			"Label": ["Task"],
+		},
+		"": {
+			"Label": ["Task"],
+		},
+		"": {
+			"Label": ["Task"],
+		},
+		"": {
+			"Label": ["Task"],
+		},
+	}
+}
