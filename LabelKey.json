@@ -1,5 +1,6 @@
 {
-	"O1" {
+	"Labels": ["Init", "ZIP", "Map", "Foreach", "GEMV", "GEMM", "CGEMM", "Stencil", "Unknown", "Not Parallel"],
+	"O1": {
 		"SAR/BP/PERFECT": {
 		},
 		"SAR/pfa_azimuth_interp/PERFECT": {
@@ -7,8 +8,8 @@
 		"SAR/pfa_range_interp/PERFECT": {
 		},
 		"HistEq/PERFECT": {
-			"Map": ["Task4","Task6"],
-			"Foreach": ["Task2"],
+			"Map":          ["Task4","Task6"],
+			"Foreach":      ["Task2"],
 			"Not Parallel": ["Task5"]
 		},
 		"StencilChain/Naive": {
@@ -16,38 +17,131 @@
 			"Stencil": ["Task32","Task33","Task34","Task35","Task36"]
 		},
 		"inner-product/Naive": {
-			"Label": ["Task"],
+			"Init": ["Task0"]
 		},
 		"inner-product/PERFECT": {
-			"Label": ["Task"],
 		},
 		"BilateralGrid/Naive": {
-			"Label": ["Task"],
 		},
 		"PrivateAlgorithms/Dash-Radiocorpus/TemporalMitigation/Naive": {
-			"Label": ["Task"],
+			"ZIP":   ["Task3"],
+			"Map":   ["Task6"],
+			"CGEMM": ["Task42","Task42"]
 		},
 		"Harris/Naive": {
-			"Label": ["Task"],
+			"Map":     ["Task2"],
+			"Stencil": ["Task24"]
 		},
 		"CGEMM/Naive": {
 			"Init": ["Task2"],
 			"Map":  ["Task4"]
 		},
 		"FFT/2D/PERFECT": {
-			"Init": ["Task3"],
+			"Init": ["Task3"]
 		},
-		"": {
-			"Label": ["Task"],
+		"FFT/1D/Naive": {
+			"Init": ["Task0"],
+			"Map": ["Task4"],
+			"Foreach": ["Task2"]
 		},
-		"": {
-			"Label": ["Task"],
+		"FFT/1D/PERFECT": {
+			"Init": ["Task2"]
 		},
-		"": {
-			"Label": ["Task"],
+		"BilateralFilter/Naive": {
 		},
-		"": {
-			"Label": ["Task"],
+		"IIRBlur/Naive": {
+			"ZIP": ["Task9","Task12","Task13","Task14"]
+		},
+		"ElementMultiply/Naive": {
+			"Init": ["Task4"],
+			"Map": ["Task3"]
+		},
+		"SIFT/Naive": {
+			"Map": ["Task25"]
+		},
+		"STAP/outer_product/PERFECT": {
+		},
+		"STAP/system_solve/PERFECT": {
+		},
+		"GEMM/Naive": {
+			"Init": ["Task2"],
+			"GEMM": ["Task4"]
+		},
+		"Sort/Naive": {
+			"Init": ["Task0"]
+		},
+		"Sort/PERFECT": {
+		},
+		"GEMV/Naive": {
+			"Init": ["Task2"],
+			"GEMV": ["Task3"]
+		},
+		"HoughTransform/Naive": {
+		},
+		"GaussianBlur/Naive": {
+		},
+		"2DConvolution/Naive": {
+		},
+		"2DConvolution/PERFECT": {
+			"Foreach": ["Task4"],
+			"Stencil": ["Task12"]
+		},
+		"DWT/PERFECT": {
+			"ZIP": ["Task11","Task11","Task11","Task11"]
+		},
+		"WAMI/debayer/PERFECT": {
+			"Map": ["Task14","Task16","Task18","Task19","Task21","Task22","Task24","Task25"]
+		},
+		"WAMI/change_detection/PERFECT": {
+		},
+		"WAMI/lucas_kanade/PERFECT": {
+			"Map": ["Task11"],
+			"Foreach": ["Task15"]
+		},
+		"MachSuite/aes": {
+		},
+		"MachSuite/backproj": {
+			"GEMV": ["Task69","Task76","Task71"],
+			"Foreach": ["Task73","Task17","Task75","Task70","Task20","Task27","Task5"],
+			"ZIP": ["Task13","Task18","Task21","Task26","Task77","Task78","Task81","Task82","Task79"],
+			"Map": ["Task17","Task5"],
+			"Unknown": ["Task71"]
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
+		},
+		"MachSuite/": {
+			"Init": ["Task0"],
 		},
 	}
 }
