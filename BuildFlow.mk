@@ -174,7 +174,7 @@ dots : $(KDFG_ENUM) KernelGrammar_$(SOURCE).json
 $(foreach d,$(KDFG_NAMES), $(eval $(call DOT_RENDER_RULE,$d)) )
 
 # map tasks back to the source code with debug symbols
-SourceMap_$(SOURCE).json : kernel_$(SOURCE).json
+SourceMap_$(SOURCE).json : kernel_$(SOURCE).json instance_$(SOURCE).json
 	$(CYCLEBITE_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k $< -o SourceMap_$(SOURCE)_kernel.json
 	$(CYCLEBITE_ROOT)bin/kernelSourceMapper -i $(SOURCE).bc -k instance_$(SOURCE).json -o SourceMap_$(SOURCE)_instance.json
 
