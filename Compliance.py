@@ -7,6 +7,7 @@ import re
 import math
 import os
 import datetime
+import copy
 
 # plot parameters
 figDim = (6,6) # in inches
@@ -48,6 +49,8 @@ def PrintFigure(plt, name):
 def parseArgs():
 	arg_parser = argparse.ArgumentParser()
 	arg_parser.add_argument("-i", "--input", default="Compliance", help="Specify input data file name. Defaults to Compliance_yyyy-mm-dd.json")
+	arg_parser.add_argument("--fast", action="store_true", help="Pass this flag if the projects are already pre-built. This will remove the kernel grammar file such that only that step is run.")
+	arg_parser.add_argument("--debug", default="-g3", help="Set debug flag for compile commands. This raw argument will be based to the DEBUG macro in the build script.")
 	arg_parser.add_argument("-o", "--output", default="Compliance", help="Specify output file name. Defaults to Compliance_yyyy-mm-dd.json.")
 	args = arg_parser.parse_args()
 	if args.input  == "Compliance":
@@ -79,17 +82,17 @@ def getLabels(inString):
 		for entry in stuff:
 			localizedTask  = re.findall("Task\d+", entry)[0]
 			localizedLabel = re.findall("\-\>\s\w+", entry)[0][3:]
-			if labels.get(localizedLabel) is None:
-				labels[localizedLabel] = []
-			labels[localizedLabel].append(localizedTask)
+			if labels.get(localizedTask) is None:
+				labels[localizedTask] = []
+			labels[localizedTask].append(localizedLabel)
 		return labels
 	except Exception as e:
 		print("Error while parsing execution log: "+str(e))
 		return -1
 
 def outputData(complianceMap, path, op):
-	# implement Total category
 	printMap = {}
+	# write results to output dict and implement Total category
 	total = dict.fromkeys(OPFLAGS, {"Total Errors": 0, "Success": 0, "Compliance": 0.0})
 	for path in complianceMap:
 		printMap[path] = {}
@@ -106,6 +109,66 @@ def outputData(complianceMap, path, op):
 					total[op]["Total Errors"] += complianceMap[path][op]["Results"][error]
 			total[op]["Compliance"] = ( ( total[op]["Success"] / (total[op]["Total Errors"] + total[op]["Success"]) )\
 										if (total[op]["Total Errors"] + total[op]["Success"]) else 0.0 ) * 100
+	## label correctness
+	# this map holds the correct labels for all known tasks in the corpus ( { oplevel: { appPath: { label: [tasks] } } } )
+	labelKey = {}
+	# this map reverse-maps labelKey ( { oplevel: { appPath: { task: [labels] } } } )
+	actualTaskToLabel = {}
+	with open("LabelKey.json","r") as f:
+		labelKey = json.load( f )
+	for path in complianceMap:
+		for op in complianceMap[path]:
+			if actualTaskToLabel.get(op) is None:
+				actualTaskToLabel[op] = {}
+			actualTaskToLabel[op][path] = {}
+			# this maps tasks to their labels
+			if labelKey[op].get(path) is None:
+				continue
+			for label in labelKey[op][path]:
+				for task in labelKey[op][path][label]:
+					if actualTaskToLabel[op][path].get(task) is None:
+						actualTaskToLabel[op][path][task] = []
+					actualTaskToLabel[op][path][task].append(label)
+
+	for path in complianceMap:
+		for op in complianceMap[path]:
+			if total[op].get("Labels") is None:
+				total[op]["Labels"] = { "Correct": {}, "Incorrect": {} }
+			printMap[path][op]["Labels"]["Correct"] = {}
+			printMap[path][op]["Labels"]["Incorrect"] = {}
+	for path in complianceMap:
+		for op in complianceMap[path]:
+			if labelKey.get(op) is not None:
+				if labelKey[op].get(path) is not None:
+					# this loop determines the false-positive and false-negative count for each label
+					for task in complianceMap[path][op]["Labels"]:
+						if (task == "Correct") or (task == "Incorrect"):
+							continue
+						if actualTaskToLabel[op][path].get(task) is None:
+							actualTaskToLabel[op][path][task] = []
+						wrongLabels = { task: {} }
+						for predictedLabel in complianceMap[path][op]["Labels"][task]:
+							if predictedLabel in actualTaskToLabel[op][path][task]:
+								# correct
+								if total[op]["Labels"]["Correct"].get(predictedLabel) is None:
+									total[op]["Labels"]["Correct"][predictedLabel] = 0
+								total[op]["Labels"]["Correct"][predictedLabel] += 1
+								if printMap[path][op]["Labels"]["Correct"].get(predictedLabel) is None:
+									printMap[path][op]["Labels"]["Correct"][predictedLabel] = 0
+								printMap[path][op]["Labels"]["Correct"][predictedLabel] += 1
+							else:
+								# incorrect
+								if wrongLabels.get(task) is None:
+									wrongLabels[task] = {}
+								wrongLabels[task][predictedLabel] = actualTaskToLabel[op][path][task]
+						for predictedLabel in wrongLabels[task]:
+							if printMap[path][op]["Labels"]["Incorrect"].get(task) is None:
+								printMap[path][op]["Labels"]["Incorrect"][task] = { predictedLabel: "" }
+							printMap[path][op]["Labels"]["Incorrect"][task][predictedLabel] = " or ".join( x for x in  wrongLabels[task][predictedLabel] )
+							if total[op]["Labels"]["Incorrect"].get(predictedLabel) is None:
+								total[op]["Labels"]["Incorrect"][predictedLabel] = []
+							total[op]["Labels"]["Incorrect"][predictedLabel].append( " or ".join( x for x in wrongLabels[task][predictedLabel] ) )
+						
 	# per-project total
 	for path in complianceMap:
 		projectName = list(set( [x for x in path.split("/")] ).intersection(targetFolders))[0]
@@ -128,15 +191,16 @@ def outputData(complianceMap, path, op):
 													 (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"]) )\
 										             if (total[projectName][op]["Total Errors"] + total[projectName][op]["Success"])\
 													 else 0.0 ) * 100
-		
 	printMap["Total"] = total
-	
-			
+
 	with open(args.output, "w") as f:
 		json.dump(printMap, f, indent=2)
 
 def buildProject(path, opflag, args, polly=False, api = False, halide=False, PERF=False):
-	build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag
+	if args.fast:
+		build = "cd "+path+" ; rm KernelGrammar* ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
+	else:
+		build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
 	output = ""
 	print(build)
 	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)

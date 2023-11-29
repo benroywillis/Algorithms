@@ -1,5 +1,5 @@
 {
-	"Labels": ["Init", "ZIP", "Map", "Foreach", "GEMV", "GEMM", "CGEMM", "Stencil", "Unknown", "Not Parallel"],
+	"Labels": ["Init", "ZIP", "Map", "Foreach", "GEMV", "GEMM", "CGEMM", "Stencil", "Unknown", "NotParallel"],
 	"O1": {
 		"SAR/BP/PERFECT": {
 		},
@@ -10,7 +10,7 @@
 		"HistEq/PERFECT": {
 			"Map":          ["Task4","Task6"],
 			"Foreach":      ["Task2"],
-			"Not Parallel": ["Task5"]
+			"NotParallel": ["Task5"]
 		},
 		"StencilChain/Naive": {
 			"Map":     ["Task19","Task26"],
@@ -100,7 +100,7 @@
 		},
 		"MachSuite/aes": {
 		},
-		"MachSuite/backproj": {
+		"MachSuite/backprop": {
 			"GEMV": ["Task69","Task76","Task71"],
 			"Foreach": ["Task73","Task17","Task75","Task70","Task20","Task27","Task5"],
 			"ZIP": ["Task13","Task18","Task21","Task26","Task77","Task78","Task81","Task82","Task79"],
@@ -136,7 +136,7 @@
 		"MachSuite/sort/merge": {
 		},
 		"MachSuite/sort/radix": {
-			"Not Parallel": ["Task3","Task15"],
+			"NotParallel": ["Task3","Task15"],
 			"ZIP": ["Task16"]
 		},
 		"MachSuite/spmv/ellpack": {
