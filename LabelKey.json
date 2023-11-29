@@ -1,7 +1,7 @@
 {
 	"Labels": ["Init", "ZIP", "Map", "Foreach", "GEMV", "GEMM", "CGEMM", "Stencil", "Unknown", "NotParallel"],
 	"O1": {
-		"SAR/BP/PERFECT": {
+		"SAR/bp/PERFECT": {
 		},
 		"SAR/pfa_azimuth_interp/PERFECT": {
 		},
@@ -19,11 +19,11 @@
 		"inner-product/Naive": {
 			"Init": ["Task0"]
 		},
-		"inner-product/PERFECT": {
+		"STAP/inner_product/PERFECT": {
 		},
 		"BilateralGrid/Naive": {
 		},
-		"PrivateAlgorithms/Dash-Radiocorpus/TemporalMitigation/Naive": {
+		"PrivateAlgorithms/Dash-RadioCorpus/TemporalMitigation/Naive": {
 			"ZIP":   ["Task3"],
 			"Map":   ["Task6"],
 			"CGEMM": ["Task42","Task42"]
@@ -94,7 +94,7 @@
 		},
 		"WAMI/change_detection/PERFECT": {
 		},
-		"WAMI/lucas_kanade/PERFECT": {
+		"WAMI/lucas-kanade/PERFECT": {
 			"Map": ["Task11"],
 			"Foreach": ["Task15"]
 		},
@@ -157,6 +157,10 @@
 		"MachSuite/templates": {
 		},
 		"MachSuite/common/test": {
+		},	
+		"Harris/Naive/RLibrary": {
+		},
+		"GEMM/Halide/Naive": {
 		}
 	}
 }
