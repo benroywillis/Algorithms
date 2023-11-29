@@ -49,7 +49,7 @@ def PrintFigure(plt, name):
 def parseArgs():
 	arg_parser = argparse.ArgumentParser()
 	arg_parser.add_argument("-i", "--input", default="Compliance", help="Specify input data file name. Defaults to Compliance_yyyy-mm-dd.json")
-	arg_parser.add_argument("--fast", action="store_true", help="Pass this flag if the projects are already pre-built. This will remove the kernel grammar file such that only that step is run.")
+	arg_parser.add_argument("--full", action="store_true", help="Pass this flag to run the entire Cyclebite toolchain on each project. Default behavior is to remove only the previously existing KernelGrammar file.")
 	arg_parser.add_argument("--debug", default="-g3", help="Set debug flag for compile commands. This raw argument will be based to the DEBUG macro in the build script.")
 	arg_parser.add_argument("-o", "--output", default="Compliance", help="Specify output file name. Defaults to Compliance_yyyy-mm-dd.json.")
 	args = arg_parser.parse_args()
@@ -123,6 +123,7 @@ def outputData(complianceMap, path, op):
 			actualTaskToLabel[op][path] = {}
 			# this maps tasks to their labels
 			if labelKey[op].get(path) is None:
+				print("Warning: path "+path+" was not found in LabelKey.json")
 				continue
 			for label in labelKey[op][path]:
 				for task in labelKey[op][path][label]:
@@ -197,10 +198,10 @@ def outputData(complianceMap, path, op):
 		json.dump(printMap, f, indent=2)
 
 def buildProject(path, opflag, args, polly=False, api = False, halide=False, PERF=False):
-	if args.fast:
-		build = "cd "+path+" ; rm KernelGrammar* ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
-	else:
+	if args.full:
 		build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
+	else:
+		build = "cd "+path+" ; rm KernelGrammar* ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
 	output = ""
 	print(build)
 	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)

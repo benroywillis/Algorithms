@@ -136,8 +136,9 @@
 		"MachSuite/sort/merge": {
 		},
 		"MachSuite/sort/radix": {
-			"NotParallel": ["Task3","Task15"],
-			"ZIP": ["Task16"]
+			"NotParallel": ["Task3"],
+			"ZIP": ["Task16"],
+			"Stencil": ["Task15"]
 		},
 		"MachSuite/spmv/ellpack": {
 			"ZIP": ["Task11"]
@@ -152,6 +153,10 @@
 		},
 		"MachSuite/viterbi": {
 			"ZIP": ["Task3"]
+		},
+		"MachSuite/templates": {
+		},
+		"MachSuite/common/test": {
 		}
 	}
 }
