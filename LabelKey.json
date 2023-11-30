@@ -1,0 +1,166 @@
+{
+	"Labels": ["Init", "ZIP", "Map", "Foreach", "GEMV", "GEMM", "CGEMM", "Stencil", "Unknown", "NotParallel"],
+	"O1": {
+		"SAR/bp/PERFECT": {
+		},
+		"SAR/pfa_azimuth_interp/PERFECT": {
+		},
+		"SAR/pfa_range_interp/PERFECT": {
+		},
+		"HistEq/PERFECT": {
+			"Map":          ["Task4","Task6"],
+			"Foreach":      ["Task2"],
+			"NotParallel": ["Task5"]
+		},
+		"StencilChain/Naive": {
+			"Map":     ["Task19","Task26"],
+			"Stencil": ["Task32","Task33","Task34","Task35","Task36"]
+		},
+		"inner-product/Naive": {
+			"Init": ["Task0"]
+		},
+		"STAP/inner_product/PERFECT": {
+		},
+		"BilateralGrid/Naive": {
+		},
+		"PrivateAlgorithms/Dash-RadioCorpus/TemporalMitigation/Naive": {
+			"ZIP":   ["Task3"],
+			"Map":   ["Task6"],
+			"CGEMM": ["Task42","Task42"]
+		},
+		"Harris/Naive": {
+			"Map":     ["Task2"],
+			"Stencil": ["Task24"]
+		},
+		"CGEMM/Naive": {
+			"Init": ["Task2"],
+			"Map":  ["Task4"]
+		},
+		"FFT/2D/PERFECT": {
+			"Init": ["Task3"]
+		},
+		"FFT/1D/Naive": {
+			"Init": ["Task0"],
+			"Map": ["Task4"],
+			"Foreach": ["Task2"]
+		},
+		"FFT/1D/PERFECT": {
+			"Init": ["Task2"]
+		},
+		"BilateralFilter/Naive": {
+		},
+		"IIRBlur/Naive": {
+			"ZIP": ["Task9","Task12","Task13","Task14"]
+		},
+		"ElementMultiply/Naive": {
+			"Init": ["Task4"],
+			"Map": ["Task3"]
+		},
+		"SIFT/Naive": {
+			"Map": ["Task25"]
+		},
+		"STAP/outer_product/PERFECT": {
+		},
+		"STAP/system_solve/PERFECT": {
+		},
+		"GEMM/Naive": {
+			"Init": ["Task2"],
+			"GEMM": ["Task4"]
+		},
+		"Sort/Naive": {
+			"Init": ["Task0"]
+		},
+		"Sort/PERFECT": {
+		},
+		"GEMV/Naive": {
+			"Init": ["Task2"],
+			"GEMV": ["Task3"]
+		},
+		"HoughTransform/Naive": {
+		},
+		"GaussianBlur/Naive": {
+		},
+		"2DConvolution/Naive": {
+		},
+		"2DConvolution/PERFECT": {
+			"Foreach": ["Task4"],
+			"Stencil": ["Task12"]
+		},
+		"DWT/PERFECT": {
+			"ZIP": ["Task11","Task11","Task11","Task11"]
+		},
+		"WAMI/debayer/PERFECT": {
+			"Map": ["Task14","Task16","Task18","Task19","Task21","Task22","Task24","Task25"]
+		},
+		"WAMI/change_detection/PERFECT": {
+		},
+		"WAMI/lucas-kanade/PERFECT": {
+			"Map": ["Task11"],
+			"Foreach": ["Task15"]
+		},
+		"MachSuite/aes": {
+		},
+		"MachSuite/backprop": {
+			"GEMV": ["Task69","Task76","Task71"],
+			"Foreach": ["Task73","Task17","Task75","Task70","Task20","Task27","Task5"],
+			"ZIP": ["Task13","Task18","Task21","Task26","Task77","Task78","Task81","Task82","Task79"],
+			"Map": ["Task17","Task5"],
+			"Unknown": ["Task71"]
+		},
+		"MachSuite/bfs/bulk": {
+		},
+		"MachSuite/bfs/queue": {
+			"Foreach": ["Task10"]
+		},
+		"MachSuite/fft/strided": {
+		},
+		"MachSuite/fft/transpose": {
+		},
+		"MachSuite/gemm/blocked": {
+			"GEMM": ["Task12"]
+		},
+		"MachSuite/gemm/ncubed": {
+			"GEMM": ["Task11"]
+		},
+		"MachSuite/kmp": {
+			"Map": ["Task0"]
+		},
+		"MachSuite/md/grid": {
+		},
+		"MachSuite/md/knn": {
+			"Unknown": ["Task19","Task19","Task19"]
+		},
+		"MachSuite/nw": {
+			"Init": ["Task0","Task1"]
+		},
+		"MachSuite/sort/merge": {
+		},
+		"MachSuite/sort/radix": {
+			"NotParallel": ["Task3"],
+			"ZIP": ["Task16"],
+			"Stencil": ["Task15"]
+		},
+		"MachSuite/spmv/ellpack": {
+			"ZIP": ["Task11"]
+		},
+		"MachSuite/spmv/crs": {
+		},
+		"MachSuite/stencil/stencil2d": {
+			"Stencil": ["Task12"]
+		},
+		"MachSuite/stencil/stencil3d": {
+			"Stencil": ["Task13"]
+		},
+		"MachSuite/viterbi": {
+			"ZIP": ["Task3"]
+		},
+		"MachSuite/templates": {
+		},
+		"MachSuite/common/test": {
+		},	
+		"Harris/Naive/RLibrary": {
+		},
+		"GEMM/Halide/Naive": {
+		}
+	}
+}
