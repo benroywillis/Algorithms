@@ -11,6 +11,9 @@ LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
 GCC=gcc
 GXX=g++
 GLD=ld
+# CUDA compiler
+NVCC?=nvcc
+CUPROF?=nvprof
 
 ## compile-time configuration flags
 # C and C++ flags
@@ -24,7 +27,7 @@ DEBUG?=-g3
 ## Source file configuration variables
 # name of the source file with main in it
 SOURCE?=test
-# suffix of the file with main in it
+# suffix of the file with main in it (can be .c, .cpp, or .cu)
 SUFFIX?=.c
 # extra path to find this file (relative path from the relative Makefile)
 SOURCE_PATH?=
@@ -55,9 +58,12 @@ RARGS?=
 ifeq ($(SUFFIX),.c)
 	C=$(CC)
 	GC=$(GCC)
-else
+else ifeq ($(SUFFIX),.cpp)
 	C=$(CXX)
 	GC=$(GXX)
+else
+	C=$(NVCC)
+	GC=$(NVCC)
 endif
 
 # TimingLib benchmarking parameters
@@ -241,6 +247,9 @@ $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOU
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
+else ifeq ($(SUFFIX),.cu)
+$(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(C) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@ 
 else
 $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@ 
@@ -298,6 +307,9 @@ ll : $(SOURCE).markov.bc $(SOURCE).memory.bc #$(SOURCE).precision.bc
 	$(DIS) $(SOURCE).markov.bc
 	$(DIS) $(SOURCE).memory.bc
 	#$(DIS) $(SOURCE).precision.bc
+
+cuprof : $(SOURCE).elf
+	$(CUPROF) $<
 
 .PHONY:
 
