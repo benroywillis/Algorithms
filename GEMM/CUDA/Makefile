@@ -1,0 +1,8 @@
+include ../../Environment.mk
+SOURCE=GEMM
+SUFFIX=.cu
+POLLY_SHOW=
+SIZE?=64
+THREADS_PER_BLOCK?= 256
+CXXFLAGS += -DSIZE=$(SIZE) -DTHREADS_PER_BLOCK=$(THREADS_PER_BLOCK)
+include ../../BuildFlow.mk
