@@ -5,7 +5,7 @@ CC=$(LLVM_INSTALL)bin/clang
 CXX=$(LLVM_INSTALL)bin/clang++
 OPT=$(LLVM_INSTALL)bin/opt
 LLD=--ld-path=$(LLVM_INSTALL)bin/ld.lld
-LDFLAGS?=-flto $(LLD) -Wl,--plugin-opt=emit-llvm
+LDFLAGS?=-flto -Wl,--plugin-opt=emit-llvm $(LLD) 
 #LDFLAGS?=-c -emit-llvm -g3 -O0 // these flags do not work if linking in static bitcode libraries
 # GNU compiler is used for GNU tools
 GCC=gcc
@@ -42,7 +42,7 @@ D_LINKS_PATH?=$(LLVM_INSTALL)lib/
 # dynamic links to use in the link phase
 D_LINKS += -L$(D_LINKS_PATH) 
 # include paths for compilation phase. The timinglib header is automatically appended to save redundant stuff in Makefiles
-INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/
+INCLUDE+= -I$(ALGORITHMS_DIR)/TimingLib/ -I$(ALGORITHMS_DIR)/inc/
 
 ## Runtime variables
 # environment variables to set before running a binary. LD_LIBRARY_PATH cannot be in this variable
@@ -131,7 +131,7 @@ $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADD
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $^ $(LIBRARIES) -o $@
 endif
 
 # Cyclebyte pipeline rules
