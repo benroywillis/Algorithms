@@ -1,3 +1,4 @@
+// helpful resource: https://timdettmers.com/2023/01/30/which-gpu-for-deep-learning/
 
 #include <stdio.h>
 #include <stdlib.h>
