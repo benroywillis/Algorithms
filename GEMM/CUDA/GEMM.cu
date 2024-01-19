@@ -58,6 +58,13 @@ int main()
         }
     }
 
+	// move the data to the GPU off-chip memory before kernel launch
+	int device = -1;
+	cudaGetDevice(&device);
+	int res0 = cudaMemPrefetchAsync(in0, SIZE*SIZE*sizeof(TYPE), device, NULL);
+	int res1 = cudaMemPrefetchAsync(in1, SIZE*SIZE*sizeof(TYPE), device, NULL);
+	int res2 = cudaMemPrefetchAsync(out, SIZE*SIZE*sizeof(TYPE), device, NULL);
+	printf("%i, %i, %i\n", res0, res1, res2);
 	__TIMINGLIB_benchmark([&]{ GEMM<<< (SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(in0, in1, out); cudaDeviceSynchronize(); });
 
 	// keeps the optimizer from ruining the experiment
