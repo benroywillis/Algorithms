@@ -38,10 +38,14 @@ int main(int argc, char **argv) {
 #if HALIDE_AUTOSCHEDULE == 1
 	double autotime = __TIMINGLIB_benchmark([&]() {
 		auto out = MatrixMultiply_autoschedule_true_generated(mat_a, mat_b, mat_c);
+		mat_c.device_sync();
+		mat_c.copy_to_host();
 	});
 #endif
     double time = __TIMINGLIB_benchmark([&]() {
         auto out = MatrixMultiply_autoschedule_false_generated(mat_a, mat_b, mat_c);
+		mat_c.device_sync();
+		mat_c.copy_to_host();
     });
     printf("Success!\n");
     return 0;
