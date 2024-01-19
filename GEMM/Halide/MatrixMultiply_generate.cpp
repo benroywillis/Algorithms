@@ -24,12 +24,18 @@ public:
 		Func output;
 		output(x, y) = matrix_mul(x, y);
 
-		Var xy;
-		output.tile( x, y, xi, yi, 32, 32).fuse(x, y, xy).parallel(xy).split(yi, yi, yii, 4).vectorize(xi, 8).unroll(xi).unroll(yii);
+		if( using_autoscheduler() )
+		{
+			// give it parameter estimates
+		}
+		else
+		{
+			Var xy;
+			output.tile( x, y, xi, yi, 32, 32).fuse(x, y, xy).parallel(xy).split(yi, yi, yii, 4).vectorize(xi, 8).unroll(xi).unroll(yii);
 
-		matrix_mul.compute_at(output, yi).vectorize(x, 8).unroll(y);
-		matrix_mul.update(0).reorder(x, y, k).vectorize(x, 8).unroll(x).unroll(y).unroll(k, 2);
-
+			matrix_mul.compute_at(output, yi).vectorize(x, 8).unroll(y);
+			matrix_mul.update(0).reorder(x, y, k).vectorize(x, 8).unroll(x).unroll(y).unroll(k, 2);
+		}
 		output.bound(x, 0, N);
 		output.bound(y, 0, M);
 		out = output;

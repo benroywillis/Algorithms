@@ -115,9 +115,11 @@ all : KernelGrammar_$(SOURCE).json
 $(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL_PREFIX)share/tools/GenGen.cpp $(ADDSOURCE_GENERATE)
 	$(CXX) $(HALIDE_COMPILE_ARGS) $(DEBUG) $(OPFLAG) $(INCLUDE) $(HALIDE_INCLUDE) $(CFLAGS) $(CXXFLAGS) -L$(HALIDE_INSTALL_PREFIX)lib/ $(HALIDE_D_LINKS) -lHalide $^ -o $@
 
+# choice of autoschedulers as of Halide 16: mullapudi2016, adams2019, anderson2021 (GPU only) 
+# machine_params=32,16777216,40
 ifeq ($(HALIDE_AUTOSCHEDULE),1)
 $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_true_generated.h $(SOURCE)_autoschedule_true_generated.halide_generated.cpp : $(SOURCE)_generated.exec
-	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_mullapudi2016.so -s Mullapudi2016 target=host auto_schedule=true machine_params=32,16777216,40
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_adams2019.so autoscheduler=Adams2019 target=host
 endif
 $(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated.h $(SOURCE)_autoschedule_false_generated.halide_generated.cpp : $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_false_generated -e bitcode,h,cpp target=host

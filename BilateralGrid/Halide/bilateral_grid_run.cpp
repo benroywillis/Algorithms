@@ -1,7 +1,8 @@
-#include <cassert>
 #include <cstdio>
-#include <cstdlib>
-#include <iostream>
+#include "TimingLib.h"
+#if HALIDE_AUTOSCHEDULE == 1
+#include "bilateral_grid_autoschedule_true_generated.h"
+#endif
 #include "bilateral_grid_autoschedule_false_generated.h"
 
 #include "HalideBuffer.h"
@@ -41,18 +42,16 @@ int main(int argc, char **argv) {
     Buffer<float> output(input.width(), input.height());
 
 	gray<float>(input, grayscale);
-	//std::cout << "grayscale image access: " << grayscale(input.width(),input.height()) << std::endl;
 
-    // Timing code. Timing doesn't include copying the input data to
-    // the gpu or copying the output back.
-	std::cout << "Running halide benchmark!" << std::endl;
-    // Manually-tuned version
-    double min_t_manual = benchmark(timing_iterations, 10, [&]() {
+#if HALIDE_AUTOSCHEDULE == 1
+	double autotime = __TIMINGLIB_benchmark([&]() {
+		bilateral_grid_autoschedule_true_generated(grayscale, r_sigma, s_sigma, output);
+		output.device_sync();
+	});	
+#endif
+    double min_t_manual = __TIMINGLIB_benchmark([&]() {
         bilateral_grid_autoschedule_false_generated(grayscale, r_sigma, s_sigma, output);
         output.device_sync();
     });
-    printf("Manually-tuned time: %gms\n", min_t_manual * 1e3);
-
-    printf("Success!\n");
     return 0;
 }

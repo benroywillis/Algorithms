@@ -4,6 +4,9 @@
 #include <stdlib.h>
 
 #include "TimingLib.h"
+#if HALIDE_AUTOSCHEDULE == 1
+#include "MatrixMultiply_autoschedule_true_generated.h"
+#endif
 #include "MatrixMultiply_autoschedule_false_generated.h"
 
 #include "HalideBuffer.h"
@@ -32,6 +35,11 @@ int main(int argc, char **argv) {
 	mat_b.allocate();
 	mat_c.allocate();
 
+#if HALIDE_AUTOSCHEDULE == 1
+	double autotime = __TIMINGLIB_benchmark([&]() {
+		auto out = MatrixMultiply_autoschedule_true_generated(mat_a, mat_b, mat_c);
+	});
+#endif
     double time = __TIMINGLIB_benchmark([&]() {
         auto out = MatrixMultiply_autoschedule_false_generated(mat_a, mat_b, mat_c);
     });

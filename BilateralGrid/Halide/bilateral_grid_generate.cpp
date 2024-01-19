@@ -72,7 +72,8 @@ public:
         // Provide estimates on the input image
         input.set_estimates({{0, 1536}, {0, 2560}});
         // Provide estimates on the parameters
-        r_sigma.set_estimate(0.1f);
+        r_sigma.set_estimate(1.0f);
+        s_sigma.set_estimate(1.0f);
         // TODO: Compute estimates from the parameter values
         histogram.set_estimate(z, -2, 16);
         blurz.set_estimate(z, 0, 12);
@@ -80,7 +81,7 @@ public:
         blury.set_estimate(z, 0, 12);
         bilateral_grid.set_estimates({{0, 1536}, {0, 2560}});
 
-        if (auto_schedule) {
+        if (using_autoscheduler()) {
             // nothing
         } else if (get_target().has_gpu_feature()) {
             // 0.50ms on an RTX 2060
