@@ -3,7 +3,9 @@
 #include <string.h>
 #include "TimingLib.h"
 
+#ifndef SIZE
 #define SIZE 		2048
+#endif
 #define PRECISION 	float
 
 int main( int argc, char** argv )
@@ -30,6 +32,7 @@ int main( int argc, char** argv )
 		}
 	}
 
+	} );
 	for( unsigned i = 0; i < SIZE; i++ )
 	{
 		for( unsigned j = 0; j < SIZE; j++ )
@@ -41,7 +44,6 @@ int main( int argc, char** argv )
 			}
 		}
 	}
-	} );
 
 	return 0;
 }
