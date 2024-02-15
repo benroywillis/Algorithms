@@ -65,4 +65,7 @@ Compliance*.json
 .vscode/
 # don't track prior result folders
 priorResults/
+# generated Halide files
+Halide_generator.cpp
+Halide_driver.cpp
 
