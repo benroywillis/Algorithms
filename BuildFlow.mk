@@ -117,9 +117,11 @@ $(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL
 
 # choice of autoschedulers as of Halide 16: mullapudi2016, adams2019, anderson2021 (GPU only) 
 # check your cuda_capability_## parameter at https://developer.nvidia.com/cuda-gpus#compute
+# the autoscheduler library needs to be lower case
+HALIDE_AUTOSCHEDULER_LIB=$(shell echo $(HALIDE_AUTOSCHEDULER) | tr A-Z a-z)
 ifeq ($(HALIDE_AUTOSCHEDULE),1)
 $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_true_generated.h $(SOURCE)_autoschedule_true_generated.halide_generated.cpp : $(SOURCE)_generated.exec
-	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_anderson2021.so autoscheduler=Anderson2021 target=host-cuda-cuda_capability_86
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_$(HALIDE_AUTOSCHEDULER_LIB).so autoscheduler=$(HALIDE_AUTOSCHEDULER) target=host-cuda-cuda_capability_86
 endif
 $(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated.h $(SOURCE)_autoschedule_false_generated.halide_generated.cpp : $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_false_generated -e bitcode,h,cpp target=host
@@ -127,7 +129,7 @@ $(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated
 # Halide needs to be built a special way
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) -DHALIDE_AUTOSCHEDULE=$(HALIDE_AUTOSCHEDULE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
@@ -245,7 +247,7 @@ cgeist : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 # Halide needs to be built a special way
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) -DHALIDE_AUTOSCHEDULE=$(HALIDE_AUTOSCHEDULE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
@@ -265,7 +267,7 @@ gdb : $(SOURCE).elf
 
 ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.1)
 $(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
-	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
+	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) -DHALIDE_AUTOSCHEDULE=$(HALIDE_AUTOSCHEDULE) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
