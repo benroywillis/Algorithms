@@ -1,6 +1,5 @@
 include ../../../Environment.mk
 
-DASH_DATA=/mnt/nobackup-09/Dash/Data/
 CFLAGS+= -std=c++17
 
 # In order for this variable to work, your run files need to be named
@@ -15,7 +14,9 @@ D_LINKS=-ljpeg -lpng -lpthread
 
 HALIDE=1
 HALIDE_THREADS?=1
-HALIDE_AUTOSCHEDULE=0
+HALIDE_AUTOSCHEDULE=1
+# can also be Mullapudi2016, Li2018, Adams2019, Anderson2021 (for GPU)
+HALIDE_AUTOSCHEDULER=Adams2019
 
 #INPUT_IMAGE=../../../Data/Input/sample_640_426.jpg
 #OUTPUT_IMAGE=../../../Data/Output/StencilChain_Halide_sample_640_426.jpg
