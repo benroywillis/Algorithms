@@ -240,8 +240,12 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 	$(OPT) $(POLLY_OPTFLAGS2.0) $< $(POLLY_OPTFLAGS2.1)
 
 # polygeist test rule
-cgeist : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(CGEIST) $^ -o $(SOURCE).cgeist
+# add -S to see the generated MLIR
+$(SOURCE).cgeist : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(CGEIST) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) -raise-scf-to-affine $^ -o $(SOURCE).cgeist
+
+run_cgeist : $(SOURCE).cgeist
+	$(BIN_ENV) ./$< $(RARGS)
 
 # builds the source code into elf form, no instrumentation
 # Halide needs to be built a special way
@@ -318,7 +322,7 @@ cuprof : $(SOURCE).elf
 .PHONY:
 
 clean:
-	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot *.dot_taskonly *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw MemoryFootprint*.csv *.jscop
+	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot *.dot_taskonly *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw MemoryFootprint*.csv *.jscop *.cgeist *.annotated_omp.c*
 
 clean_oprofile:
 	sudo rm -rf oprofile_data
