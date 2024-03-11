@@ -35,7 +35,7 @@ barWidth = 0.3
 # install prefix of Algorithms repo
 rootPath = "/home/ben/Documents/Research/Algorithms/"
 # folders to find and build within them
-targetFolders = { "PERFECT","Naive","MachSuite" }
+targetFolders = { "PERFECT","Naive","MachSuite","polybench" }
 #targetFolders = { "MachSuite" }
 # set the opflag to what you want to test
 #OPFLAGS = ["O0", "O1", "O2", "O3" ]
