@@ -11,7 +11,7 @@ BlockInfo*
 kernel_*
 *instance*.json
 Instance_*
-KernelGrammar_*
+KernelGrammar_*.json
 SourceMap_*
 ExclusivityMap.json
 *.dot

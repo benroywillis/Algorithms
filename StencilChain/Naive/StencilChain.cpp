@@ -62,7 +62,7 @@ void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int wid
 
 int main(int argc, char** argv)
 {
-	    if( argc != 3 )
+    if( argc != 3 )
     {
         printf("Please provide input image name and output image name.\n");
         return EXIT_FAILURE;
