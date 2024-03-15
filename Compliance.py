@@ -201,7 +201,7 @@ def buildProject(path, opflag, args, polly=False, api = False, halide=False, PER
 	if args.full:
 		build = "cd "+path+" ; make clean ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
 	else:
-		build = "cd "+path+" ; rm KernelGrammar* ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
+		build = "cd "+path+" ; rm KernelGrammar*.json ; make OPFLAG=-"+opflag+" DEBUG="+args.debug
 	output = ""
 	print(build)
 	check = sp.Popen( build, stdout=sp.PIPE, stderr=sp.PIPE, shell=True)
