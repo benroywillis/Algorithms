@@ -161,6 +161,23 @@
 		"Harris/Naive/RLibrary": {
 		},
 		"GEMM/Halide/Naive": {
+		},
+		"GEMM/polybench/": {
+			"Init": ["Task7", "Task5", "Task4"],
+			"GEMM": ["Task8"]
+		},
+		"2MM/polybench": {
+			"Init": ["Task6","Task7","Task10","Task11"],
+			"GEMM": ["Task12"],
+			"Map": ["Task13"]
+		},
+		"3MM/polybench": {
+			"Init": ["Task7","Task10","Task12","Task13"],
+			"GEMM": ["Task14","Task15","Task16"]
+		},
+		"Doitgen/polybench": {
+			"Init": ["Task5","Task8"],
+			"GEMM": ["Task9"]
 		}
 	}
 }

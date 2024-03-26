@@ -1,0 +1,30 @@
+2MM -> works
+3MM -> works
+Gemm -> works
+Doitgen (NxMxL * LxK) -> works
+Jacobi_1D -> works but an expression prints too many times in the Halide
+Jacobi_2D -> same as jacobi_1D
+Durbin -> contains an fneg
+TriSolv -> contains an fneg
+LU -> contains an fneg, otherwise all tasks are compliant
+LUDec -> contains a predicated expression and an fneg
+BICG -> collection maps to more than one load
+FDTD_APML -> collection maps to more than one load
+GeSumMV -> collection maps to more than one load
+SYMM -> collection maps to more than one load
+Correlation -> cannot print a task that doesn't have a collection as output
+FDTD_2D -> cannot print a task that doesn't have a collection as output
+MVT -> works but an expression doesn't connect to the output
+Regdetect -> fully compliant but the Halide contains an expression that uses its rv and doesn't connect to the output
+Adi -> makes the grammar tool segfault because producer-consumer dimensions are not the same size
+GramSchmidt -> segfault when processing Task 9
+ATAX -> has two outputs and only uses 4/5 inputs
+GemVer -> works but the Halide contains too many inputs (not all of them are used in the expressions)
+Cholesky -> contains a predicated instruction in its worker task
+DynProg -> contains a predicated instruction in its worker task
+Seidel_1D -> contains a predicated instruction in its working task
+Syr2K -> contains a predicated instruction
+Floyd-Warshall -> could not build a symbol for this value (select instruction)
+Covariance -> fully compliant but has two bad expressions in its Halide
+SyrK -> fully compliant but Halide is completely broken in its communication and subexpression references
+TrMM -> correct expressions but the indices are in the wrong place and the RDom has bad boundaries
