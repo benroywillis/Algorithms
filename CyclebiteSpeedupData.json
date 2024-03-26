@@ -1,0 +1,103 @@
+{
+	"Notes": {
+		"Platform": "All results captured on an AMD ryzen 9 5950x",
+		"LLVM": "LLVM17.0.1 was used to compile Cyclebite, Cyclebite-Template and tool intermediates",
+		"Halide": "Halide16.0.0 was used with the Adams2019 autoscheduler",
+		"2024-03-08": ["ElementMultiply", "GEMV", "GEMM"],
+		"2024-03-10": ["StencilChain"],
+		"2024-03-24": ["polybench/gemm"],
+		"2024-03-25": ["polybench/3mm"],
+		"2024-03-26": ["polybench/gemver"]
+	},
+	"ElementMultiply (SIZE=2048)": {
+		"Cyclebite-Template": {
+			"1": 0.0005036,
+			"2": 0.0002508,
+			"4": 0.0002000,
+			"8": 0.0000923,
+			"16": 0.0001084
+		}
+	},
+	"GEMV (SIZE=2048)": 
+		"Cyclebite-Template": {
+			"1": 0.0013241,
+			"2": 0.0006524,
+			"4": 0.0003437,
+			"8": 0.0001869,
+			"16": 0.0001517
+		}
+	},
+	"SGEMM (SIZE=512)":
+		"Cyclebite-Template": {
+			"1": 0.0182862,
+			"2": 0.0099670,
+			"4": 0.0049059,
+			"8": 0.0025544,
+			"16": 0.0017003
+		}
+	},
+	"CGEMM":
+		"Cyclebite-Template": {
+			"1": 0.,
+			"2": 0.,
+			"4": 0.,
+			"8": 0.,
+			"16": 0.
+		}
+	},
+	"IIRBlur":
+		"Cyclebite-Template": {
+			"1": 0.,
+			"2": 0.,
+			"4": 0.,
+			"8": 0.,
+			"16": 0.
+		}
+	},
+	"Stencil Chain":
+		"Cyclebite-Template": {
+			"1": 0.0154333,
+			"2": 0.0083689,
+			"4": 0.0042374,
+			"8": 0.0022221,
+			"16": 0.0012343
+		}
+	},
+	"HistEq":
+		"Cyclebite-Template": {
+			"1": 0.,
+			"2": 0.,
+			"4": 0.,
+			"8": 0.,
+			"16": 0.
+		}
+	},
+	"polybench/GEMM (SIZE=1024)": {
+		"Cyclebite-Template": {
+			"1": 0.303643,
+			"2": 0.427632,
+			"4": 0.137416,
+			"8": 0.081089,
+			"16": 0.0563948
+
+		}
+	},
+	"polybench/3mm (SIZE=1024)": {
+		"Cyclebite-Template": {
+			"1": 0.524943,
+			"2": 0.531144,
+			"4": 0.248092,
+			"8": 0.104337,
+			"16": 0.108372
+		}
+	},
+	"polybench/gemver (SIZE=4096)": {
+		"Cyclebite-Template": {
+			"1": 0.00047887,
+			"2": 0.00026995,
+			"4": 0.00018408,
+			"8": 0.00013965,
+			"16": 0.00019284
+		}
+	}
+}
