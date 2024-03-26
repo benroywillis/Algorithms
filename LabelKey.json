@@ -178,6 +178,12 @@
 		"Doitgen/polybench": {
 			"Init": ["Task5","Task8"],
 			"GEMM": ["Task9"]
+		},
+		"GemVer/polybench": {
+   			"Init": ["Task7", "Task7", "Task7", "Task7", "Task7", "Task7", "Task7"],
+			"GEMV": ["Task5","Task6"],
+			"Map": ["Task8"],
+			"ZIP": ["Task1"]
 		}
 	}
 }
