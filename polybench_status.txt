@@ -11,6 +11,12 @@ TrMM -> works but the RDom has bad boundaries (need to implement Halide's triang
 SyrK -> fully compliant but second task is not referring to the first task which normalized the input first
 -- Incorrect expression caused by task code being modified by serial code --
 Covariance -> fully compliant but has bad expressions because the column vector means are summed in a loop then normalized in serial code
+-- Two tasks fused together --
+BICG -> result seems to be correct but one of the outputs is ignored... The two tasks should be split into two pipelines
+-- Two tasks in the same pipeline that don't communicate --
+MVT -> works but an expression doesn't connect to the output
+-- Some massaging of the expressions --
+ATAX -> misses a reduction and doesn't connect connected tasks together (its two GEMVs back to back, one connects to the other via the resulting vector)
 
 // medium
 -- predicated instruction (phi or select in the function) --
@@ -19,6 +25,10 @@ DynProg -> contains a predicated instruction in its worker task
 Seidel_1D -> contains a predicated instruction in its working task
 Syr2K -> contains a predicated instruction
 Floyd-Warshall -> could not build a symbol for this value (select instruction)
+-- child-loop prologue and epilogue code --
+TriSolv -> its expressions contain improper syntax and no var... just a reduction domain. It also has many instances and doesn't seem like it should.
+-- task uses a reduction to compute temporary reduction variables that are eventually saved into the output
+GeSumMV -> some expressions don't have all their vars in their declarations, and none of them connect to the output
 
 // hard
 -- Missing task code due to comprehension--
@@ -30,6 +40,9 @@ Adi -> makes the grammar tool segfault because there is a producer whose dimensi
 Durbin (toeplitz system solve) -> Cyclebite-template goes to completion but none of the expressions in the halide talk to each other
 Jacobi_1D -> the expression generated is still being printed lots, and there's a write-back after each algorithm iteration that's not being observed
 Jacobi_2D -> same as jacobi_1D
+-- lots of fused tasks that need to be separated --
+FDTD_APML -> there are many outputs and they all have crazy definitions (in the number of dimensions they seem to use)
+
 
 // unknown
 -- segfault from a subexpression having a nullptr as output --
@@ -42,9 +55,3 @@ SYMM  -> same as Correlation
 GramSchmidt -> segfault when processing Task 9 (it blows up the stack) [it seems to be bouncing between phi (else condition, line 557) with the callbase inner for loop (line 616)]
 
 
-TriSolv -> its expressions contain improper syntax and no var... just a reduction domain
-BICG -> has too many input base pointers and an expression doesn't map to the output
-FDTD_APML -> lots of inputs and none of them connect to the output
-GeSumMV -> some expressions don't have all their vars in their declarations, and none of them connect to the output
-MVT -> works but an expression doesn't connect to the output
-ATAX -> has two outputs and only uses 3/4 inputs. 
