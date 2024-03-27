@@ -2,29 +2,49 @@
 3MM -> works
 Gemm -> works
 Doitgen (NxMxL * LxK) -> works
-Jacobi_1D -> works but an expression prints too many times in the Halide
-Jacobi_2D -> same as jacobi_1D
-Durbin -> contains an fneg
-TriSolv -> contains an fneg
-LU -> contains an fneg, otherwise all tasks are compliant
-LUDec -> contains a predicated expression and an fneg
-BICG -> collection maps to more than one load
-FDTD_APML -> collection maps to more than one load
-GeSumMV -> collection maps to more than one load
-SYMM -> collection maps to more than one load
-Correlation -> cannot print a task that doesn't have a collection as output
-FDTD_2D -> cannot print a task that doesn't have a collection as output
-MVT -> works but an expression doesn't connect to the output
-Regdetect -> fully compliant but the Halide contains an expression that uses its rv and doesn't connect to the output
-Adi -> makes the grammar tool segfault because producer-consumer dimensions are not the same size
-GramSchmidt -> segfault when processing Task 9
-ATAX -> has two outputs and only uses 4/5 inputs
-GemVer -> works but the Halide contains too many inputs (not all of them are used in the expressions)
+GemVer -> works but the Halide contains too many inputs 
+
+// easy
+-- Triangular RDom --
+TrMM -> works but the RDom has bad boundaries (need to implement Halide's triangular RDom stuff)
+-- Incorrect expression caused by task code working in-place in the first task, then reducing new results to the same place
+SyrK -> fully compliant but second task is not referring to the first task which normalized the input first
+-- Incorrect expression caused by task code being modified by serial code --
+Covariance -> fully compliant but has bad expressions because the column vector means are summed in a loop then normalized in serial code
+
+// medium
+-- predicated instruction (phi or select in the function) --
 Cholesky -> contains a predicated instruction in its worker task
 DynProg -> contains a predicated instruction in its worker task
 Seidel_1D -> contains a predicated instruction in its working task
 Syr2K -> contains a predicated instruction
 Floyd-Warshall -> could not build a symbol for this value (select instruction)
-Covariance -> fully compliant but has two bad expressions in its Halide
-SyrK -> fully compliant but Halide is completely broken in its communication and subexpression references
-TrMM -> correct expressions but the indices are in the wrong place and the RDom has bad boundaries
+
+// hard
+-- Missing task code due to comprehension--
+Regdetect -> it contains a loop comprehension whose child loops don't always fill the usage criteria for a task. This results in tasks being missed by the tool. For the task subexpressions that are captured, they are syntactically correct but not connected together. 
+Durbin -> contains an XOR, none of the expressions talk to each other
+-- segfault --
+Adi -> makes the grammar tool segfault because there is a producer whose dimensions are not explicit (one of its dimensions is a constant) - this breaks the Collection::getOutputDimensions() method causing a mismatch between producer dimensions and consumer dimensions
+-- comprehension code --
+Durbin (toeplitz system solve) -> Cyclebite-template goes to completion but none of the expressions in the halide talk to each other
+Jacobi_1D -> the expression generated is still being printed lots, and there's a write-back after each algorithm iteration that's not being observed
+Jacobi_2D -> same as jacobi_1D
+
+// unknown
+-- segfault from a subexpression having a nullptr as output --
+Correlation -> it has an expression (Task5, lines 83-91 in correlation.c) with a nullptr as its output attribute
+FDTD_2D -> same as Correlation
+LUDec -> same as Correlation
+LU -> same as Correlation
+SYMM  -> same as Correlation
+-- segfault from blowing up the stack when processing a task expression
+GramSchmidt -> segfault when processing Task 9 (it blows up the stack) [it seems to be bouncing between phi (else condition, line 557) with the callbase inner for loop (line 616)]
+
+
+TriSolv -> its expressions contain improper syntax and no var... just a reduction domain
+BICG -> has too many input base pointers and an expression doesn't map to the output
+FDTD_APML -> lots of inputs and none of them connect to the output
+GeSumMV -> some expressions don't have all their vars in their declarations, and none of them connect to the output
+MVT -> works but an expression doesn't connect to the output
+ATAX -> has two outputs and only uses 3/4 inputs. 

@@ -64,11 +64,11 @@ void kernel_trisolv(int n,
 
 #pragma scop
   for (i = 0; i < _PB_N; i++) {
-      x[i] = c[i];
-      for (j = 0; j <= i - 1; j++) {
-          x[i] = x[i] - A[i][j] * x[j];
-	  }
-      x[i] = x[i] / A[i][i];
+    x[i] = c[i];
+    for (j = 0; j <= i - 1; j++) {
+      x[i] = x[i] - A[i][j] * x[j];
+	}
+    x[i] = x[i] / A[i][i];
   }
 #pragma endscop
 
