@@ -3,11 +3,22 @@
 		"Platform": "All results captured on an AMD ryzen 9 5950x",
 		"LLVM": "LLVM17.0.1 was used to compile Cyclebite, Cyclebite-Template and tool intermediates",
 		"Halide": "Halide16.0.0 was used with the Adams2019 autoscheduler",
-		"2024-03-08": ["ElementMultiply", "GEMV", "GEMM"],
-		"2024-03-10": ["StencilChain"],
-		"2024-03-24": ["polybench/gemm"],
-		"2024-03-25": ["polybench/3mm"],
-		"2024-03-26": ["polybench/gemver"]
+		"Cyclebite-Template": {
+			"Collection Method": "was timed with the average of 15 samples, each sample is the minimum time of 15 iterations",
+			"App Collection Dates": {
+				"2024-03-08": ["ElementMultiply", "GEMV", "GEMM"],
+				"2024-03-10": ["StencilChain"],
+				"2024-03-24": ["polybench/gemm"],
+				"2024-03-25": ["polybench/3mm"],
+				"2024-03-26": ["polybench/gemver"]
+			}
+		},
+		"LLVM-Polly": {
+			"Collection Method": "was timed with the average of 5 samples",
+			"App Collection Dates": {
+				"2024-03-27": ["ElementMultiply"]
+			}
+		}
 	},
 	"ElementMultiply (SIZE=2048)": {
 		"Cyclebite-Template": {
@@ -16,6 +27,13 @@
 			"4": 0.0002000,
 			"8": 0.0000923,
 			"16": 0.0001084
+		},
+		"LLVM-Polly": {
+			"1": 0.0046164,
+			"2": 0.0011636,
+			"4": 0.0005661,
+			"8": 0.0058881,
+			"16": 0.00050142
 		}
 	},
 	"GEMV (SIZE=2048)": 
@@ -25,6 +43,13 @@
 			"4": 0.0003437,
 			"8": 0.0001869,
 			"16": 0.0001517
+		},
+		"LLVM-Polly": {
+			"1": 0.0012870,
+			"2": 0.0013142,
+			"4": 0.0014143,
+			"8": 0.0015671,
+			"16": 0.0020723
 		}
 	},
 	"SGEMM (SIZE=512)":
@@ -34,6 +59,13 @@
 			"4": 0.0049059,
 			"8": 0.0025544,
 			"16": 0.0017003
+		},
+		"LLVM-Polly": {
+			"1": 0.037927,
+			"2": 0.020351,
+			"4": 0.011908,
+			"8": 0.007997,
+			"16": 0.0066108
 		}
 	},
 	"CGEMM":
@@ -54,13 +86,20 @@
 			"16": 0.
 		}
 	},
-	"Stencil Chain":
+	"Stencil Chain (1280x1920)":
 		"Cyclebite-Template": {
 			"1": 0.0154333,
 			"2": 0.0083689,
 			"4": 0.0042374,
 			"8": 0.0022221,
 			"16": 0.0012343
+		},
+		"LLVM-Polly": {
+			"1": 0.118969,
+			"2": 0.116931,
+			"4": 0.117014,
+			"8": 0.117352,
+			"16": 0.116746
 		}
 	},
 	"HistEq":
@@ -79,7 +118,13 @@
 			"4": 0.137416,
 			"8": 0.081089,
 			"16": 0.0563948
-
+		},
+		"LLVM-Polly": {
+			"1": 0.181178,
+			"2": 0.164232,
+			"4": 0.169959,
+			"8": 0.180131,
+			"16": 0.157391
 		}
 	},
 	"polybench/3mm (SIZE=1024)": {
@@ -89,6 +134,13 @@
 			"4": 0.248092,
 			"8": 0.104337,
 			"16": 0.108372
+		},
+		"LLVM-Polly": {
+			"1": 0.355261,
+			"2": 0.357857,
+			"4": 0.372362,
+			"8": 0.352060,
+			"16": 0.359088
 		}
 	},
 	"polybench/gemver (SIZE=4096)": {
@@ -98,6 +150,13 @@
 			"4": 0.00018408,
 			"8": 0.00013965,
 			"16": 0.00019284
+		},
+		"LLVM-Polly": {
+			"1": 0.037816,
+			"2": 0.023659,
+			"4": 0.019718,
+			"8": 0.019832,
+			"16": 0.017397
 		}
 	}
 }
