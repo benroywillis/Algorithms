@@ -25,7 +25,7 @@
 #  endif
 
 #  ifdef STANDARD_DATASET /* Default if unspecified. */
-#   define N 4000
+#   define N 4096
 #  endif
 
 #  ifdef LARGE_DATASET
