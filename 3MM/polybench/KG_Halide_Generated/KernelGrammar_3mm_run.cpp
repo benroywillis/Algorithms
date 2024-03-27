@@ -39,6 +39,7 @@ int main(int argc, char** argv) {
 #if HALIDE_AUTOSCHEDULE == 1
 	double autotime = __TIMINGLIB_benchmark([&]() {
 		auto out = KernelGrammar_3mm_autoschedule_true_generated(input0, input1, input2, input3, output0);
+		// these seem to have no effect on performance
 		output0.device_sync();
 		output0.copy_to_host();
 	});

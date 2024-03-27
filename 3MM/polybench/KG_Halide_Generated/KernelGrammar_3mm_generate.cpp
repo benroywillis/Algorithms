@@ -33,7 +33,11 @@ public:
 		collection116 = Halide::BoundaryConditions::repeat_edge(collection97);
 		Func collection117("collection117");
 		collection117 = Halide::BoundaryConditions::repeat_edge(collection98);
-
+		/* Interestingly, commenting the bounding functions above and uncommenting this code makes the app about 2.5x slower (0.55s -> 1.25s)
+		Func collection114 = collection83;
+		Func collection115 = collection84;
+		Func collection116 = collection97;
+		Func collection117 = collection98;*/
 		RDom rv75(0, SIZE);
 		Func call85("call85");
 		call85(var72, var74) += collection114(var72, rv75) * collection115(rv75, var74);
