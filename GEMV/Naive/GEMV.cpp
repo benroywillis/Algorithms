@@ -15,6 +15,7 @@
 
 void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1), PRECISION (*out))
 {
+#pragma scop
     for (int i = 0; i < SIZE; i++)
     {
         for (int j = 0; j < SIZE; j++)
@@ -22,6 +23,7 @@ void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1), PRECISION (*out))
             out[i] += in0[i][j] * in1[j];
         }
     }
+#pragma endscop
 }
 
 int main()
