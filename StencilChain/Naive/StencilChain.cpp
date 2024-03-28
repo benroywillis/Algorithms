@@ -15,6 +15,7 @@ void move(PRECISION* in, PRECISION* out, unsigned int height, unsigned int width
 {
 #define IN(y, x) in[y*width + x]
 #define OUT(y, x) out[y*width + x]
+#pragma scop
 	for( int y = 0; y < height; y++ )
 	{
 		for( int x = 0; x < width; x++ )
@@ -22,6 +23,7 @@ void move(PRECISION* in, PRECISION* out, unsigned int height, unsigned int width
 			OUT(y, x) = IN(y, x);
 		}
 	}
+#pragma endscop
 	memset(out, 0, height*width*sizeof(PRECISION));
 }
 
@@ -37,7 +39,7 @@ void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int wid
 									 {4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f}, 
 									 {1.0f / 273.0f,  4.0f / 273.0f,  7.0f / 273.0f,  4.0f / 273.0f, 1.0f / 273.0f} 
 								   };
-//#pragma scop
+#pragma scop
 	for( int y = 0; y < height; y++ )
 	{
 		for( int x = 0; x < width; x++ )
@@ -57,7 +59,7 @@ void filter(PRECISION* in, PRECISION* out, unsigned int height, unsigned int wid
 			}
 		}
 	}
-//#pragma endscop
+#pragma endscop
 }
 
 int main(int argc, char** argv)
