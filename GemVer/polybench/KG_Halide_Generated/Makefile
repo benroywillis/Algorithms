@@ -1,6 +1,6 @@
 include ../../../Environment.mk
 
-SIZE?=500
+SIZE?=4096
 CFLAGS+= -std=c++17 -DSIZE=$(SIZE)
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp

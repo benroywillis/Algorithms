@@ -71,3 +71,4 @@ Halide_driver.cpp
 # polly explanation files
 html/
 opt-viewer/
+opt-output/

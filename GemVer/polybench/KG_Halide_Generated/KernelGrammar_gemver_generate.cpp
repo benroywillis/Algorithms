@@ -1,5 +1,9 @@
 #include <Halide.h>
 
+#ifndef SIZE
+#define SIZE 4096
+#endif
+
 using Halide::Generator;
 
 class KernelGrammar_gemver : public Generator<KernelGrammar_gemver> {
@@ -39,28 +43,28 @@ public:
 		Func expr146("expr146");
 		expr146(var131, var130) =  bp159(var131, var130) + bp151(var131) * bp155(var130);
 
-		RDom rv9(0, 500);
+		RDom rv9(0, SIZE);
 		Func call20("call20");
 		call20(var8) +=  expr146(rv9, var8) * Halide::Expr(12313.000000) * bp149(rv9);
 
 		Func expr6("expr6");
 		expr6(var0) =  bp147(var0) + call20(var0);
 
-		RDom rv23(0, 500);
+		RDom rv23(0, SIZE);
 		Func call34("call34");
 		call34(var22) +=  expr146(var22, rv23) * Halide::Expr(43532.000000) * expr6(rv23);
 
 		Func output("output");
 		output(var22) = call34(var22);
 		bp25 = output;
-		bp2.set_estimates({ { 0, 500 } });
-		bp12.set_estimates({ { 0, 500 } });
-		bp133.set_estimates({ { 0, 500 } });
-		//bp135.set_estimates({ { 0, 500 } });
-		bp134.set_estimates({ { 0, 500 } });
-		//bp136.set_estimates({ { 0, 500 } });
-		bp132.set_estimates({ { 0, 500 }, { 0, 500 } });
-		bp25.set_estimates({ { 0, 500 } });
+		bp2.set_estimates({ { 0, SIZE } });
+		bp12.set_estimates({ { 0, SIZE } });
+		bp133.set_estimates({ { 0, SIZE } });
+		//bp135.set_estimates({ { 0, SIZE } });
+		bp134.set_estimates({ { 0, SIZE } });
+		//bp136.set_estimates({ { 0, SIZE } });
+		bp132.set_estimates({ { 0, SIZE }, { 0, SIZE } });
+		bp25.set_estimates({ { 0, SIZE } });
 	}
 };
 HALIDE_REGISTER_GENERATOR(KernelGrammar_gemver, KernelGrammar_gemver)

@@ -2,7 +2,7 @@
 #include "TimingLib.h"
 
 #ifndef SIZE
-#define SIZE 500
+#define SIZE 4096
 #endif
 
 #if HALIDE_AUTOSCHEDULE == 1
