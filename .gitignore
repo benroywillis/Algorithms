@@ -68,4 +68,6 @@ priorResults/
 # generated Halide files
 Halide_generator.cpp
 Halide_driver.cpp
-
+# polly explanation files
+html/
+opt-viewer/
