@@ -89,11 +89,11 @@ POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-bran
 POLLY_VECTORIZE=-mllvm -polly-vectorizer=stripmine
 # turns on omp code generation and parallelization
 POLLY_THREADS?=1
-POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -fopenmp
+POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -mllvm -polly-scheduling=static -fopenmp
 # contains all flags that will be passed to polly opt pass
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
 # contains all flags that will be passed to clang for polly optimization
-POLLY_CLANG_FLAGS = -mllvm -polly $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL) $(POLLY_SHOW)
+POLLY_CLANG_FLAGS = -mllvm -polly -ffast-math -ffinite-math-only -funsafe-math-optimizations -fsave-optimization-record $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL) $(POLLY_SHOW)
 ## breakdown polly transformation steps
 # transforms the input program to a canonical form polly can understand
 POLLY_OPTFLAGS1=-S -polly-canonicalize
@@ -119,9 +119,15 @@ $(SOURCE)_generated.exec : $(SOURCE_PATH)$(SOURCE)_generate.cpp $(HALIDE_INSTALL
 # check your cuda_capability_## parameter at https://developer.nvidia.com/cuda-gpus#compute
 # the autoscheduler library needs to be lower case
 HALIDE_AUTOSCHEDULER_LIB=$(shell echo $(HALIDE_AUTOSCHEDULER) | tr A-Z a-z)
+# the halide target should be the host gpu (for Anderson2021) and host for everything else
+ifeq ($(HALIDE_AUTOSCHEDULER),Anderson2021)
+	HALIDE_TARGET=host-cuda-cuda_capability_86
+else
+	HALIDE_TARGET=host
+endif
 ifeq ($(HALIDE_AUTOSCHEDULE),1)
 $(SOURCE)_autoschedule_true_generated.bc $(SOURCE)_autoschedule_true_generated.h $(SOURCE)_autoschedule_true_generated.halide_generated.cpp : $(SOURCE)_generated.exec
-	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_$(HALIDE_AUTOSCHEDULER_LIB).so autoscheduler=$(HALIDE_AUTOSCHEDULER) target=host-cuda-cuda_capability_86
+	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_true_generated -e bitcode,h,cpp -p $(HALIDE_INSTALL_PREFIX)lib/libautoschedule_$(HALIDE_AUTOSCHEDULER_LIB).so autoscheduler=$(HALIDE_AUTOSCHEDULER) target=$(HALIDE_TARGET)
 endif
 $(SOURCE)_autoschedule_false_generated.bc $(SOURCE)_autoschedule_false_generated.h $(SOURCE)_autoschedule_false_generated.halide_generated.cpp : $(SOURCE)_generated.exec
 	LD_LIBRARY_PATH=$(HALIDE_INSTALL_PREFIX)lib/ ./$< -o . -g $(SOURCE) -f $(SOURCE)_autoschedule_false_generated -e bitcode,h,cpp target=host
