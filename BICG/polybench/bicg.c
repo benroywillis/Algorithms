@@ -72,17 +72,16 @@ void kernel_bicg(int nx, int ny,
   int i, j;
 
 #pragma scop
-  for (i = 0; i < _PB_NY; i++)
+  for (i = 0; i < _PB_NY; i++) {
     s[i] = 0;
-  for (i = 0; i < _PB_NX; i++)
-    {
-      q[i] = 0;
-      for (j = 0; j < _PB_NY; j++)
-	{
+  }
+  for (i = 0; i < _PB_NX; i++) {
+    q[i] = 0;
+    for (j = 0; j < _PB_NY; j++) {
 	  s[j] = s[j] + r[i] * A[i][j];
 	  q[i] = q[i] + A[i][j] * p[j];
 	}
-    }
+  }
 #pragma endscop
 
 }
