@@ -10,8 +10,9 @@
 #endif
 
 #define PRECISION 	float
+#ifndef SIZE
 #define SIZE 		512
-//#define SIZE 		64
+#endif
 
 void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1), PRECISION (*out))
 {
