@@ -9,7 +9,9 @@ GemVer -> works but the Halide contains too many inputs
 TrMM -> works but the RDom has bad boundaries (need to implement Halide's triangular RDom stuff)
 -- Incorrect expression caused by task code working in-place in the first task, then reducing new results to the same place
 SyrK -> fully compliant but second task is not referring to the first task which normalized the input first
--- Incorrect expression caused by task code being modified by serial code --
+-- Problem: the reduction is updating the last task's collection and we don't support something like that
+-- Solution: lever the update definition in Halide when the output collection of a task is updated by the producer..
+   --- but this solution (done by hand) gets bad results.. perhaps try other ways first and build the one that gets better performance
 Covariance -> fully compliant but has bad expressions because the column vector means are summed in a loop then normalized in serial code
 -- Two tasks fused together --
 BICG -> result seems to be correct but one of the outputs is ignored... The two tasks should be split into two pipelines

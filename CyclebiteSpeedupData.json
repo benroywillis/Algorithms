@@ -10,13 +10,15 @@
 				"2024-03-10": ["StencilChain"],
 				"2024-03-24": ["polybench/gemm"],
 				"2024-03-25": ["polybench/3mm"],
-				"2024-03-26": ["polybench/gemver"]
+				"2024-03-26": ["polybench/gemver"],
+				"2024-03-28": ["polybench/syrk"]
 			}
 		},
 		"LLVM-Polly": {
 			"Collection Method": "was timed with the average of 5 samples",
 			"App Collection Dates": {
-				"2024-03-27": ["ElementMultiply", "GEMV", "SGEMM", "Stencil Chain", "polybench/DGEMM", "polybench/gemver", "polybench/3mm"]
+				"2024-03-27": ["ElementMultiply", "GEMV", "SGEMM", "Stencil Chain", "polybench/DGEMM", "polybench/gemver", "polybench/3mm"],
+				"2024-03-28": ["polybench/syrk"]
 			}
 		}
 	},
@@ -209,6 +211,25 @@
 			"4": 0.019718,
 			"8": 0.019832,
 			"16": 0.017397
+		}
+	},
+	"polybench/syrk (SIZE=1024)": {
+		"O3": {
+			"1": 0.652417
+		},
+		"Cyclebite-Template": {
+			"1": 0.559055,
+			"2": 0.290578,
+			"4": 0.150943,
+			"8": 0.074403,
+			"16": 0.043878
+		},
+		"LLVM-Polly": {
+			"1": 0.207245,
+			"2": 0.104465,
+			"4": 0.088846,
+			"8": 0.057599,
+			"16": 0.025434
 		}
 	}
 }
