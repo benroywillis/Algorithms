@@ -14,6 +14,11 @@ GLD=ld
 # CUDA compiler
 NVCC?=nvcc
 CUPROF?=nvprof
+# Polygeist stuff
+PC?=$(POLYGEIST_INSTALL)bin/cgeist
+POLYMEROPT?=$(POLYGEIST_INSTALL)bin/polymer-opt
+MLIROPT?=$(POLYGEIST_INSTALL)bin/mlir-opt
+MLIRTRANSLATE?=$(POLYGEIST_INSTALL)bin/mlir-translate
 
 ## compile-time configuration flags
 # C and C++ flags
@@ -247,10 +252,18 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 
 # polygeist test rule
 # add -S to see the generated MLIR
-$(SOURCE).cgeist : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(CGEIST) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) -raise-scf-to-affine $^ -o $(SOURCE).cgeist
+# [BW] 2024-04-09 the polygeist compiler works with just the first step on input applications from polybench, but it doesn't produce valid MLIR when you ask it to raise to affine (--raise-scf-to-affine)
+#      -> thus it doesn't do what it is supposed to
+#      -> without exporting valid MLIR, we can't parallelize its output, and when we run the cgeist output alone, we get performance that under-performs the clang17 front-end on -O3 -g0
+#      -> also, cgeist does worse for higher optimization levels (optimal op level seems to be -O1)
+$(SOURCE).cgeist.native : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	$(CGEIST) --raise-scf-to-affine -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $(SOURCE).cgeist.mlir
+	LD_LIBRARY_PATH=/home/ben/Builds/Polygeist/build/tools/polygeist/pluto/install/lib/ $(POLYMEROPT) -allow-unregistered-dialect --demote-loop-reduction --extract-scop-stmt --pluto-opt="parallelize=1" --inline --canonicalize $(SOURCE).cgeist.mlir -o $(SOURCE).polymerpar.mlir
+	$(MLIROPT) -mem2reg -detect-reduction -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-std -convert-openmp-to-llvm $(SOURCE).polymerpar.mlir -o $(SOURCE).mliropt.mlir
+	$(MLIRTRANSLATE) -mlir-to-llvmir $(SOURCE).mliropt.mlir -o $(SOURCE).polygeist.bc
+	$(CC) -fopenmp -lomp $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(SOURCE).polygeist.bc -o $@
 
-run_cgeist : $(SOURCE).cgeist
+run_cgeist : $(SOURCE).cgeist.native
 	$(BIN_ENV) ./$< $(RARGS)
 
 # builds the source code into elf form, no instrumentation
