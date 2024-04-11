@@ -95,7 +95,7 @@ POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-bran
 POLLY_VECTORIZE=-mllvm -polly-vectorizer=stripmine
 # turns on omp code generation and parallelization
 POLLY_THREADS?=1
-POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -mllvm -polly-scheduling=static -fopenmp
+POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -mllvm -polly-omp-backend=LLVM -mllvm -polly-scheduling=static -fopenmp
 # contains all flags that will be passed to polly opt pass
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
 # contains all flags that will be passed to clang for polly optimization
@@ -300,8 +300,13 @@ else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).elf_polly : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
-$(SOURCE).elf_polly : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $^ -o $@
+$(SOURCE).elf_polly : $(SOURCE).bc
+	#$(OPT) -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-process-unprofitable -polly-parallel -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-vectorizer=stripmine $(SOURCE).bc 
+	# if you try to read in the jscop, llvm-polly breaks (so you can't use the -polly-import-jscop option) $(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-import-jscop -polly-import-jscop-postfix=interchanged+tiled+vector -polly-codegen -polly-parallel -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-vectorizer=stripmine -o $(SOURCE).polly.bc
+	# useful for polybench3.2/gemm
+	$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-only-func=kernel_gemm -o $(SOURCE).polly.bc
+	#$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -o $(SOURCE).polly.bc
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(SOURCE).polly.bc -o $@
 endif
 
 #$(SOURCE).bc_polly : $(SOURCE).bc
