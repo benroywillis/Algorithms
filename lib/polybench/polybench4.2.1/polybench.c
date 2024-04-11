@@ -544,26 +544,26 @@ xmalloc(size_t alloc_sz)
 }
 
 
-void polybench_free_data(void* ptr)
-{
-#ifdef POLYBENCH_ENABLE_INTARRAY_PAD
-  free_data_from_alloc_table (ptr);
-#else
-  free (ptr);
-#endif
-}
+//void polybench_free_data(void* ptr)
+//{
+//#ifdef POLYBENCH_ENABLE_INTARRAY_PAD
+//  free_data_from_alloc_table (ptr);
+//#else
+//  free (ptr);
+//#endif
+//}
 
 
-void* polybench_alloc_data(unsigned long long int n, int elt_size)
-{
-#ifdef POLYBENCH_ENABLE_INTARRAY_PAD
-  check_alloc_table_state ();
-#endif
-
-  /// FIXME: detect overflow!
-  size_t val = n;
-  val *= elt_size;
-  void* ret = xmalloc (val);
-
-  return ret;
-}
+//void* polybench_alloc_data(unsigned long long int n, int elt_size)
+//{
+//#ifdef POLYBENCH_ENABLE_INTARRAY_PAD
+//  check_alloc_table_state ();
+//#endif
+//
+//  /// FIXME: detect overflow!
+//  size_t val = n;
+//  val *= elt_size;
+//  void* ret = xmalloc (val);
+//
+//  return ret;
+//}
