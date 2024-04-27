@@ -118,6 +118,7 @@ hist (algPixel_t *streamA, int *h, int nRows, int nCols, int nBpp)
 
   memset((void *)h, 0, nBins * sizeof(int));
 
+#pragma scop
   for (i = 0; i < nPxls; i++)
   {
     if (streamA[i] >= nBins)
@@ -130,6 +131,7 @@ hist (algPixel_t *streamA, int *h, int nRows, int nCols, int nBpp)
       h[(int)streamA[i]]++;
     }
   }
+#pragma endscop
 
   return 0;
 }
@@ -156,11 +158,13 @@ histEq (algPixel_t *streamA, algPixel_t *out, int *h, int nRows, int nCols, int 
     return -1;
   }
 
+#pragma scop
   for (i = 0; i < nInpBins; i++)
   {
     sum += (double) h[i];
     CDF[i] = sum;
   }
+#pragma endscop
 
   for (i = 0; i < nInpBins; i++)
   {
