@@ -11,6 +11,10 @@
 #define K 	5
 #define L 	5
 
+// this attribute actually makes task 36 work because of context scoping reasons (the BP DFG walk can't reach the loads that were touching multiple memory in the other version)
+// however, if the base pointers changed between stencils, it would change the compliance of this program
+// thus, you might want to still build out the big plans you wrote down... however you can wait on it now that this program is compliant again
+__attribute__ ((noinline))
 void move(PRECISION* in, PRECISION* out, unsigned int height, unsigned int width)
 {
 #define IN(y, x) in[y*width + x]
