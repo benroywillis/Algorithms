@@ -19,6 +19,8 @@
 		"inner-product/Naive": {
 			"Init": ["Task0"]
 		},
+		"BFS/Naive": {
+		},
 		"STAP/inner_product/PERFECT": {
 		},
 		"BilateralGrid/Naive": {
@@ -81,6 +83,10 @@
 		"GaussianBlur/Naive": {
 		},
 		"2DConvolution/Naive": {
+		},
+		"spmm/Naive": {
+		},
+		"Hist/Naive": {
 		},
 		"2DConvolution/PERFECT": {
 			"Foreach": ["Task4"],
@@ -162,7 +168,7 @@
 		},
 		"GEMM/Halide/Naive": {
 		},
-		"GEMM/polybench/": {
+		"GEMM/polybench": {
 			"Init": ["Task7", "Task5", "Task4"],
 			"GEMM": ["Task8"]
 		},
@@ -184,6 +190,58 @@
 			"GEMV": ["Task5","Task6"],
 			"Map": ["Task8"],
 			"ZIP": ["Task1"]
+		},
+		"BICG/polybench": {
+		},
+		"TriSolv/polybench": {
+		},
+		"GeSumMV/polybench": {
+		},
+		"GramSchmidt/polybench": {
+		},
+		"SyrK/polybench": {
+		},
+		"Syr2k/polybench": {
+		},
+		"LUDcmp/polybench": {
+		},
+		"Regdetect/polybench": {
+		},
+		"DynProg/polybench": {
+		},
+		"Seidel_1D/polybench": {
+		},
+		"Cholesky/polybench": {
+		},
+		"Adi/polybench": {
+		},
+		"FDTD_2D/polybench": {
+		},
+		"FDTD_APML/polybench": {
+		},
+		"Jacobi_1D/polybench": {
+		},
+		"Jacobi_2D/polybench": {
+		},
+		"SYMM/polybench": {
+		},
+		"TrMM/polybench": {
+		},
+		"2MM/polybench": {
+		},
+		"MVT/polybench": {
+		},
+		"Correlation/polybench": {
+		},
+		"Covariance/polybench": {
+		},
+		"ATAX/polybench": {
+		},
+		"Floyd-Warshall/polybench": {
+		},
+		"LU/polybench": {
+		},
+		"Durbin/polybench": {
 		}
 	}
 }
