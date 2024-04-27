@@ -24,9 +24,15 @@ public:
 		Func output;
 		output(x, y) = matrix_mul(x, y);
 
+		//output.bound(x, 0, N);
+		//output.bound(y, 0, M);
+		out = output;
 		if( using_autoscheduler() )
 		{
 			// give it parameter estimates
+			A.set_estimates( { {0, SIZE}, {0, SIZE} } );
+			B.set_estimates( { {0, SIZE}, {0, SIZE} } );
+			out.set_estimates( { {0, SIZE}, {0, SIZE} } );
 		}
 		else
 		{
@@ -36,9 +42,6 @@ public:
 			matrix_mul.compute_at(output, yi).vectorize(x, 8).unroll(y);
 			matrix_mul.update(0).reorder(x, y, k).vectorize(x, 8).unroll(x).unroll(y).unroll(k, 2);
 		}
-		output.bound(x, 0, N);
-		output.bound(y, 0, M);
-		out = output;
 	}
 };
 

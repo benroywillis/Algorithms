@@ -2,7 +2,7 @@ include ../../Environment.mk
 SOURCE=2mm
 ADDSOURCE=$(ALGORITHMS_DIR)lib/polybench/polybench.c
 # 128x128 for gemm
-CFLAGS += -DSMALL_DATASET
+CFLAGS += -DSMALL_DATASET -DPOLYBENCH_TIME
 #CFLAGS += -DSTANDARD_DATASET
 SUFFIX=.c
 D_LINKS=-lm
