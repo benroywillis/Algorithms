@@ -43,6 +43,10 @@ ADDSOURCE?=
 ADDSOURCE_GENERATE?=
 # static libraries for compilation phase
 LIBRARIES?=
+# some libraries require that some archives are treated differently than others (e.g., pytorch requires specific flags for specific archives)
+# thus we have a special variable for the flag belonging to those second archives and a variable for those second archives
+ARCHIVE_FLAGS?=
+LIBRARIES2?=
 # path to any special dynamic libraries. This should only be a path and contain no white spaces anywhere. For multiple paths, separate with a colon ex. D_LINKS_PATH=/path/to/first/:/path/to/second/
 D_LINKS_PATH?=$(LLVM_INSTALL)lib/
 # dynamic links to use in the link phase
@@ -147,7 +151,7 @@ $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADD
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $^ $(LIBRARIES) -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $^ $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) -o $@
 endif
 
 # Cyclebyte pipeline rules
@@ -178,7 +182,7 @@ KernelGrammar_$(SOURCE).json : instance_$(SOURCE).json
 	LD_LIBRARY_PATH=$(SO_PATH) $(CYCLEBITE_ROOT)bin/KernelGrammar -i $< -k kernel_$(SOURCE).json -b $(SOURCE).bc -bi BlockInfo_$(SOURCE).json -p $(SOURCE).bin -o $@
 
 $(SOURCE).annotated_omp.native : KernelGrammar_$(SOURCE).json $(ADDSOURCE)
-	$(C) -fopenmp $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(SOURCE).annotated_omp$(SUFFIX) $(ADDSOURCE) -o $@
+	$(C) -fopenmp $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $(SOURCE).annotated_omp$(SUFFIX) $(ADDSOURCE) -o $@
 
 run_annotated : $(SOURCE).annotated_omp.native
 	$(BIN_ENV) ./$< $(RARGS)
@@ -226,7 +230,7 @@ ts_$(SOURCE)_run : ts_$(SOURCE).exec
 
 # tik with polly
 tik_polly_$(SOURCE).bc : tik_$(SOURCE).bc
-	$(C) $(LDFLAGS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(POLLYFLAGS) -S $(LIBRARIES) $< -o $@
+	$(C) $(LDFLAGS) $(OPFLAG) $(POLLYFLAGS) -S $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $< -o $@
 
 ts_polly_$(SOURCE).bc : tik_polly_$(SOURCE).bc $(SOURCE).bc
 	$(CYCLEBITE_ROOT)bin/tikSwap -S -t $< -b $(SOURCE).bc -o $@
@@ -258,7 +262,7 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 #      -> also, cgeist does worse for higher optimization levels (optimal op level seems to be -O1)
 $(SOURCE).cgeist.native : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	#$(CGEIST) --raise-scf-to-affine --c-style-memref --openmp-opt -fopenmp -lomp -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $(SOURCE).cgeist.native
-	$(CGEIST) --raise-scf-to-affine --memref-abi --c-style-memref -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $(SOURCE).cgeist.mlir
+	$(CGEIST) --raise-scf-to-affine --memref-abi --c-style-memref -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $^ -o $(SOURCE).cgeist.mlir
 	# this command breaks polygeist-op -> $(POLYGEIST_INSTALL)bin/polygeist-opt --convert-polygeist-to-llvm $(SOURCE).cgeist.mlir -o $(SOURCE).simplify.mlir
 	#LD_LIBRARY_PATH=/home/ben/Builds/Polygeist/build/tools/polygeist/pluto/install/lib/ $(POLYMEROPT) -allow-unregistered-dialect --demote-loop-reduction --extract-scop-stmt --pluto-opt="parallelize=1" --inline --canonicalize $(SOURCE).cgeist.mlir -o $(SOURCE).polymerpar.mlir
 	#$(MLIROPT) -mem2reg -detect-reduction -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-std -convert-openmp-to-llvm $(SOURCE).polymerpar.mlir -o $(SOURCE).mliropt.mlir
@@ -266,7 +270,7 @@ $(SOURCE).cgeist.native : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(MLIROPT) -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-cf -convert-openmp-to-llvm $(SOURCE).cgeist.mlir -o $(SOURCE).mliropt.mlir
 	$(MLIRTRANSLATE) -mlir-to-llvmir $(SOURCE).mliropt.mlir -o $(SOURCE).polygeist.bc
 	#$(MLIRTRANSLATE) -mlir-to-llvmir $(SOURCE).cgeist.mlir -o $(SOURCE).polygeist.bc
-	$(CC) -fopenmp -lomp $(INCLUDE) $(D_LINKS) -O3 -g0 $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(SOURCE).polygeist.bc -o $@
+	$(CC) -fopenmp -lomp $(INCLUDE) $(D_LINKS) -O3 -g0 $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $(SOURCE).polygeist.bc -o $@
 
 run_cgeist : $(SOURCE).cgeist.native
 	$(BIN_ENV) ./$< $(RARGS)
@@ -281,10 +285,10 @@ $(SOURCE).elf : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(AD
 	$(C) $(LLD) $(HALIDE_INCLUDE) $(INCLUDE) $(D_LINKS) $(HALIDE_D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
 else ifeq ($(SUFFIX),.cu)
 $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@ 
+	$(C) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $^ -o $@ 
 else
 $(SOURCE).elf : $(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $@ 
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $^ -o $@ 
 endif
 
 run : $(SOURCE).elf
@@ -306,7 +310,7 @@ $(SOURCE).elf_polly : $(SOURCE).bc
 	# useful for polybench3.2/gemm
 	$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-only-func=kernel_gemm -o $(SOURCE).polly.bc
 	#$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -o $(SOURCE).polly.bc
-	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(SOURCE).polly.bc -o $@
+	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $(SOURCE).polly.bc -o $@
 endif
 
 #$(SOURCE).bc_polly : $(SOURCE).bc
