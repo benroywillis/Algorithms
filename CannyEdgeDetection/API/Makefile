@@ -18,12 +18,13 @@ $(OPENCV_ROOT)lib/opencv4/3rdparty/libIlmImf.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibjpeg-turbo.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibopenjp2.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/liblibpng.a\
+$(OPENCV_ROOT)lib/opencv4/3rdparty/libtbb.a\
 $(OPENCV_ROOT)lib/opencv4/3rdparty/libzlib.a
 
 HYST_THRESH_0 = 1.0
 HYST_THRESH_1 = 2.0
-INPUT_IMAGE=../../BilateralFilter/Data/john.bmp
-OUTPUT_IMAGE=../../BilateralFilter/Data/canny_john.bmp
+INPUT_IMAGE=../../Data/Input/john.bmp
+OUTPUT_IMAGE=../../Data/Input/canny_john.bmp
 RARGS=$(HYST_THRESH_0) $(HYST_THRESH_1) $(INPUT_IMAGE) $(OUTPUT_IMAGE)
 
 include ../../BuildFlow.mk
