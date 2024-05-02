@@ -2,7 +2,8 @@ include ../../Environment.mk
 SOURCE=autograd
 SUFFIX=.cpp
 #TORCH_ROOT=/home/ben/Installs/pytorch/debug/
-TORCH_ROOT=/home/ben/Installs/KoalaLibraries/debug/pytorch/
+#TORCH_ROOT=/home/ben/Installs/KoalaLibraries/debug/pytorch/
+TORCH_ROOT=/home/ben/Installs/KoalaLibraries/release/pytorch/
 INCLUDE=-I$(TORCH_ROOT)include/ -I$(TORCH_ROOT)include/torch/csrc/api/include/
 # for some reason, pytorch archives need to have special flags (or else their ctors and dtors are undefined
 CXXFLAGS += -Wl,--gc-sections -Wl,--whole-archive
@@ -19,10 +20,9 @@ $(TORCH_ROOT)lib/libclog.a \
 $(TORCH_ROOT)lib/libcpuinfo.a \
 $(TORCH_ROOT)lib/libittnotify.a \
 $(TORCH_ROOT)lib/libkineto.a \
-/usr/lib/x86_64-linux-gnu/libnuma.a \
 $(TORCH_ROOT)lib/libnnpack.a \
-$(TORCH_ROOT)lib/libprotobufd.a \
 $(TORCH_ROOT)lib/libpthreadpool.a \
+$(TORCH_ROOT)lib/libprotobuf.a \
 $(TORCH_ROOT)lib/libpytorch_qnnpack.a \
 $(TORCH_ROOT)lib/libqnnpack.a \
 $(TORCH_ROOT)lib/libsleef.a \
@@ -30,6 +30,8 @@ $(TORCH_ROOT)lib/libonnx.a \
 $(TORCH_ROOT)lib/libonnx_proto.a \
 $(TORCH_ROOT)lib/libXNNPACK.a
 
+# the debug version of this archive has an extra d at the end
+#$(TORCH_ROOT)lib/libprotobufd.a \
 #$(TORCH_ROOT)lib/libasmjit.a \
 #$(TORCH_ROOT)lib/libdnnl.a \
 #$(TORCH_ROOT)lib/libfbgemm.a \
@@ -37,5 +39,6 @@ $(TORCH_ROOT)lib/libXNNPACK.a
 #$(TORCH_ROOT)lib/libtensorpipe.a \
 #$(TORCH_ROOT)lib/libtensorpipe_uv.a \
 
-D_LINKS=-lomp
+# nnpack is a mix of elf objects and bitcode (which suggests it has non-HLL stuff in it)
+D_LINKS=-lomp $(TORCH_ROOT)lib/libnnpack.a /usr/lib/x86_64-linux-gnu/libnuma.a
 include ../../BuildFlow.mk
