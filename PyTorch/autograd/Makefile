@@ -1,9 +1,6 @@
 include ../../Environment.mk
 SOURCE=autograd
 SUFFIX=.cpp
-#TORCH_ROOT=/home/ben/Installs/pytorch/debug/
-#TORCH_ROOT=/home/ben/Installs/KoalaLibraries/debug/pytorch/
-TORCH_ROOT=/home/ben/Installs/KoalaLibraries/release/pytorch/
 INCLUDE=-I$(TORCH_ROOT)include/ -I$(TORCH_ROOT)include/torch/csrc/api/include/
 # for some reason, pytorch archives need to have special flags (or else their ctors and dtors are undefined
 CXXFLAGS += -Wl,--gc-sections -Wl,--whole-archive
