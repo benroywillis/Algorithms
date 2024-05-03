@@ -1,7 +1,7 @@
 include ../../Environment.mk
 
 SOURCE=raytracer
-SUFFIX=.cc
+SUFFIX=.cpp
 
 POLLY_SHOW=
 include ../../BuildFlow.mk
