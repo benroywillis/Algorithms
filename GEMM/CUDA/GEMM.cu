@@ -64,8 +64,11 @@ int main()
 	int res0 = cudaMemPrefetchAsync(in0, SIZE*SIZE*sizeof(TYPE), device, NULL);
 	int res1 = cudaMemPrefetchAsync(in1, SIZE*SIZE*sizeof(TYPE), device, NULL);
 	int res2 = cudaMemPrefetchAsync(out, SIZE*SIZE*sizeof(TYPE), device, NULL);
-	printf("%i, %i, %i\n", res0, res1, res2);
-	__TIMINGLIB_benchmark([&]{ GEMM<<< (SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(in0, in1, out); cudaDeviceSynchronize(); });
+	printf("Cuda prefetch ret codes: %i, %i, %i\n", res0, res1, res2);
+	__TIMINGLIB_benchmark([&]{ 
+		GEMM<<< (SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(in0, in1, out); 
+		cudaDeviceSynchronize();
+	});
 
 	// keeps the optimizer from ruining the experiment
 	volatile bool yes = out[0];
@@ -76,8 +79,8 @@ int main()
 			volatile bool yes = out[i*SIZE+j];
 		}
 	}*/
-#if CHECK == 1
-	print("Running check between CUDA answer and naive C answer...\n");
+#if CHECK
+	printf("Running check between CUDA answer and naive C answer...\n");
 	for( unsigned i = 0; i < SIZE; i++ )
 	{
 		for( unsigned j = 0; j < SIZE; j++ )
