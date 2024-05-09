@@ -5,7 +5,7 @@ include ../../Environment.mk
 SOURCE=GEMM
 SUFFIX=.cu
 POLLY_SHOW=
-SIZE?=64
+SIZE?=512
 PRECISION?=0 # 0 for float, anything else for double
 THREADS_PER_BLOCK?= 256
 CHECK?=0

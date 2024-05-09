@@ -50,89 +50,98 @@
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
+#include <math.h>
 
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 
 #include "cublas_utils.h"
+#include "TimingLib.h"
 
-using data_type = double;
+#if PRECISION == 0
+#define TYPE float
+#else
+#define TYPE double 
+#endif
+
+#ifndef SIZE
+#define SIZE 512
+#endif
 
 int main(int argc, char *argv[]) {
+	// step 0: make some data
+	TYPE* A = (TYPE*)malloc(SIZE*SIZE*sizeof(TYPE));
+	TYPE* B = (TYPE*)malloc(SIZE*SIZE*sizeof(TYPE));
+	TYPE* C = (TYPE*)malloc(SIZE*SIZE*sizeof(TYPE));
+	for( unsigned i = 0; i < SIZE; i++ ) {
+		for( unsigned j = 0; j < SIZE; j++ ) {
+			A[i*SIZE+j] = fmod((TYPE)rand(), SIZE);
+			B[i*SIZE+j] = fmod((TYPE)rand(), SIZE);
+			C[i*SIZE+j] = (TYPE)0.0;
+		}
+	}
+    // step 1: create cublas handle, bind a stream
     cublasHandle_t cublasH = NULL;
     cudaStream_t stream = NULL;
-
-    const int m = 2;
-    const int n = 2;
-    const int k = 2;
-    const int lda = 2;
-    const int ldb = 2;
-    const int ldc = 2;
-    /*
-     *   A = | 1.0 | 2.0 |
-     *       | 3.0 | 4.0 |
-     *
-     *   B = | 5.0 | 6.0 |
-     *       | 7.0 | 8.0 |
-     */
-
-    const std::vector<data_type> A = {1.0, 2.0, 3.0, 4.0};
-    const std::vector<data_type> B = {5.0, 6.0, 7.0, 8.0};
-    std::vector<data_type> C(m * n);
-    const data_type alpha = 1.0;
-    const data_type beta = 0.0;
-
-    data_type *d_A = nullptr;
-    data_type *d_B = nullptr;
-    data_type *d_C = nullptr;
-
-    cublasOperation_t transa = CUBLAS_OP_N;
-    cublasOperation_t transb = CUBLAS_OP_N;
-
-    printf("A\n");
-    print_matrix(m, k, A.data(), lda);
-    printf("=====\n");
-
-    printf("B\n");
-    print_matrix(k, n, B.data(), ldb);
-    printf("=====\n");
-
-    /* step 1: create cublas handle, bind a stream */
     CUBLAS_CHECK(cublasCreate(&cublasH));
 
     CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
     CUBLAS_CHECK(cublasSetStream(cublasH, stream));
 
-    /* step 2: copy data to device */
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_A), sizeof(data_type) * A.size()));
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(data_type) * B.size()));
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(data_type) * C.size()));
+    // step 2: copy data to device
+	TYPE* d_A;
+	TYPE* d_B;
+	TYPE* d_C;
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_A), sizeof(TYPE) * SIZE*SIZE));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(TYPE) * SIZE*SIZE));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * SIZE*SIZE));
 
-    CUDA_CHECK(cudaMemcpyAsync(d_A, A.data(), sizeof(data_type) * A.size(), cudaMemcpyHostToDevice,
-                               stream));
-    CUDA_CHECK(cudaMemcpyAsync(d_B, B.data(), sizeof(data_type) * B.size(), cudaMemcpyHostToDevice,
-                               stream));
+    CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
+    CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
 
-    /* step 3: compute */
-    CUBLAS_CHECK(
-        cublasDgemm(cublasH, transa, transb, m, n, k, &alpha, d_A, lda, d_B, ldb, &beta, d_C, ldc));
+    // step 3: compute
+    // these calls do not transpose the matrix (CUBLAS_OP_T would, CUBLAS_OP_C would be a hermitian transpose)
+    const TYPE alpha = 1.0;
+    const TYPE beta = 0.0;
+	__TIMINGLIB_benchmark( [&] { 
+#if PRECISION == 0
+    	CUBLAS_CHECK(cublasSgemm(cublasH, CUBLAS_OP_N, CUBLAS_OP_N, SIZE, SIZE, SIZE, &alpha, d_A, SIZE, d_B, SIZE, &beta, d_C, SIZE));
+#else
+    	CUBLAS_CHECK(cublasDgemm(cublasH, CUBLAS_OP_N, CUBLAS_OP_N, SIZE, SIZE, SIZE, &alpha, d_A, SIZE, d_B, SIZE, &beta, d_C, SIZE));
+#endif
+		cudaDeviceSynchronize();
+	});
 
-    /* step 4: copy data to host */
-    CUDA_CHECK(cudaMemcpyAsync(C.data(), d_C, sizeof(data_type) * C.size(), cudaMemcpyDeviceToHost,
-                               stream));
-
+    // step 4: copy data to host
+    CUDA_CHECK(cudaMemcpyAsync(C, d_C, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyDeviceToHost, stream));
     CUDA_CHECK(cudaStreamSynchronize(stream));
+	// step 5: snr with CPU result
+#if CHECK
+	TYPE* D = (TYPE*)calloc(SIZE*SIZE, sizeof(TYPE));
+	for( unsigned i = 0; i < SIZE; i++ ) {
+		for( unsigned j = 0; j < SIZE; j++ ) {
+			for( unsigned k = 0; k < SIZE; k++ ) {
+				D[i*SIZE+j] += A[i*SIZE+k]*B[k*SIZE+j];
+			}
+		}
+	}
+	double num = 0.0;
+	double den = 0.0;
+	// the reference signal is the CPU result (D)
+	for( unsigned i = 0; i < SIZE; i++ ) {
+		for( unsigned j = 0; j < SIZE; j++ ) {
+			num +=  D[i*SIZE+j]*D[i*SIZE+j];
+			den += (D[i*SIZE+j]-C[i*SIZE+j])*(D[i*SIZE+j]-C[i*SIZE+j]);
+		}
+	}
+    if (den < 0.001) printf("Reference and test outputs matched exactly\n");
+    else 		     printf(" num: %g den: %g\n", num, den); printf("SNR: %.2fdb\n", 10.0*log10(num/den));
+#endif
 
-    /*
-     *   C = | 23.0 | 31.0 |
-     *       | 34.0 | 46.0 |
-     */
-
-    printf("C\n");
-    print_matrix(m, n, C.data(), ldc);
-    printf("=====\n");
-
-    /* free resources */
+    // free resources
+	free(A);
+	free(B);
+	free(C);
     CUDA_CHECK(cudaFree(d_A));
     CUDA_CHECK(cudaFree(d_B));
     CUDA_CHECK(cudaFree(d_C));
