@@ -2,7 +2,7 @@ include ../../Environment.mk
 SOURCE=jacobi-2d-imper
 ADDSOURCE=$(ALGORITHMS_DIR)lib/polybench/polybench.c
 # 128x128 for gemm
-CFLAGS += -DSMALL_DATASET
+CFLAGS += -DSMALL_DATASET -DPOLYBENCH_TIME
 SUFFIX=.c
 D_LINKS=-lm
 INCLUDE=-I$(TRACEATLAS_ROOT)include/Profile/Backend/Utilities/ -I$(ALGORITHMS_DIR)lib/polybench/
