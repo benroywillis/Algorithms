@@ -1,5 +1,5 @@
 include ../../Environment.mk
-SOURCE=seidel-2d
+SOURCE=deriche
 ADDSOURCE=$(ALGORITHMS_DIR)lib/polybench/polybench4.2.1/polybench.c
 # 128x128 for gemm
 CFLAGS += -DSMALL_DATASET -DPOLYBENCH_TIME
