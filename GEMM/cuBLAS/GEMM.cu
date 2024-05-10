@@ -96,8 +96,11 @@ int main(int argc, char *argv[]) {
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(TYPE) * SIZE*SIZE));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * SIZE*SIZE));
 
+	// BW 2024-05-09 No significant different in performance has been observed between Async transfers and Sync transfers (thus there seems to be a block of some sort for the Async case)
     CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
     CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
+    //CUDA_CHECK(cudaMemcpy((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
+    //CUDA_CHECK(cudaMemcpy((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
 
     // step 3: compute
     // these calls do not transpose the matrix (CUBLAS_OP_T would, CUBLAS_OP_C would be a hermitian transpose)
