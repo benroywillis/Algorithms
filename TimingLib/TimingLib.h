@@ -70,4 +70,30 @@ inline double __TIMINGLIB_benchmark(const std::function<void()> &op) {
     return best / TIMINGLIB_ITERATIONS;
 }
 
-
+inline void __TIMINGLIB_snr( void* ref, void* test, int elem_size, int num_elems )
+{
+    double num = 0.0;
+    double den = 0.0;
+	if( elem_size == 4 ) {
+		for( unsigned i = 0; i < num_elems; i++ ) {
+			// num += ref*ref
+        	num +=  ((float*)ref)[i] * ((float*)ref)[i];
+			// den += (ref-test)*(ref-test)
+        	den += ( ((float*)ref)[i] - ((float*)test)[i] ) * ( ((float*)ref)[i] - ((float*)test)[i] );
+    	}
+	}
+	else if( elem_size == 8 ) {
+		for( unsigned i = 0; i < num_elems; i++ ) {
+			// num += ref*ref
+        	num +=  ((double*)ref)[i] * ((double*)ref)[i];
+			// den += (ref-test)*(ref-test)
+        	den += ( ((double*)ref)[i] - ((double*)test)[i] ) * ( ((double*)ref)[i] - ((double*)test)[i] );
+    	}
+	}
+	else { 
+		printf("__TIMINGLIB_snr cannot handle data types that are not 4 or 8 bytes large!\n"); 
+		return; 
+	}
+    if (den < 0.001) printf("Reference and test outputs matched exactly\n");
+    else             printf("num: %g den: %g\n", num, den); printf("SNR: %.2fdb\n", 10.0*log10(num/den));
+}
