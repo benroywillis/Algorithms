@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "TimingLib.h"
 
 #if PRECISION == 0 // float
@@ -22,18 +23,28 @@
 #define CHECK 0
 #endif
 
+// CUDA API error checking
+#define CUDA_CHECK(err)                                                   \
+    do {                                                                  \
+        int err_ = (err);                                                 \
+        if (err_ != 0) {                                                  \
+            printf("CUDA error %d at %s:%d\n", err_, __FILE__, __LINE__); \
+        }                                                                 \
+    } while (0)
+
 __global__
-void GEMM(TYPE *in0, TYPE *in1, TYPE *out)
+void GEMM(TYPE *A, TYPE *B, TYPE *C)
 {
 	int stride = blockDim.x * gridDim.x;
 	int index  = blockIdx.x * blockDim.x + threadIdx.x;
     for (int i = index; i < SIZE; i += stride )
+    //for (int i = 0; i < SIZE; i++ )
     {
         for (int j = 0; j < SIZE; j++)
         {
             for (int k = 0; k < SIZE; k++)
             {
-                out[i*SIZE+j] += in0[i*SIZE+k] * in1[k*SIZE+j];
+                C[i*SIZE+j] += A[i*SIZE+k] * B[k*SIZE+j];
             }
         }
     }
@@ -41,72 +52,66 @@ void GEMM(TYPE *in0, TYPE *in1, TYPE *out)
 
 int main()
 {
-	TYPE* in0, *in1, *out, *out_check;
-	cudaMallocManaged(&in0, SIZE*SIZE*sizeof(TYPE));
-	cudaMallocManaged(&in1, SIZE*SIZE*sizeof(TYPE));
-	cudaMallocManaged(&out, SIZE*SIZE*sizeof(TYPE));
-	cudaMallocManaged(&out_check, SIZE*SIZE*sizeof(TYPE));
-
+	TYPE* A = (TYPE*)malloc(sizeof(TYPE)*SIZE*SIZE);
+	TYPE* B = (TYPE*)malloc(sizeof(TYPE)*SIZE*SIZE);
+	TYPE* C = (TYPE*)malloc(sizeof(TYPE)*SIZE*SIZE);
     for (int i = 0; i < SIZE; i++)
     {
         for (int j = 0; j < SIZE; j++)
         {
-            in0[i*SIZE+j] = rand();
-            in1[i*SIZE+j] = rand();
-            out[i*SIZE+j] = 0;
-            out_check[i*SIZE+j] = 0;
+            A[i*SIZE+j] = fmod(rand(), SIZE);
+            B[i*SIZE+j] = fmod(rand(), SIZE);
+            C[i*SIZE+j] = 0;
         }
     }
 
-	// move the data to the GPU off-chip memory before kernel launch
-	int device = -1;
-	cudaGetDevice(&device);
-	int res0 = cudaMemPrefetchAsync(in0, SIZE*SIZE*sizeof(TYPE), device, NULL);
-	int res1 = cudaMemPrefetchAsync(in1, SIZE*SIZE*sizeof(TYPE), device, NULL);
-	int res2 = cudaMemPrefetchAsync(out, SIZE*SIZE*sizeof(TYPE), device, NULL);
-	printf("Cuda prefetch ret codes: %i, %i, %i\n", res0, res1, res2);
-	__TIMINGLIB_benchmark([&]{ 
-		GEMM<<< (SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(in0, in1, out); 
-		cudaDeviceSynchronize();
+    // create a stream
+    cudaStream_t stream = NULL;
+    CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    // copy data to device
+    TYPE* d_A;
+    TYPE* d_B;
+    TYPE* d_C;
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_A), sizeof(TYPE) * SIZE*SIZE));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(TYPE) * SIZE*SIZE));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * SIZE*SIZE));
+    CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
+    CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
+    //CUDA_CHECK(cudaMemcpy((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
+    //CUDA_CHECK(cudaMemcpy((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
+	// run GEMM
+	__TIMINGLIB_benchmark( [&] {
+		GEMM<<< (SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(d_A, d_B, d_C); 
 	});
+    // copy data to host
+    CUDA_CHECK(cudaStreamSynchronize(stream));
+	CUDA_CHECK(cudaDeviceSynchronize());
+    CUDA_CHECK(cudaMemcpyAsync(C, d_C, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyDeviceToHost, stream));
 
-	// keeps the optimizer from ruining the experiment
-	volatile bool yes = out[0];
-	/*for( unsigned i = 0; i < SIZE; i++ )
-	{
-		for( unsigned j = 0; j < SIZE; j++ )
-		{
-			volatile bool yes = out[i*SIZE+j];
-		}
-	}*/
 #if CHECK
-	printf("Running check between CUDA answer and naive C answer...\n");
+	TYPE* D = (TYPE*)calloc(sizeof(TYPE), SIZE*SIZE);
 	for( unsigned i = 0; i < SIZE; i++ )
 	{
 		for( unsigned j = 0; j < SIZE; j++ )
 		{
+			//printf("%g\n", C[i*SIZE+j]);
 			for( unsigned k = 0; k < SIZE ; k++ )
 			{
-				out_check[i*SIZE+j] += in0[i*SIZE+k] * in1[k*SIZE+j];
+				D[i*SIZE+j] += A[i*SIZE+k] * B[k*SIZE+j];
 			}
 		}
 	}
-	double error = 0.0;
-	double sum   = 0.0;
-	for( unsigned i = 0; i < SIZE; i++ )
-	{
-		for( unsigned j = 0; j < SIZE; j++ )
-		{
-			error += abs(out[i*SIZE+j]  - out_check[i*SIZE+j]);
-			sum   += abs(out[i*SIZE+j]) + abs(out_check[i*SIZE+j]);
-		}
-	}
-	printf("Difference: %g\n", (error / sum) * 100);
+	__TIMINGLIB_snr(D, C, sizeof(TYPE), SIZE*SIZE);
 #endif
 
-	cudaFree(in0);
-	cudaFree(in1);
-	cudaFree(out);
-	cudaFree(out_check);
+	free(A);
+	free(B);
+	free(C);
+	free(D);
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+    cudaStreamDestroy(stream);
+    cudaDeviceReset();
     return 0;
 }
