@@ -1,5 +1,6 @@
 
-// the pipeline below implements a point-wise filter (color -> grayscale) followed by a depth-wise filter (gaussian blur)
+// pointwise convolutions: iterate per-pixel but filter all color channels at once
+// (hence, grayscaling an image is a point-wise convolution)
 // source: https://github.com/christianversloot/machine-learning-articles/blob/main/understanding-separable-convolutions.md
 #include <stdlib.h>
 #include <stdio.h>
@@ -64,7 +65,6 @@ int main(int argc, char** argv) {
 				gray[y*image_width+x] = ((TYPE)0.299)*input[y*image_width+x].r + ((TYPE)0.587)*input[y*image_width+x].g + ((TYPE)0.114)*input[y*image_width+x].b;
 			}
 		}
-		ImageConv(gray, output);
 	});
 
     // convert output image to an image acceptable for printing
@@ -73,13 +73,13 @@ int main(int argc, char** argv) {
     {
         for( unsigned int j = 0; j < image_width; j++ )
         {
-            (input + i*image_height + j)->r = (uint8_t)(*(output + i*image_height + j));
-            (input + i*image_height + j)->g = (input + i*image_height + j)->r;
-            (input + i*image_height + j)->b = (input + i*image_height + j)->g;
+            (input + i*image_height + j)->r = (uint8_t)gray[i*image_height+j];
+            (input + i*image_height + j)->g = (uint8_t)gray[i*image_height+j];
+            (input + i*image_height + j)->b = (uint8_t)gray[i*image_height+j];
         }
     }
 
-    // the output space is grayscale
+    // write result of point-wise filter
     writeImage(input, argv[2]);
 
     free(input);

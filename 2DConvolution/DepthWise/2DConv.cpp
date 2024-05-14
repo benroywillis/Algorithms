@@ -1,5 +1,6 @@
 
-// the pipeline below implements a point-wise filter (color -> grayscale) followed by a depth-wise filter (gaussian blur)
+// depthwise convolutions: iterate per-channel and filter a square of pixels at once
+// (hence, gaussian blur is a depth-wise convolution)
 // source: https://github.com/christianversloot/machine-learning-articles/blob/main/understanding-separable-convolutions.md
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +27,7 @@ const TYPE filter[K][L] = { {1.0f / 273.0f,  4.0f / 273.0f,  7.0f / 273.0f,  4.0
                             {4.0f / 273.0f, 16.0f / 273.0f, 26.0f / 273.0f, 16.0f / 273.0f, 4.0f / 273.0f},
                             {1.0f / 273.0f,  4.0f / 273.0f,  7.0f / 273.0f,  4.0f / 273.0f, 1.0f / 273.0f} };
 
-void ImageConv( TYPE* image, TYPE* blur ) {
+void DepthWiseConv( Pixel* image, TYPE* blur ) {
 	for( int y = 0; y < image_height; y++ ) {
 		for( int x = 0; x < image_width; x++ ) {
 			for( int k = -K/2; k < K/2; k++ ) {
@@ -37,7 +38,7 @@ void ImageConv( TYPE* image, TYPE* blur ) {
 					int col = x+l < 0 ? abs(x+l) : x+l;
 					row     = y+k >= image_height ? y-k : y+k;
 					col     = x+l >= image_width ? x-l : x+l;
-					blur[y*image_width] += filter[k][l] * image[row*image_width+col];
+					blur[y*image_width] += filter[k][l] * (TYPE)image[row*image_width+col].r;
 				}
 			}
 		}
@@ -54,17 +55,10 @@ int main(int argc, char** argv) {
     TYPE* gray;
     TYPE* output;
     input  = readImage(argv[1]);
-	gray   = (TYPE*)calloc(image_width*image_height, sizeof(TYPE));
     output = (TYPE*)calloc(image_width*image_height, sizeof(TYPE));
 
     __TIMINGLIB_benchmark( [&]{ 
-		// gray the image
-		for( unsigned y = 0; y < image_height; y++ ) {
-			for( unsigned x = 0; x < image_width; x++ ) {
-				gray[y*image_width+x] = ((TYPE)0.299)*input[y*image_width+x].r + ((TYPE)0.587)*input[y*image_width+x].g + ((TYPE)0.114)*input[y*image_width+x].b;
-			}
-		}
-		ImageConv(gray, output);
+		DepthWiseConv( input, output );
 	});
 
     // convert output image to an image acceptable for printing
@@ -73,13 +67,13 @@ int main(int argc, char** argv) {
     {
         for( unsigned int j = 0; j < image_width; j++ )
         {
-            (input + i*image_height + j)->r = (uint8_t)(*(output + i*image_height + j));
-            (input + i*image_height + j)->g = (input + i*image_height + j)->r;
-            (input + i*image_height + j)->b = (input + i*image_height + j)->g;
+            (input + i*image_height + j)->r = (uint8_t)output[i*image_height+j];
+            (input + i*image_height + j)->g = (uint8_t)output[i*image_height+j];
+            (input + i*image_height + j)->b = (uint8_t)output[i*image_height+j];
         }
     }
 
-    // the output space is grayscale
+    // write result of point-wise filter
     writeImage(input, argv[2]);
 
     free(input);
