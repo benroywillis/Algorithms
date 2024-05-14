@@ -32,19 +32,17 @@
         }                                                                 \
     } while (0)
 
-__global__
-void GEMM(TYPE *A, TYPE *B, TYPE *C)
+__global__ void GEMM(TYPE *A, TYPE *B, TYPE *C)
 {
 	int stride = blockDim.x * gridDim.x;
 	int index  = blockIdx.x * blockDim.x + threadIdx.x;
     for (int i = index; i < SIZE; i += stride )
-    //for (int i = 0; i < SIZE; i++ )
     {
         for (int j = 0; j < SIZE; j++)
         {
             for (int k = 0; k < SIZE; k++)
             {
-                C[i*SIZE+j] += A[i*SIZE+k] * B[k*SIZE+j];
+            	C[i*SIZE+j]+= A[i*SIZE+k] * B[k*SIZE+j];
             }
         }
     }
@@ -77,15 +75,13 @@ int main()
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * SIZE*SIZE));
     CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
     CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
-    //CUDA_CHECK(cudaMemcpy((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
-    //CUDA_CHECK(cudaMemcpy((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
 	// run GEMM
 	__TIMINGLIB_benchmark( [&] {
 		GEMM<<< (SIZE + THREADS_PER_BLOCK - 1) / THREADS_PER_BLOCK, THREADS_PER_BLOCK >>>(d_A, d_B, d_C); 
+    	CUDA_CHECK(cudaStreamSynchronize(stream));
+		CUDA_CHECK(cudaDeviceSynchronize());
 	});
     // copy data to host
-    CUDA_CHECK(cudaStreamSynchronize(stream));
-	CUDA_CHECK(cudaDeviceSynchronize());
     CUDA_CHECK(cudaMemcpyAsync(C, d_C, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyDeviceToHost, stream));
 
 #if CHECK
@@ -102,12 +98,12 @@ int main()
 		}
 	}
 	__TIMINGLIB_snr(D, C, sizeof(TYPE), SIZE*SIZE);
+	free(D);
 #endif
 
 	free(A);
 	free(B);
 	free(C);
-	free(D);
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);

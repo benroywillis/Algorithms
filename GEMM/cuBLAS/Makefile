@@ -9,6 +9,6 @@ SIZE?=512
 PRECISION?=0 # 0 for float, anything else for double
 THREADS_PER_BLOCK?= 256
 CHECK?=0
-CXXFLAGS += -DSIZE=$(SIZE) -DPRECISION=$(PRECISION) -DTHREADS_PER_BLOCK=$(THREADS_PER_BLOCK) -DCHECK=$(CHECK) -L/usr/local/cuda-12.4/targets/x86_64-linux/lib/
+CXXFLAGS += --gpu-code=sm_86 --gpu-architecture=compute_86 -DSIZE=$(SIZE) -DPRECISION=$(PRECISION) -DTHREADS_PER_BLOCK=$(THREADS_PER_BLOCK) -DCHECK=$(CHECK) -L/usr/local/cuda-12.4/targets/x86_64-linux/lib/
 D_LINKS=-lcublas
 include ../../BuildFlow.mk
