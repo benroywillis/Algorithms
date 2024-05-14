@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include "TimingLib.h"
 
 #define PRECISION 	double
 #define SIZE 		512
@@ -43,18 +44,6 @@ void createFilter(PRECISION* filter)
 			*(filter + (i*K + j)) /= sum;
 		}
 	}
-
-/*
-	for( unsigned int i = 0; i < K; i++ )
-	{
-		for( unsigned int j = 0; j < K; j++ )
-		{
-			printf( "%f,", *(filter + j + i*K) );
-		}
-		printf("\n");
-	}
-*/
-
 }
 
 PRECISION convolve(PRECISION* in, PRECISION* filter)
@@ -90,7 +79,10 @@ int main()
 	createFilter(filter);
 	readImage(input);
 
-	blur(input, output, filter);
+	__TIMINGLIB_benchmark( [&]{
+		blur(input, output, filter);
+	});
+	
 
 /*	for( unsigned int i = 0; i < SIZE; i++ )
 	{
@@ -101,5 +93,8 @@ int main()
 		printf("\n");
 	}*/
 
+	free(input);
+	free(output);
+	free(filter);
 	return 0;
 }
