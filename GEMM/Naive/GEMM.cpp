@@ -5,13 +5,21 @@
 #include <math.h>
 #include "TimingLib.h"
 
-#define PRECISION 	float
+
+#ifndef PRECISION
+#define TYPE float
+#elif   PRECISION == 0
+#define TYPE float
+#elif   PRECISION == 1
+#define TYPE double
+#endif
+
 #ifndef SIZE
 #define SIZE 		64
 #endif
 
-//void GEMM(PRECISION (*in0)[SIZE], PRECISION (*in1)[SIZE], PRECISION (*out)[SIZE])
-void GEMM(PRECISION *in0, PRECISION *in1, PRECISION *out)
+//void GEMM(TYPE (*in0)[SIZE], TYPE (*in1)[SIZE], TYPE (*out)[SIZE])
+void GEMM(TYPE *in0, TYPE *in1, TYPE *out)
 {
 #pragma scop
     for (int i = 0; i < SIZE; i++)
@@ -28,7 +36,7 @@ void GEMM(PRECISION *in0, PRECISION *in1, PRECISION *out)
 #pragma endscop
 }
 
-void GEMM_polygeist(PRECISION* in0, PRECISION* in1, PRECISION* out)
+void GEMM_polygeist(TYPE* in0, TYPE* in1, TYPE* out)
 {
     double best = 1000000000.0;
     for (uint64_t i = 0; i < TIMINGLIB_SAMPLES; i++) {
@@ -56,13 +64,13 @@ void GEMM_polygeist(PRECISION* in0, PRECISION* in1, PRECISION* out)
 
 int main()
 {
-    /*PRECISION (*in0)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(PRECISION[SIZE][SIZE]));
-    PRECISION (*in1)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(PRECISION[SIZE][SIZE]));
-    PRECISION (*out)[SIZE] = (PRECISION (*)[SIZE])malloc(sizeof(PRECISION[SIZE][SIZE]));
+    /*TYPE (*in0)[SIZE] = (TYPE (*)[SIZE])malloc(sizeof(TYPE[SIZE][SIZE]));
+    TYPE (*in1)[SIZE] = (TYPE (*)[SIZE])malloc(sizeof(TYPE[SIZE][SIZE]));
+    TYPE (*out)[SIZE] = (TYPE (*)[SIZE])malloc(sizeof(TYPE[SIZE][SIZE]));
 	*/
-    PRECISION *in0 = (PRECISION *)malloc(sizeof(PRECISION[SIZE][SIZE]));
-    PRECISION *in1 = (PRECISION *)malloc(sizeof(PRECISION[SIZE][SIZE]));
-    PRECISION *out = (PRECISION *)malloc(sizeof(PRECISION[SIZE][SIZE]));
+    TYPE *in0 = (TYPE *)malloc(sizeof(TYPE[SIZE][SIZE]));
+    TYPE *in1 = (TYPE *)malloc(sizeof(TYPE[SIZE][SIZE]));
+    TYPE *out = (TYPE *)malloc(sizeof(TYPE[SIZE][SIZE]));
 
     for (int i = 0; i < SIZE; i++)
     {
