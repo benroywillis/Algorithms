@@ -112,12 +112,12 @@ int main(int argc, char *argv[]) {
 #else
     	CUBLAS_CHECK(cublasDgemm(cublasH, CUBLAS_OP_N, CUBLAS_OP_N, SIZE, SIZE, SIZE, &alpha, d_A, SIZE, d_B, SIZE, &beta, d_C, SIZE));
 #endif
+    	CUDA_CHECK(cudaStreamSynchronize(stream));
 		cudaDeviceSynchronize();
 	});
 
     // step 4: copy data to host
     CUDA_CHECK(cudaMemcpyAsync(C, d_C, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyDeviceToHost, stream));
-    CUDA_CHECK(cudaStreamSynchronize(stream));
 	// step 5: snr with CPU result
 #if CHECK
 	TYPE* D = (TYPE*)calloc(SIZE*SIZE, sizeof(TYPE));
