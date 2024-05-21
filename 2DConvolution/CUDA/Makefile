@@ -1,0 +1,10 @@
+include ../../Environment.mk
+SOURCE=2DConv
+SUFFIX=.cu
+POLLY_SHOW=
+SIZE?=64
+PRECISION?=0 # 0 for float, anything else for double
+THREADS_PER_BLOCK?= 256
+CHECK?=0
+CXXFLAGS += --gpu-code=sm_86 --gpu-architecture=compute_86 -DSIZE=$(SIZE) -DPRECISION=$(PRECISION) -DTHREADS_PER_BLOCK=$(THREADS_PER_BLOCK) -DCHECK=$(CHECK)
+include ../../BuildFlow.mk
