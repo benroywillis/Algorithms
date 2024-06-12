@@ -1,7 +1,8 @@
 include ../../../Environment.mk
 
+SIZE?=4000
 # Size of "STANDARD_DATASET" is 1024 (defined in gemm.h)
-CFLAGS+= -std=c++17 -DSTANDARD_DATASET
+CFLAGS+= -std=c++17 -DSTANDARD_DATASET -DSIZE=$(SIZE)
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp
 # and your generator (-g <generator_name>) needs to match this variable

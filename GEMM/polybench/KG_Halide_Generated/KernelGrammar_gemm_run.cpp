@@ -8,6 +8,10 @@
 
 #include "HalideBuffer.h"
 
+#ifndef SIZE
+#define SIZE 512
+#endif
+
 using namespace std;
 using namespace Halide;
 
@@ -20,19 +24,29 @@ int main(int argc, char** argv) {
 	cout << "Setting thread count to "+to_string(threads) << endl;
 	halide_set_num_threads(threads);
 
-	// USER: if you have any special reading functions for your inputs, inject them here and pass those parameters to the runtime buffers listed below (i.e., replace "nullptr" with your pointers)
-	Runtime::Buffer<double> input0( nullptr, 1024, 1024 );
-	input0.allocate();
-	Runtime::Buffer<double> input1( nullptr, 1024, 1024 );
-	input1.allocate();
-	Runtime::Buffer<double> input2( nullptr, 1024, 1024 );
-	input2.allocate();
-	Runtime::Buffer<double> output0( nullptr, 1024, 1024);
-	output0.allocate();
+	// USER: if you have any special reading functions for your inputs, inject them here and pass those parameters to the runtime buffers listed below (i.e., replace "nullptr" with your pointers)q
+	double* in0 = (double*)malloc( SIZE*SIZE*sizeof(double) );
+	double* in1 = (double*)malloc( SIZE*SIZE*sizeof(double) );
+	double* in2 = (double*)malloc( SIZE*SIZE*sizeof(double) );
+	double* out = (double*)malloc( SIZE*SIZE*sizeof(double) );
+	
+	for( unsigned i = 0; i < SIZE; i++ ) {
+		for( unsigned j = 0; j < SIZE; j++ ) {
+			in0[i*SIZE+j] = fmod(rand(), SIZE);
+			in1[i*SIZE+j] = fmod(rand(), SIZE);
+			in2[i*SIZE+j] = fmod(rand(), SIZE);
+			out[i*SIZE+j] = fmod(rand(), SIZE);
+		}
+	}
+
+	Runtime::Buffer<double> input0( in0, SIZE, SIZE );
+	Runtime::Buffer<double> input1( in1, SIZE, SIZE );
+	Runtime::Buffer<double> input2( in2, SIZE, SIZE );
+	Runtime::Buffer<double> output0( out, SIZE, SIZE);
 
 #if HALIDE_AUTOSCHEDULE == 1
 	double autotime = __TIMINGLIB_benchmark([&]() {
-		auto out = KernelGrammar_gemm_autoschedule_true_generated(input1, input2, output0);
+		auto out = KernelGrammar_gemm_autoschedule_true_generated(input0, input1, input2, output0);
 		output0.device_sync();
 		output0.copy_to_host();
 	});
