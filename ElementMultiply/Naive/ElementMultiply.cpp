@@ -8,6 +8,14 @@
 #endif
 #define PRECISION 	float
 
+void elem_mul(PRECISION* a, PRECISION* b, PRECISION* c) {
+	for( unsigned i = 0 ; i < SIZE ; i++ ) {
+		for( unsigned j = 0; j < SIZE; j++ ) {
+			c[i*SIZE + j] = a[i*SIZE + j]*b[i*SIZE + j];
+		}
+	}
+}
+
 int main( int argc, char** argv )
 {
 	PRECISION* a = (PRECISION*)malloc(SIZE*SIZE*sizeof(PRECISION));
@@ -24,14 +32,7 @@ int main( int argc, char** argv )
 	}
 	
 	__TIMINGLIB_benchmark( [&] {
-	for( unsigned i = 0 ; i < SIZE ; i++ )
-	{
-		for( unsigned j = 0; j < SIZE; j++ )
-		{
-			c[i*SIZE + j] = a[i*SIZE + j]*b[i*SIZE + j];
-		}
-	}
-
+		elem_mul(a, b, c);
 	} );
 	for( unsigned i = 0; i < SIZE; i++ )
 	{
