@@ -6,14 +6,15 @@
 		"Cyclebite-Template": {
 			"Collection Method": "was timed with the average of 15 samples, each sample is the minimum time of 15 iterations",
 			"App Collection Dates": {
-				"2024-06-11": ["ElementMultiply", "GEMV"]
+				"2024-06-11": ["ElementMultiply", "GEMV"],
+				"2024-06-12": ["SGEMM", "Stencil Chain", "polybench/DGEMM", "polybench/SyrK", "polybench/3mm", "polybench/gemver"]
 			}
 		},
 		"LLVM-Polly": {
-			"Collection Method": "was timed with the average of 5 samples",
+			"Collection Method": "was timed with 1 sample",
 			"App Collection Dates": {
-				"2024-03-27": ["ElementMultiply", "GEMV", "SGEMM", "Stencil Chain", "polybench/DGEMM", "polybench/gemver", "polybench/3mm"],
-				"2024-03-28": ["polybench/syrk"]
+				"2024-06-11": ["ElementMultiply", "GEMV"],
+				"2024-06-12": ["SGEMM", "Stencil Chain", "polybench/DGEMM", "polybench/SyrK", "polybench/3mm", "polybench/gemver"]
 			}
 		}
 	},
@@ -159,22 +160,19 @@
 		}
 	},
 	"polybench/3mm (SIZE=1024)": {
-		"O3": {
-			"1": 12.56905
-		},
 		"Cyclebite-Template": {
-			"1": 0.524943,
-			"2": 0.531144,
-			"4": 0.248092,
-			"8": 0.104337,
-			"16": 0.108372
+			"1": 2.061,
+			"2": 1.084,
+			"4": 0.545,
+			"8": 0.366,
+			"16": 0.223
 		},
 		"LLVM-Polly": {
-			"1": 0.355261,
-			"2": 0.357857,
-			"4": 0.372362,
-			"8": 0.352060,
-			"16": 0.359088
+			"1": 1.988,
+			"2": 1.042,
+			"4": 0.545,
+			"8": 0.282,
+			"16": 0.256
 		}
 	},
 	"polybench/gemver (SIZE=4096)": {
@@ -182,37 +180,34 @@
 			"1": 0.106863
 		},
 		"Cyclebite-Template": {
-			"1": 0.0415337,
-			"2": 0.0215398,
-			"4": 0.0115291,
-			"8": 0.008731,
-			"16": 0.009248
+			"1": 0.10101,
+			"2": 0.05085,
+			"4": 0.02815,
+			"8": 0.01608,
+			"16": 0.01210
 		},
 		"LLVM-Polly": {
-			"1": 0.037816,
-			"2": 0.023659,
-			"4": 0.019718,
-			"8": 0.019832,
-			"16": 0.017397
+			"1": 0.07242,
+			"2": 0.05094,
+			"4": 0.03695,
+			"8": 0.03015,
+			"16": 0.03864
 		}
 	},
 	"polybench/syrk (SIZE=1024)": {
-		"O3": {
-			"1": 0.652417
-		},
 		"Cyclebite-Template": {
-			"1": 0.559055,
-			"2": 0.290578,
-			"4": 0.150943,
-			"8": 0.074403,
-			"16": 0.043878
+			"1": 1.852,
+			"2": 0.932,
+			"4": 0.466,
+			"8": 0.236,
+			"16": 0.117
 		},
 		"LLVM-Polly": {
-			"1": 0.207245,
-			"2": 0.104465,
-			"4": 0.088846,
-			"8": 0.057599,
-			"16": 0.025434
+			"1": 1.232,
+			"2": 1.236,
+			"4": 1.231,
+			"8": 1.239,
+			"16": 1.258
 		}
 	}
 }
