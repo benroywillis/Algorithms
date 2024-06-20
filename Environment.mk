@@ -13,6 +13,10 @@ HALIDE_INSTALL_PREFIX=
 HALIDE_COMPILE_ARGS=-fno-rtti
 HALIDE_D_LINKS=-lpthread -ldl -lpng -ljpeg
 HALIDE_INCLUDE=-I$(HALIDE_INSTALL_PREFIX)include/ -I$(HALIDE_INSTALL_PREFIX)share/tools
+# options as of Halide 16 are mullapudi2016, li2018, adams2019, anderson2021
+# mullapudi2016, li2018, and adams2019 schedule for CPUs
+# anderson2021 schedules for GPUs
+HALIDE_AUTOSCHEDULER?=Adams2019
 
 # install of the dash-archives repository (only required for algorithms driven by APIs)
 DASH_ROOT=
@@ -20,6 +24,7 @@ GSL_ROOT=$(DASH_ROOT)gsl/
 FFTW_ROOT=$(DASH_ROOT)fftw/
 OPENCV_ROOT=$(DASH_ROOT)opencv/
 SRSRAN_ROOT=$(DASH_ROOT)srsran/
+TORCH_ROOT=$(DASH_ROOT)pytorch/
 
 # Polygeist compiler
 POLYGEIST_ROOT=
