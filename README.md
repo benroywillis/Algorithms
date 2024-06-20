@@ -2,20 +2,21 @@
 This repository provides a buildflow (using GNU Makefile) for the [Cyclebite](https://github.com/benroywillis/Cyclebite) toolchain. Its [publication](https://ieeexplore.ieee.org/document/10301361) provides insight to how it works and what its goals are.
 
 ## Quick start guide
- * Build [Cyclebite and its dependencies](https://github.com/benroywillis/Cyclebite/blob/main/README.md) and install them somewhere.
- * Build [Halidev16](https://github.com/halide/Halide/releases/tag/v16.0.0) and install it somewhere.
- * Fill out the paths defined in Environment.mk. Each variable is mandatory unless marked "optional:" in its comment.
- * Go to the GEMM/Naive project and type "make". You should see the entire Cyclebite run to completion (a KernelGrammar_\<project\>.json file should be present)! If you don't see the KernelGrammar file, something is wrong with your dependencies - please see FAQ or double-check that you installed your dependencies correctly.
+ * Build [Cyclebite and its dependencies](https://github.com/benroywillis/Cyclebite/blob/devb/README.md) and install them somewhere.
+ * Build [Halidev16](https://github.com/halide/Halide/releases/tag/v16.0.0) and install it somewhere (see our build instructions below).
+ * Fill out the paths defined in Environment.mk. Variables after HALIDE_AUTOSCHEDULER are optional.
+ * Go to the GEMM/Naive project and type "make". You should see the entire Cyclebite run to completion (Halide_generator.cpp and Halide_driver.cpp should be present)! If you don't see the halide files, something is wrong - please see FAQ or double-check that you installed your dependencies correctly.
  * Make a folder for your own project: FOO/Naive.
  * Copy GEMM/Naive/Makefile into your project folder.
- * Change the name of the "SOURCE" variable from "GEMM" to your project name: "FOO" (if your project is a C project, you can delete the "SUFFIX" variable).
- * Run "make" and Cyclebite will structure and export your project in Halide! If something goes wrong, see the FAQ section to see if your error is there. If it isn't, [submit an issue](https://github.com/benroywillis/Cyclebite/issues/new/).
+ * Change the name of the "SOURCE" variable from "GEMM" to your project name: "FOO" (if your project is a C project, you can delete the "SUFFIX" variable inside the Makefile). See BuildFlow.mk for a description of each variable that appears in the Makefile.
+ * Run "make" and Cyclebite will structure your program and export its task graph in Halide! If something goes wrong, see the FAQ section to see if your error is there. If it isn't, [submit an issue](https://github.com/benroywillis/Cyclebite/issues/new/).
 
 ## General Architecture
  * Buildflow.mk: provides the rules for building the toolchain, as well as state-of-the-art (SoA) program structuring, analysis, and optimization frameworks like [Halide](https://github.com/halide/Halide), [LLVM-Polly](polly.llvm.org), [Polygeist](polygeist.llvm.org), CUDA, and [OpenMP](openmp.llvm.org).
  * Environment.mk: holds the paths to dependencies used by the Cyclebite toolchain. Each variable is commented with a description of its intention - if it is marked required, you must have this dependency installed and pointed to for the Cyclebite toolchain to run to completion.
  * Each project is meant to build only itself. There is no global build framework (except the Compliance.py script - it collects information on how well Cyclebite structures and labels the tasks of the applications within this repo).
- * Within each project's "Makefile" file is a reference to Environment.mk and Buildflow.mk. Those imports provide the general configuration and buildflow rules to each project. Thus, to add your own project, make a directory for it, copy an existing project's Makefile (perhaps GEMM/Naive), change its include paths to match your project's location, and change "SOURCE" to fit the source files in your project. There are special rules for Halide project (see "Halide").
+ * Within each project's "Makefile" file is a reference to Environment.mk and Buildflow.mk. Those imports provide the general configuration and buildflow rules to each project. Thus, to add your own project, make a directory for it, copy an existing project's Makefile (perhaps GEMM/Naive), change its include paths to match your project's location, and change "SOURCE" to fit the source files in your project. There are special rules for Halide projects (see "Halide").
+ * You can build your project using the normal llvm front-end ("make run"), Cyclebite ("make"), LLVM-Polly (make run_polly), Polygeist (make run_cgeist), GNU gdb (make gdb), 
 
 ## Example: GEMM/Naive
 This is a simple n-cubed square matrix multiply with some knobs to change the configuration of the application. There are no source dependencies for this file - it is a standalone application. If your application depends on a library, please see the GEMM/GSL example.
@@ -49,7 +50,7 @@ This will run the entire Cyclebite toolchain (including Cyclebite-Template, whic
 
 If you run
 ```command
-:~$ llvm-dis <project>.markov.bc
+llvm-dis <project>.markov.bc
 ```
 you will get a human-readable form of the Markov Profile (MP) annotated binary. Within this file are calls to the profiling backend: "MarkovIncrement( i64 )". The argument in this function call (i64) is the ID of the basic block it lies within. This will be helpful to understand the analysis of later Cyclebite toolchain stages.
 
@@ -73,6 +74,21 @@ If the repository is compiled with configuration `-DCMAKE_BUILD_TYPE=Debug` or `
  * simplifiedMarkovControlGraph.dot: holds the fully-simplified MCG before its cycles are localized. Like MarkovControlGraph, the nodes in this graph lie in the cartographer's virtual node space, thus their IDs to not map to basic block IDs in <project>.markov.ll.
  * StaticCallGraph.dot: a dot file detailing the static configuration of the call graph in the application. In complex API applications, this graph will be huge and contain many nodes that don't connect to the tree. Edges point from caller to callee.
  * TransformedMarkovControlGraph_#.dot: contains the MCG of the application after # iterations of cycle localization. Like MCG, the node IDs in this graph do not map to the basic block IDs in <project>.markov.ll.
+
+To map your tasks back to the source code lines which made them, run
+```command
+make SourceMap_KernelGrammar_<project>.json
+```
+This will produce two files:
+ * SourceMap_project_instance.json: contains the tasks found by Cyclebite.
+ * SourceMap_project_kernel.json: contains the task candidates that were found by Cyclebite.
+Both files map each LLVM basic block ID to a source code line if possible.
+If your tasks map to very few (or even no) source code lines, run your project again with max debug symbols:
+```command
+make clean
+make OPFLAG=-O1 DEBUG=-g3
+make SourceMap_<TabComplete>
+```
 
 #### Cyclebite-Template
 Cyclebite-Template prints a variety of information when it's compiled with with `-DCMAKE_BUILD_TYPE="Debug"` or `-DCMAKE_BUILD_TYPE="relwithdebinfo"`. It will print the characteristics extracted from each task. Once each task is characterized, each task's parallel pattern label is printed. Finally, it outputs some files:
@@ -104,13 +120,14 @@ make run
 ```
 and your halide will build and run!
 
-To gather runtime information for your program, pass the following argument flags into the CFLAGS var in the Makefile:
- * TIMINGLIB_SAMPLES=15 - control how many timing samples will be collected for your program. Each sample is the median time of all TIMINGLIB_ITERATIONS executed per sample
- * TIMINGLIB_ITERATIONS=15 - control how many iterations take place for each TIMINGLIB_SAMPLE
- * PRINT_TIMES - print each time sample that is collected. Each measurement is in seconds.
- * HALIDE_THREADS=4 - defaults to 1. This is a dynamic flag to the Halide executable, so you can change this flag without rebuilding the Halide application
+To optimize your program fully and gather runtimes for it, pass the following variables when calling the Makefile:
  * OPFLAG=-O3 - set the optimization level of the front-end LLVM compiler that compiles the Halide program's generated LLVM IR. Set this to the highest level (O3) for optimal performance
  * DEBUG=-g0 - set this to no debug symbols (-g0) for optimal performance
+ * HALIDE_THREADS=4 - defaults to 1. This is a dynamic flag to the Halide executable, so you can change this flag without rebuilding the Halide application
+ * HALIDE_AUTOSCHEDULER=Anderson2021 - defaults to Adams2019 for CPU. If you want to compile toward your GPU, pass Anderson2021
+ * TIMINGLIB_SAMPLES=15 - control how many timing samples will be collected for your program. Each sample is the median time of all TIMINGLIB_ITERATIONS executed per sample
+ * TIMINGLIB_ITERATIONS=15 - control how many iterations take place for each TIMINGLIB_SAMPLE
+ * PRINT_TIMES=1 - print each time sample that is collected. Each measurement is in seconds.
 
 An example of a configured Halide build-and-run for CPU:
 ```command
@@ -129,17 +146,17 @@ If you choose the GPU scheduler, you need to change the HALIDE_TARGET variable i
 Find your compatibility [here](https://developer.nvidia.com/cuda-gpus#compute).
 
 ## Halide
-Cyclebite-Template exports the application task graph to the Halide domain-specific language for transformation and optimization towards a [cpu](https://halide-lang.org/papers/autoscheduler2019.html) or [gpu](https://cseweb.ucsd.edu/~tzli/gpu_autoscheduler.pdf) target.
+Cyclebite-Template exports the application task graph to the [Halide](https://people.csail.mit.edu/jrk/halide-pldi13.pdf) domain-specific language for transformation and optimization towards a [cpu](https://halide-lang.org/papers/autoscheduler2019.html) or [gpu](https://cseweb.ucsd.edu/~tzli/gpu_autoscheduler.pdf).
 
 ### Build Halide
-We built Halide using the following configuration successfully with both gcc v11.4.0 and LLVM16 on Ubunto 22.04LTS (it fails when using LLVM17: LLVM_Output.cpp:398:28: error: ‘createRewriteSymbolsPass’ is not a member of ‘llvm’; did you mean ‘RewriteSymbolPass’?). Our build flow:
+We build Halide using the following configuration successfully with both gcc v11.4.0 and LLVM16 on Ubuntu 22.04LTS (it fails when using LLVM17: LLVM_Output.cpp:398:28: error: ‘createRewriteSymbolsPass’ is not a member of ‘llvm’; did you mean ‘RewriteSymbolPass’?). Our build flow:
 ```command
 wget https://github.com/halide/Halide/archive/refs/tags/v16.0.0.tar.gz
 mv v16.0.0.tar.gz Halide16.0.0.tar.gz
 tar -xvf Halide16.0.0.tar.gz
 cd Halide16.0.0
 mkdir build_release ; cd build_release
-cmake ../ -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=<path-to-llvm16-install/lib/cmake/llvm/ -DCMAKE_INSTALL_PREFIX=/home/ben/Installs/Halide16/release/ -DWITH_TESTS=OFF
+cmake ../ -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=<path-to-llvm16-install/lib/cmake/llvm/ -DCMAKE_INSTALL_PREFIX=</path/to/Installs/>Halide16/release/ -DWITH_TESTS=OFF
 ninja
 ninja install
 
