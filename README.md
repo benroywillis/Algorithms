@@ -82,6 +82,7 @@ make SourceMap_KernelGrammar_<project>.json
 This will produce two files:
  * SourceMap_project_instance.json: contains the tasks found by Cyclebite.
  * SourceMap_project_kernel.json: contains the task candidates that were found by Cyclebite.
+
 Both files map each LLVM basic block ID to a source code line if possible.
 If your tasks map to very few (or even no) source code lines, run your project again with max debug symbols:
 ```command
@@ -125,7 +126,7 @@ To optimize your program fully and gather runtimes for it, pass the following va
  * DEBUG=-g0 - set this to no debug symbols (-g0) for optimal performance
  * HALIDE_THREADS=4 - defaults to 1. This is a dynamic flag to the Halide executable, so you can change this flag without rebuilding the Halide application
  * HALIDE_AUTOSCHEDULER=Anderson2021 - defaults to Adams2019 for CPU. If you want to compile toward your GPU, pass Anderson2021
- * TIMINGLIB_SAMPLES=15 - control how many timing samples will be collected for your program. Each sample is the median time of all TIMINGLIB_ITERATIONS executed per sample
+ * TIMINGLIB_SAMPLES=15 - control how many timing samples will be collected for your program. Each sample is the arithmetic mean of all TIMINGLIB_ITERATIONS trials executed per sample
  * TIMINGLIB_ITERATIONS=15 - control how many iterations take place for each TIMINGLIB_SAMPLE
  * PRINT_TIMES=1 - print each time sample that is collected. Each measurement is in seconds.
 
