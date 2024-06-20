@@ -1,9 +1,9 @@
 include ../../../Environment.mk
 
 SIZE?=64
-
+PRINT_TIMES?=0
 DASH_DATA=/mnt/nobackup-09/Dash/Data/
-CFLAGS+= -std=c++17 -DSIZE=$(SIZE)
+CFLAGS+= -std=c++17 -DSIZE=$(SIZE) -DPRINT_TIMES=$(PRINT_TIMES)
 
 # In order for this variable to work, your run files need to be named
 # $(SOURCE)_generate.cpp $(SOURCE)_run.cpp

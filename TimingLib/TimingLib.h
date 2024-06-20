@@ -82,12 +82,12 @@ double __TIMINGLIB_benchmark(const std::function<void()> &op) {
 	}
 #if PRINT_TIMES
 	for( int i = 0; i < TIMINGLIB_SAMPLES; i++ ) {
-		printf("%g\n", times[i]);
+		printf("%gs\n", times[i]);
 	}
 #endif
 	double median = 0.0;
 	if( (TIMINGLIB_SAMPLES % 2) && (TIMINGLIB_SAMPLES > 1) ) {
-		median = (times[TIMINGLIB_SAMPLES/2] + times[TIMINGLIB_SAMPLES/2+1])/2;
+		median = (times[TIMINGLIB_SAMPLES/2-1] + times[TIMINGLIB_SAMPLES/2])/2;
 	}
 	else {
 		median = times[TIMINGLIB_SAMPLES/2];

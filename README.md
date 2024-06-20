@@ -2,13 +2,14 @@
 This repository provides a buildflow (using GNU Makefile) for the [Cyclebite](https://github.com/benroywillis/Cyclebite) toolchain. Its [publication](https://ieeexplore.ieee.org/document/10301361) provides insight to how it works and what its goals are.
 
 ## Quick start guide
- * Build the [Cyclebite dependencies](https://github.com/benroywillis/Cyclebite/blob/main/README.md) and install them somewhere.
+ * Build [Cyclebite and its dependencies](https://github.com/benroywillis/Cyclebite/blob/main/README.md) and install them somewhere.
+ * Build [Halidev16](https://github.com/halide/Halide/releases/tag/v16.0.0) and install it somewhere.
  * Fill out the paths defined in Environment.mk. Each variable is mandatory unless marked "optional:" in its comment.
  * Go to the GEMM/Naive project and type "make". You should see the entire Cyclebite run to completion (a KernelGrammar_\<project\>.json file should be present)! If you don't see the KernelGrammar file, something is wrong with your dependencies - please see FAQ or double-check that you installed your dependencies correctly.
  * Make a folder for your own project: FOO/Naive.
  * Copy GEMM/Naive/Makefile into your project folder.
  * Change the name of the "SOURCE" variable from "GEMM" to your project name: "FOO" (if your project is a C project, you can delete the "SUFFIX" variable).
- * Run "make" and Cyclebite will structure and export your project! If something goes wrong, see the FAQ section to see if your error is there. If it isn't, [submit an issue](https://github.com/benroywillis/Cyclebite/issues/new/).
+ * Run "make" and Cyclebite will structure and export your project in Halide! If something goes wrong, see the FAQ section to see if your error is there. If it isn't, [submit an issue](https://github.com/benroywillis/Cyclebite/issues/new/).
 
 ## General Architecture
  * Buildflow.mk: provides the rules for building the toolchain, as well as state-of-the-art (SoA) program structuring, analysis, and optimization frameworks like [Halide](https://github.com/halide/Halide), [LLVM-Polly](polly.llvm.org), [Polygeist](polygeist.llvm.org), CUDA, and [OpenMP](openmp.llvm.org).
@@ -21,14 +22,14 @@ This is a simple n-cubed square matrix multiply with some knobs to change the co
 
 ### Run Native Binary
 To build the application toward the current platform, type
-```console
-:~$ make run
+```command
+make run
 ```
 
 ### Run The Cyclebite Toolchain
 To build the current application using Cyclebite, run
-```console
-:~$ make
+```command
+make
 ```
 This will run the entire Cyclebite toolchain (including Cyclebite-Template, which ends in the export of Halide). During the running of the toolchain, many intermediate files will be generated.
 
@@ -82,14 +83,68 @@ Cyclebite-Template prints a variety of information when it's compiled with with 
  * IdxVarTree_Task#.dot: contains the multi-dimensional array accesses of memory within Task #. Edges point from child dimension to parent dimension (that is, if an array A[i][j], then j's outgoing edge points to node i).
  * Task\#\_Collection\#.dot: contains a rendering of the collection# in task #. Edges point from child dimension to parent dimension.
 
+#### Generated Halide 
+Cyclebite-Template generates two Halide files: 
+ * Halide_generator.cpp: contains the exported application task graph as a [Halide generator](https://halide-lang.org/tutorials/tutorial_lesson_15_generators.html)
+ * Halide_run.cpp: contains the driver for the exported Halide pipeline. The user must change the inputs inside this file to feed the pipeline in the same way they fed the pipeline in their original C/C++ program (and to output the results).
+
+To build and run the generated Halide, follow these steps:
+```command
+mkdir Generated_Halide ; cd Generated_Halide
+cp ../Halide_* .
+mv Halide_generated.cpp your-project-name_generate.cpp
+mv Halide_run.cpp your-project-name_run.cpp
+cp <path/to/Algorithms/root>GEMM/Naive/KG_Halide_Generated/Makefile .
+```
+Next, you need to change the generated code inside your-project-name_run.cpp to feed the application pipeline and export its results like you did in your C/C++ program.
+Finally, open the copied Makefile and change the project name, links, static configurations, and runtime arguments to match your project.
+Then, 
+```command
+make run
+```
+and your halide will build and run!
+
+To gather runtime information for your program, pass the following argument flags into the CFLAGS var in the Makefile:
+ * TIMINGLIB_SAMPLES=15 - control how many timing samples will be collected for your program. Each sample is the median time of all TIMINGLIB_ITERATIONS executed per sample
+ * TIMINGLIB_ITERATIONS=15 - control how many iterations take place for each TIMINGLIB_SAMPLE
+ * PRINT_TIMES - print each time sample that is collected. Each measurement is in seconds.
+ * HALIDE_THREADS=4 - defaults to 1. This is a dynamic flag to the Halide executable, so you can change this flag without rebuilding the Halide application
+ * OPFLAG=-O3 - set the optimization level of the front-end LLVM compiler that compiles the Halide program's generated LLVM IR. Set this to the highest level (O3) for optimal performance
+ * DEBUG=-g0 - set this to no debug symbols (-g0) for optimal performance
+
+An example of a configured Halide build-and-run for CPU:
+```command
+make clean ; make run TIMINGLIB_SAMPLES=15 TIMINGLIB_ITERATIONS=15 OPFLAG=-O3 DEBUG=-g0 PRINT_TIMES=1 HALIDE_THREADS=16
+```
+An example of a configured Halide build-and-run for GPU:
+```command
+make clean ; make run TIMINGLIB_SAMPLES=15 TIMINGLIB_ITERATIONS=15 OPFLAG=-O3 DEBUG=-g0 PRINT_TIMES=1 HALIDE_THREADS=16 HALIDE_AUTOSCHEDULER=Anderson2021
+```
+
+#### Halide autoschedulers
+You have a choice to either export an application whose schedule is optimized for CPUs or GPUs. 
+By default, the build flow will export a CPU-scheduled program.
+You can change this by setting the HALIDE_AUTOSCHEDULER variable in Environment.mk
+If you choose the GPU scheduler, you need to change the HALIDE_TARGET variable inside BuildFlow.mk to the cuda compatibility of your card (the default exports applications to an Nvidia RTX 3060 12GB).
+Find your compatibility [here](https://developer.nvidia.com/cuda-gpus#compute).
+
 ## Halide
-Halide projects are built with halide generators.
+Cyclebite-Template exports the application task graph to the Halide domain-specific language for transformation and optimization towards a [cpu](https://halide-lang.org/papers/autoscheduler2019.html) or [gpu](https://cseweb.ucsd.edu/~tzli/gpu_autoscheduler.pdf) target.
 
-### Dependencies
- * [Halide v16](https://github.com/benroywillis/Halide/releases/tag/v16.0.0)
+### Build Halide
+We built Halide using the following configuration successfully with both gcc v11.4.0 and LLVM16 on Ubunto 22.04LTS (it fails when using LLVM17: LLVM_Output.cpp:398:28: error: ‘createRewriteSymbolsPass’ is not a member of ‘llvm’; did you mean ‘RewriteSymbolPass’?). Our build flow:
+```command
+wget https://github.com/halide/Halide/archive/refs/tags/v16.0.0.tar.gz
+mv v16.0.0.tar.gz Halide16.0.0.tar.gz
+tar -xvf Halide16.0.0.tar.gz
+cd Halide16.0.0
+mkdir build_release ; cd build_release
+cmake ../ -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=<path-to-llvm16-install/lib/cmake/llvm/ -DCMAKE_INSTALL_PREFIX=/home/ben/Installs/Halide16/release/ -DWITH_TESTS=OFF
+ninja
+ninja install
 
-### Configure your project
- * Copy a simple halide folder (e.g., GEMM/Halide/) and name it after your project.
+```
+Note: There is a compile problem with the Halide tests so those need to be turned off (FAILED: test/fuzz/CMakeFiles/fuzz_simplify.dir/simplify.cpp.o: error: current translation unit is compiled with the target feature '-fsanitize=fuzzer-no-link' but the AST file was not)
 
 ## FAQ
 These are frequently asked questions, but a synonym would be "frequently encountered problems".
