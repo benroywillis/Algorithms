@@ -111,7 +111,7 @@ mkdir Generated_Halide ; cd Generated_Halide
 cp ../Halide_* .
 mv Halide_generated.cpp your-project-name_generate.cpp
 mv Halide_run.cpp your-project-name_run.cpp
-cp <path/to/Algorithms/root>GEMM/Naive/KG_Halide_Generated/Makefile .
+cp /path-to-Algorithms-root/GEMM/Naive/KG_Halide_Generated/Makefile .
 ```
 Next, you need to change the generated code inside your-project-name_run.cpp to feed the application pipeline and export its results like you did in your C/C++ program.
 Finally, open the copied Makefile and change the project name, links, static configurations, and runtime arguments to match your project.
@@ -157,7 +157,7 @@ mv v16.0.0.tar.gz Halide16.0.0.tar.gz
 tar -xvf Halide16.0.0.tar.gz
 cd Halide16.0.0
 mkdir build_release ; cd build_release
-cmake ../ -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=<path-to-llvm16-install/lib/cmake/llvm/ -DCMAKE_INSTALL_PREFIX=</path/to/Installs/>Halide16/release/ -DWITH_TESTS=OFF
+cmake ../ -G Ninja -DCMAKE_BUILD_TYPE=Release -DLLVM_DIR=/path-to-llvm16-install/lib/cmake/llvm/ -DCMAKE_INSTALL_PREFIX=/path-to-Installs/Halide16/release/ -DWITH_TESTS=OFF
 ninja
 ninja install
 
