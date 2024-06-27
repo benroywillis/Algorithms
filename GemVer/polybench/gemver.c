@@ -92,28 +92,25 @@ void kernel_gemver(int n,
   for (i = 0; i < _PB_N; i++) {
     for (j = 0; j < _PB_N; j++) {
       // the two statements below are functionally equivalent - however, using the commented one causes Cyclebite-Template to miss an input in the generated Halide (the 2d input collection)
-      // using the commented statement (which
-      //A[i][j] = A[i][j] + u1[i] * v1[j] + u2[i] * v2[j];
-      A[i][j] += u1[i] * v1[j] + u2[i] * v2[j];
+	  // [BW] 2024-06-13 Cyclebite-Template correctly constructs the canonical expression, but the Halide export is not correct
+      A[i][j] = A[i][j] + u1[i] * v1[j] + u2[i] * v2[j];
+      //A[i][j] += u1[i] * v1[j] + u2[i] * v2[j];
     }
   }
 
   for (i = 0; i < _PB_N; i++) {
     for (j = 0; j < _PB_N; j++) {
-      //x[i] += beta * A[j][i] * y[j];
       x[i] = x[i] + beta * A[j][i] * y[j];
     }
   }
 
   for (i = 0; i < _PB_N; i++) {
-    //x[i] = x[i] + z[i];
-    x[i] += z[i];
+    x[i] = x[i] + z[i];
   }
 
   for (i = 0; i < _PB_N; i++) {
     for (j = 0; j < _PB_N; j++) {
-      //w[i] = w[i] +  alpha * A[i][j] * x[j];
-      w[i] += alpha * A[i][j] * x[j];
+      w[i] = w[i] +  alpha * A[i][j] * x[j];
     }
   }
 
