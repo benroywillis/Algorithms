@@ -99,7 +99,7 @@ POLLY_NONAFFINE=-mllvm -polly-allow-nonaffine -mllvm -polly-allow-nonaffine-bran
 POLLY_VECTORIZE=-mllvm -polly-vectorizer=stripmine
 # turns on omp code generation and parallelization
 POLLY_THREADS?=1
-POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -mllvm -polly-omp-backend=LLVM -mllvm -polly-scheduling=static -fopenmp
+POLLY_PARALLEL=-mllvm -polly-parallel -lgomp -mllvm -polly-num-threads=$(POLLY_THREADS) -mllvm -polly-omp-backend=LLVM -mllvm -polly-scheduling=static -fopenmp  
 # contains all flags that will be passed to polly opt pass
 POLLY_C_FLAGS+=$(POLLY_SHOW) $(POLLY_NONAFFINE) $(POLLY_VECTORIZE) $(POLLY_PARALLEL)
 # contains all flags that will be passed to clang for polly optimization
@@ -261,16 +261,15 @@ $(SOURCE)_polly_scops : $(SOURCE).canonical.bc
 #      -> without exporting valid MLIR, we can't parallelize its output, and when we run the cgeist output alone, we get performance that under-performs the clang17 front-end on -O3 -g0
 #      -> also, cgeist does worse for higher optimization levels (optimal op level seems to be -O1)
 $(SOURCE).cgeist.native : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
-	#$(CGEIST) --raise-scf-to-affine --c-style-memref --openmp-opt -fopenmp -lomp -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $(SOURCE).cgeist.native
-	$(CGEIST) --raise-scf-to-affine --memref-abi --c-style-memref -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $^ -o $(SOURCE).cgeist.mlir
+	LD_LIBRARY_PATH=/home/ben/Builds/Polygeist/build/tools/polygeist/pluto/install/lib/ $(CGEIST) --raise-scf-to-affine --c-style-memref --openmp-opt --polyhedral-opt -fopenmp -lomp $(INCLUDE) $(D_LINKS) $(OPFLAG) $(LIBRARIES) $(CFLAGS) $(CXXFLAGS) $^ -o $(SOURCE).cgeist.native
+	#LD_LIBRARY_PATH=/home/ben/Builds/Polygeist/build/tools/polygeist/pluto/install/lib/ $(CGEIST) --raise-scf-to-affine --memref-abi --c-style-memref -S $(INCLUDE) $(D_LINKS) $(OPFLAG) $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $^ -o $(SOURCE).cgeist.mlir
 	# this command breaks polygeist-op -> $(POLYGEIST_INSTALL)bin/polygeist-opt --convert-polygeist-to-llvm $(SOURCE).cgeist.mlir -o $(SOURCE).simplify.mlir
 	#LD_LIBRARY_PATH=/home/ben/Builds/Polygeist/build/tools/polygeist/pluto/install/lib/ $(POLYMEROPT) -allow-unregistered-dialect --demote-loop-reduction --extract-scop-stmt --pluto-opt="parallelize=1" --inline --canonicalize $(SOURCE).cgeist.mlir -o $(SOURCE).polymerpar.mlir
 	#$(MLIROPT) -mem2reg -detect-reduction -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-std -convert-openmp-to-llvm $(SOURCE).polymerpar.mlir -o $(SOURCE).mliropt.mlir
-	#$(MLIROPT) -mem2reg -detect-reduction -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-std -convert-openmp-to-llvm $(SOURCE).polymerpar.mlir -o $(SOURCE).mliropt.mlir
-	$(MLIROPT) -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-cf -convert-openmp-to-llvm $(SOURCE).cgeist.mlir -o $(SOURCE).mliropt.mlir
-	$(MLIRTRANSLATE) -mlir-to-llvmir $(SOURCE).mliropt.mlir -o $(SOURCE).polygeist.bc
+	#$(MLIROPT) -mem2reg -canonicalize -affine-parallelize -lower-affine -convert-scf-to-openmp -convert-scf-to-cf -convert-openmp-to-llvm $(SOURCE).cgeist.mlir -o $(SOURCE).mliropt.mlir
+	#$(MLIRTRANSLATE) -mlir-to-llvmir $(SOURCE).mliropt.mlir -o $(SOURCE).polygeist.bc
 	#$(MLIRTRANSLATE) -mlir-to-llvmir $(SOURCE).cgeist.mlir -o $(SOURCE).polygeist.bc
-	$(CC) -fopenmp -lomp $(INCLUDE) $(D_LINKS) -O3 -g0 $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $(SOURCE).polygeist.bc -o $@
+	#$(CC) -fopenmp -lomp $(INCLUDE) $(D_LINKS) -O3 -g0 $(CFLAGS) $(CXXFLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $(SOURCE).polygeist.bc -o $@
 
 run_cgeist : $(SOURCE).cgeist.native
 	$(BIN_ENV) ./$< $(RARGS)
@@ -308,7 +307,7 @@ $(SOURCE).elf_polly : $(SOURCE).bc
 	#$(OPT) -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-process-unprofitable -polly-parallel -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-vectorizer=stripmine $(SOURCE).bc 
 	# if you try to read in the jscop, llvm-polly breaks (so you can't use the -polly-import-jscop option) $(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-import-jscop -polly-import-jscop-postfix=interchanged+tiled+vector -polly-codegen -polly-parallel -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-vectorizer=stripmine -o $(SOURCE).polly.bc
 	# useful for polybench3.2/gemm
-	$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-only-func=kernel_gemm -o $(SOURCE).polly.bc
+	$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -polly-only-func=kernel_gemm -o $(SOURCE).polly.bc
 	#$(OPT) -S $(SOURCE).bc -basic-aa -polly-use-llvm-names -polly-export-jscop -polly-codegen -polly-omp-backend=LLVM -polly-parallel -polly-vectorizer=stripmine -polly-process-unprofitable -polly-allow-nonaffine -polly-allow-nonaffine-branches -polly-allow-nonaffine-loops -o $(SOURCE).polly.bc
 	$(C) $(LLD) $(INCLUDE) $(D_LINKS) $(OPFLAG) $(DEBUG) $(CFLAGS) $(CXXFLAGS) $(POLLY_CLANG_FLAGS) $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) $(SOURCE).polly.bc -o $@
 endif
