@@ -26,7 +26,7 @@ colors = [
 markers = [ 'o', '^', '1', 's', '*', 'd', 'X', '>']
 barWidth = 0.3
 
-Apps = { "ElementMultiply (SIZE=2048)", "GEMV (SIZE=2048)", "SGEMM (SIZE=512)", "Stencil Chain (1280x1920)", "polybench/DGEMM (SIZE=1024)", "polybench/3mm (SIZE=1024)", "polybench/gemver (SIZE=4096)"  }
+Apps = { "ElementMultiply (SIZE=2048)", "GEMV (SIZE=2048)", "SGEMM (SIZE=512)", "Stencil Chain (1280x1920)", "polybench/DGEMM (SIZE=4096)", "polybench/3mm (SIZE=1024)", "polybench/gemver (SIZE=4096)"  }
 THREADS=[1,2,4,8,16]
 
 def PrintFigure(plt, name):
