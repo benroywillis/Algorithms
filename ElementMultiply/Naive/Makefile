@@ -4,5 +4,5 @@ SUFFIX=.cpp
 INCLUDE=-I$(TRACEATLAS_ROOT)include/Profile/Backend/Utilities/ -I../../TimingLib/
 POLLY_SHOW=
 SIZE?=512
-CXXFLAGS += -DSIZE=$(SIZE)
+CXXFLAGS += -DSIZE=$(SIZE) -DPRINT_TIMES
 include ../../BuildFlow.mk

@@ -34,11 +34,8 @@ int main(int argc, char** argv) {
 	float* in1 = (float*)malloc( SIZE*SIZE*sizeof(float) );
 	float* out = (float*)malloc( SIZE*SIZE*sizeof(float) );
 	Runtime::Buffer<float> input0( in0, SIZE, SIZE);
-	input0.allocate();
 	Runtime::Buffer<float> input1( in1, SIZE, SIZE);
-	input1.allocate();
 	Runtime::Buffer<float> output( out, SIZE, SIZE);
-	output.allocate();
 
 #if HALIDE_AUTOSCHEDULE == 1
 	double autotime = __TIMINGLIB_benchmark([&]() {
