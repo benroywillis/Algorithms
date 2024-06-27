@@ -1,6 +1,6 @@
 include ../../../Environment.mk
 
-CFLAGS?=-Wall -Wno-unused-label
+#CFLAGS?=-Wall -Wno-unused-label
 
 SOURCE=gemm
 ADDSOURCE=local_support.c ../../common/support.c ../../common/harness.c
