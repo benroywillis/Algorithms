@@ -122,7 +122,7 @@ def outputData(complianceMap, path, op):
 				actualTaskToLabel[op] = {}
 			actualTaskToLabel[op][path] = {}
 			# this maps tasks to their labels
-			if (labelKey[op].get(path) is None) and !(path.contains("KG_Halide_Generated")):
+			if (labelKey[op].get(path) is None) or ("KG_Halide_Generated" in path):
 				print("Warning: path "+path+" was not found in LabelKey.json")
 				continue
 			for label in labelKey[op][path]:
