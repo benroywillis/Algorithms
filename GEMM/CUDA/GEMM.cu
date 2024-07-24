@@ -9,19 +9,39 @@
 #define min(a,b) ((a)<(b)?(a):(b))
 #define max(a,b) ((a)>(b)?(a):(b))
 
+#define CEIL_DIV(M, N) (((M) + (N)-1) / (N))
+
 #if PRECISION == 0 // float
 #define TYPE float
 #else // double
 #define TYPE double
 #endif
 
-#ifndef SIZE
-#define SIZE 		64
+#ifndef BLOCKSIZE
+#define BLOCKSIZE	32
 #endif
 
-// defines how large the side of each block is in shared mem
-#ifndef BLOCKSIZE
-#define BLOCKSIZE 	32
+#ifndef M
+#define M	512
+#endif
+#ifndef K
+#define K	512
+#endif
+#ifndef N
+#define N 	512
+#endif
+
+// defines how large the sides of each block are
+#ifndef BM
+#define BM 	32
+#endif
+
+#ifndef BK
+#define BK 	32
+#endif 
+
+#ifndef BN
+#define BN 	32
 #endif
 
 #ifndef THREADS_PER_BLOCK
@@ -80,31 +100,34 @@ __global__ void GEMM(TYPE *A, TYPE *B, TYPE *C)
 	unsigned int col = blockIdx.y;
 
 	// allocate local buffers for current invocation in shared mem
-	__shared__ TYPE As[min(SIZE, BLOCKSIZE*BLOCKSIZE)];
-	__shared__ TYPE Bs[min(SIZE, BLOCKSIZE*BLOCKSIZE)];
+	__shared__ TYPE As[BLOCKSIZE*BLOCKSIZE];
+	__shared__ TYPE Bs[BLOCKSIZE*BLOCKSIZE];
 
 	// we access individual entries in the block with these
+	// remember the threadIdx's are projected onto the same number line (of size BLOCKSIZE*BLOCKSIZE) to allow for grouping contiguous column accesses together ("memory coalescing")
+	// then the row index within the block will count every time BLOCKSIZE entries has been complete (because their are BLOCKSIZE entries in a row)
 	unsigned int threadRow = threadIdx.x / BLOCKSIZE;
+	// and the column index wihtin the block counter will count every increment, and should stay withinn BLOCKSIZE entries (because there are BLOCKSIZE columns in each block)
 	unsigned int threadCol = threadIdx.x % BLOCKSIZE;
 
 	// offset our pointers to the correct block position
-	A += row * BLOCKSIZE*SIZE; // replace SIZE with K if not square
+	A += row * BLOCKSIZE*K;
 	B += col * BLOCKSIZE;
-	C += row * BLOCKSIZE*SIZE + col*BLOCKSIZE; // replace SIZE with N if not square
+	C += row * BLOCKSIZE*N+ col*BLOCKSIZE; 
 
 	// this sum holds the result of all block invocations
 	float sum = (TYPE)0;
-	for( unsigned blkIdx = 0; blkIdx < SIZE; blkIdx += BLOCKSIZE ) { 
+	for( unsigned blkIdx = 0; blkIdx < K; blkIdx += BLOCKSIZE ) { 
 		// load from RAM into shared memory
-		As[threadRow*BLOCKSIZE+threadCol] = A[threadRow*SIZE + threadCol];
-		Bs[threadRow*BLOCKSIZE+threadCol] = B[threadRow*SIZE + threadCol];
+		As[threadRow*BLOCKSIZE+threadCol] = A[threadRow*K+ threadCol];
+		Bs[threadRow*BLOCKSIZE+threadCol] = B[threadRow*N+ threadCol];
 
 		// here we have to block until all threads in the warp have initialized shared memory 
 		__syncthreads();
 		
 		// now we update our base pointers to the next block
 		A += BLOCKSIZE;
-		B += BLOCKSIZE*SIZE; // replace SIZE with N if the matrix is not square
+		B += BLOCKSIZE*N;
 
 		// now that shared memory is ready, we accumulate
 		for( unsigned dotIdx = 0; dotIdx < BLOCKSIZE; dotIdx++ ) {
@@ -115,23 +138,27 @@ __global__ void GEMM(TYPE *A, TYPE *B, TYPE *C)
 		__syncthreads();
 	}
 	// this is the accumulation of our block's sum into the result
-	C[threadRow*SIZE + threadCol] += sum; // replace SIZE with N if matrix is not square
+	C[threadRow*N+ threadCol] += sum;
 }
 
 int main()
 {
-	TYPE* A = (TYPE*)malloc(sizeof(TYPE)*SIZE*SIZE);
-	TYPE* B = (TYPE*)malloc(sizeof(TYPE)*SIZE*SIZE);
-	TYPE* C = (TYPE*)malloc(sizeof(TYPE)*SIZE*SIZE);
-    for (int i = 0; i < SIZE; i++)
-    {
-        for (int j = 0; j < SIZE; j++)
-        {
-            A[i*SIZE+j] = (TYPE)fmod(rand(), SIZE);
-            B[i*SIZE+j] = (TYPE)fmod(rand(), SIZE);
-            C[i*SIZE+j] = (TYPE)0;
+	TYPE* A = (TYPE*)malloc(sizeof(TYPE)*M*K);
+	TYPE* B = (TYPE*)malloc(sizeof(TYPE)*K*N);
+	TYPE* C = (TYPE*)malloc(sizeof(TYPE)*M*N);
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            A[i*K+j] = (TYPE)fmod(rand(), M);
         }
+		for( int j = 0; j < N; j++ ) {
+            C[i*N+j] = (TYPE)0;
+		}
     }
+	for( int i = 0; i < K; i++ ) {
+		for( int j = 0; j < N; j++ ) {
+            B[i*N+j] = (TYPE)fmod(rand(), N);
+		}
+	}
 
     // create a stream
     cudaStream_t stream = NULL;
@@ -140,38 +167,37 @@ int main()
     TYPE* d_A;
     TYPE* d_B;
     TYPE* d_C;
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_A), sizeof(TYPE) * SIZE*SIZE));
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(TYPE) * SIZE*SIZE));
-    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * SIZE*SIZE));
-    CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
-    CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_A), sizeof(TYPE) * M*K));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(TYPE) * K*N));
+    CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * M*N));
+    CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * M*K, cudaMemcpyHostToDevice, stream));
+    CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * K*N, cudaMemcpyHostToDevice, stream));
 	// run GEMM
 	__TIMINGLIB_benchmark( [&] {
-		dim3 gridDim ( BLOCKSIZE, BLOCKSIZE ); // the grid dim arranges blocks into groups
-        // dim3 blockDim( BLOCKSIZE, BLOCKSIZE, 1 ); // this is the naive implementation
-        dim3 blockDim( min( SIZE, BLOCKSIZE * BLOCKSIZE ) ); // we make this one dimensional to enable memory coalescing - we use it to index both the row and column in a single dimension without doing weird math
+		dim3 gridDim ( CEIL_DIV(M, 32), CEIL_DIV(N, 32) ); // the grid dim arranges blocks into groups
+        dim3 blockDim( 32*32); // we make this one dimensional to enable memory coalescing - we use it to index both the row and column in a single dimension without doing weird math
 		cudaFuncSetAttribute( GEMM, cudaFuncAttributePreferredSharedMemoryCarveout, cudaSharedmemCarveoutMaxShared );
 		GEMM<<< gridDim, blockDim >>>(d_A, d_B, d_C); 
     	CUDA_CHECK(cudaStreamSynchronize(stream));
 		CUDA_CHECK(cudaDeviceSynchronize());
 	});
     // copy data to host
-    CUDA_CHECK(cudaMemcpyAsync(C, d_C, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyDeviceToHost, stream));
+    CUDA_CHECK(cudaMemcpyAsync(C, d_C, sizeof(TYPE) * M*N, cudaMemcpyDeviceToHost, stream));
 
 #if CHECK
-	TYPE* D = (TYPE*)calloc(sizeof(TYPE), SIZE*SIZE);
-	for( unsigned i = 0; i < SIZE; i++ )
+	TYPE* D = (TYPE*)calloc(sizeof(TYPE), M*N);
+	for( unsigned i = 0; i < M; i++ )
 	{
-		for( unsigned j = 0; j < SIZE; j++ )
+		for( unsigned j = 0; j < N; j++ )
 		{
 			//printf("%g\n", C[i*SIZE+j]);
-			for( unsigned k = 0; k < SIZE ; k++ )
+			for( unsigned k = 0; k < K; k++ )
 			{
-				D[i*SIZE+j] += A[i*SIZE+k] * B[k*SIZE+j];
+				D[i*N+j] += A[i*K+k] * B[k*N+j];
 			}
 		}
 	}
-	__TIMINGLIB_snr(D, C, sizeof(TYPE), SIZE*SIZE);
+	__TIMINGLIB_snr(D, C, sizeof(TYPE), M*N);
 	free(D);
 #endif
 
