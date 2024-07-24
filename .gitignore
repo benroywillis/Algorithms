@@ -73,3 +73,11 @@ Halide_driver.cpp
 html/
 opt-viewer/
 opt-output/
+# CUDA intermediates (which appear when passing "-keep" flag to nvcc)
+*.ii 
+*.cuda* 
+*.cubin 
+*.fatbin* 
+*_dlink.* 
+*.ptx
+*.module_id

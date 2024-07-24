@@ -74,6 +74,7 @@ else ifeq ($(SUFFIX),.cpp)
 else
 	C=$(NVCC)
 	GC=$(NVCC)
+	CFLAGS += -keep # dumps ptx from an nvcc compile pass
 endif
 
 # TimingLib benchmarking parameters
@@ -354,7 +355,7 @@ cuprof : $(SOURCE).elf
 .PHONY:
 
 clean:
-	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot *.dot_taskonly *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw MemoryFootprint*.csv *.jscop *.cgeist *.annotated_omp.c*
+	rm -rf *.bc* *.ll *.tr* *.bin *.json *.exec *.elf* *.native *.dot *.dot_taskonly *.obj *.gcda *.gcno *.gcov *.log *.data *.out *_generated* *_output.* *.raw MemoryFootprint*.csv *.jscop *.cgeist *.annotated_omp.c* *.ii *.cuda* *.cubin *.fatbin* *_dlink.* *.ptx *.module_id
 
 clean_oprofile:
 	sudo rm -rf oprofile_data
