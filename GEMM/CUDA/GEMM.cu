@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 #include "TimingLib.h"
 
 // some macros to make static configurations flexible
@@ -17,10 +18,7 @@
 #define TYPE double
 #endif
 
-#ifndef BLOCKSIZE
-#define BLOCKSIZE	32
-#endif
-
+// input dimensions ( MxN = MxK * KxN )
 #ifndef M
 #define M	512
 #endif
@@ -31,23 +29,26 @@
 #define N 	512
 #endif
 
-// defines how large the sides of each block are
+// block dimensions
 #ifndef BM
-#define BM 	32
+#define BM 	64
 #endif
-
 #ifndef BK
-#define BK 	32
+#define BK 	8
 #endif 
-
 #ifndef BN
-#define BN 	32
+#define BN 	64
 #endif
 
-#ifndef THREADS_PER_BLOCK
-#define THREADS_PER_BLOCK 32
+// tile dimensions
+#ifndef TM
+#define TM	8
+#endif
+#ifndef TN
+#define TN 	8
 #endif
 
+// to compare results on the GPU v CPU using SNR (see TimingLib.h for technicals)
 #ifndef CHECK
 #define CHECK 0
 #endif
@@ -61,7 +62,8 @@
         }                                                                 \
     } while (0)
 
-__global__ void GEMM(TYPE *A, TYPE *B, TYPE *C)
+// __launch_bounds__( maxThreadsPerblock, minBlocksPerSM, maxBlocksPerCluster) aids the compiler in register mapping
+__global__ void __launch_bounds__((BM * BN) / (TM * TN), 1) GEMM(TYPE *A, TYPE *B, TYPE *C)
 {
 	// Streaming Multiprocessor (SM): holds 32 "warps" or "blocks"
     // block: a collection of warps that can be batched to an SM
@@ -95,50 +97,87 @@ __global__ void GEMM(TYPE *A, TYPE *B, TYPE *C)
 		C[x*SIZE+y] = tmp;
     }*/
 
-	// blocked and tiled version
-	unsigned int row = blockIdx.x;
-	unsigned int col = blockIdx.y;
+	// we flip rows and columns 
+	unsigned int row = blockIdx.y;
+	unsigned int col = blockIdx.x;
+
+	// total number of output atoms (in C matrix) computed by a block
+	const unsigned totalResultsBlockTile = BM*BN;
+	// total number of output atoms calculated by each thread (in the block)
+	const unsigned numThreadsBlockTile = totalResultsBlockTile / (TM*TN);
+	assert( numThreadsBlockTile == blockDim.x );
 
 	// allocate local buffers for current invocation in shared mem
-	__shared__ TYPE As[BLOCKSIZE*BLOCKSIZE];
-	__shared__ TYPE Bs[BLOCKSIZE*BLOCKSIZE];
+	__shared__ TYPE As[BM*BK];
+	__shared__ TYPE Bs[BK*BN];
 
-	// we access individual entries in the block with these
-	// remember the threadIdx's are projected onto the same number line (of size BLOCKSIZE*BLOCKSIZE) to allow for grouping contiguous column accesses together ("memory coalescing")
-	// then the row index within the block will count every time BLOCKSIZE entries has been complete (because their are BLOCKSIZE entries in a row)
-	unsigned int threadRow = threadIdx.x / BLOCKSIZE;
-	// and the column index wihtin the block counter will count every increment, and should stay withinn BLOCKSIZE entries (because there are BLOCKSIZE columns in each block)
-	unsigned int threadCol = threadIdx.x % BLOCKSIZE;
+	// we access individual threads in the block with these
+	// remember the threadIdx's are projected onto the same number line (of size BM*BN) to allow for grouping contiguous column accesses together ("memory coalescing")
+	// then the row index within the block will count every time BN entries has been complete (because their are BN entries in a row)
+	// tiles (TM*TN) break up the block into sections, thus we normalize by the number of those sections to get the iterator range for a given block-tile permutation
+	unsigned int threadRow = threadIdx.x / (BN/TN);
+	// and the column index within the block counter will count every increment, and should stay within BN entries (because there are BN columns in each block)
+	unsigned int threadCol = threadIdx.x % (BN/TN);
 
-	// offset our pointers to the correct block position
-	A += row * BLOCKSIZE*K;
-	B += col * BLOCKSIZE;
-	C += row * BLOCKSIZE*N+ col*BLOCKSIZE; 
+	// offset input/output working sets to the row/column squares that feed this kernel instance
+	A += row * BM*K;
+	B += col * BN;
+	C += row * BM*N+ col*BN; 
 
-	// this sum holds the result of all block invocations
-	float sum = (TYPE)0;
-	for( unsigned blkIdx = 0; blkIdx < K; blkIdx += BLOCKSIZE ) { 
-		// load from RAM into shared memory
-		As[threadRow*BLOCKSIZE+threadCol] = A[threadRow*K+ threadCol];
-		Bs[threadRow*BLOCKSIZE+threadCol] = B[threadRow*N+ threadCol];
+	// calculate tile iterators
+	// each thread tile is on a small square of the block 
+	const int innerRowA = threadIdx.x / BK; // row counter increments each time we complete a row in the tile (with BK entries)
+	const int innerColA = threadIdx.x % BK; // column counter increments each time and resets after completing a row (with BK entries)
+	const unsigned strideA = numThreadsBlockTile / BK; // stride skips over each tile - remember all threads are on the same number line - thus after completing a tile in A, we move onto the next
+	const int innerRowB = threadIdx.x / BN;
+	const int innerColB = threadIdx.x % BN;
+	const unsigned strideB = numThreadsBlockTile / BN; // stride skips over a completed tile - remember all threads are on the same number line - thus after completing a tile in B, we move to the next
 
+	// these are partial sums calculated for each tile - at the end they are added to the applicable output pixel
+	TYPE threadSums[TM*TN] = {(TYPE)0};
+	// it is useful to put input values inside registers to save the redundant shared memory access (e.g., when adjacent tiles both need the same row, just register file that row)
+	TYPE regM[TM] = { (TYPE)0 };
+	TYPE regN[TN] = { (TYPE)0 };
+
+	for( unsigned blkIdx = 0; blkIdx < K; blkIdx += BK ) { 
+		// for each block (blkIdx), load A input working set into shared memory
+		for( unsigned i = 0; i < BM; i += strideA ) {
+			As[ (innerRowA + i) * BK + innerColA ] = A[ (innerRowA + i) * K + innerColA ];
+		}
+		for( unsigned i = 0; i < BK; i += strideB ) {
+			Bs[ (innerRowB + i) * BN + innerColB ] = B[ (innerRowB + i) * N + innerColB ];
+		}
 		// here we have to block until all threads in the warp have initialized shared memory 
 		__syncthreads();
-		
+
 		// now we update our base pointers to the next block
-		A += BLOCKSIZE;
-		B += BLOCKSIZE*N;
+		A += BK;
+		B += BK*N;
 
-		// now that shared memory is ready, we accumulate
-		for( unsigned dotIdx = 0; dotIdx < BLOCKSIZE; dotIdx++ ) {
-			sum += As[threadRow*BLOCKSIZE + dotIdx]*Bs[dotIdx*BLOCKSIZE+threadCol];
+		// per-thread result (calculates a reduction over a single tile)
+		for( unsigned dotIdx = 0; dotIdx < TM; dotIdx++ ) {
+			// initialize block registers
+			for( unsigned i = 0; i < TM; i++ ) {
+				regM[i] = As[ (threadRow*TM + i)*BK + dotIdx ];
+			}
+			for( unsigned i = 0; i < TN; i++ ) {
+				regN[i] = Bs[  dotIdx*BN + threadCol*TN + i];
+			}
+			for( unsigned threadTileA = 0; threadTileA < TM; threadTileA++ ) {
+				for( unsigned threadTileB = 0; threadTileB < TN; threadTileB++ ) {
+					threadSums[threadTileA*TN + threadTileB] += regM[ threadTileA ]*regN[ threadTileB ];
+				}
+			}
 		}
-
 		// again we block because all partial dot products need to be written before we move to another block
 		__syncthreads();
 	}
 	// this is the accumulation of our block's sum into the result
-	C[threadRow*N+ threadCol] += sum;
+	for( unsigned i = 0; i < TM; i++ ) {
+		for( unsigned j = 0; j < TN; j++ ) {
+			C[(threadRow*TM + i)*N + threadCol*TN + j] += threadSums[i*TM + j];
+		}
+	}
 }
 
 int main()
@@ -174,8 +213,8 @@ int main()
     CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * K*N, cudaMemcpyHostToDevice, stream));
 	// run GEMM
 	__TIMINGLIB_benchmark( [&] {
-		dim3 gridDim ( CEIL_DIV(M, 32), CEIL_DIV(N, 32) ); // the grid dim arranges blocks into groups
-        dim3 blockDim( 32*32); // we make this one dimensional to enable memory coalescing - we use it to index both the row and column in a single dimension without doing weird math
+		dim3 gridDim ( CEIL_DIV(N, BN), CEIL_DIV(M, BM) ); // the grid dim arranges blocks into groups
+        dim3 blockDim( (BM * BN) / (TM*TN) ); // we make this one dimensional to enable memory coalescing - we use it to index both the row and column in a single dimension without doing weird math
 		cudaFuncSetAttribute( GEMM, cudaFuncAttributePreferredSharedMemoryCarveout, cudaSharedmemCarveoutMaxShared );
 		GEMM<<< gridDim, blockDim >>>(d_A, d_B, d_C); 
     	CUDA_CHECK(cudaStreamSynchronize(stream));
