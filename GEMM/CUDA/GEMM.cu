@@ -77,41 +77,23 @@ __global__ void __launch_bounds__((BM * BN) / (TM * TN), 1) GEMM(TYPE *A, TYPE *
 	// gridDim indexes into the grid (each index is a warp)
     // blockDim indexes into warp (each index is a thread)
 
+	// our task abstraction is block-wise (each warp computes a block of results in the output matrix)
+	// "row" is the output row we are computing
+	// "col" is the output column we are computing
+	unsigned int row = blockIdx.x;
+	unsigned int col = blockIdx.y;
 
-	// thread IDs are useful for sharing memory among threads that all load the same column ("global memory coalescing")
-	//uint32_t threadId = threadIdx.x + blockDim.x*(threadIdx.y+blockDim.y*threadIdx.z);
-
-	// naive implementation
-	//uint32_t x = blockIdx.x*blockDim.x + threadIdx.x;
-	//uint32_t y = blockIdx.y*blockDim.y + threadIdx.y;
-	
-    // memory coalescing implementation
-	// it shares the input data load ("memory coalescing") by telling each kernel invocation to access the same row, and touch different columns
-	/*int x = blockIdx.x*32 + (threadIdx.x / 32);
-	int y = blockIdx.y*32 + (threadIdx.x % 32);
-    if ( x < SIZE && y < SIZE ) {
-		TYPE tmp = (TYPE)0;
-        for (int k = 0; k < SIZE; k++) {
-            tmp += A[x*SIZE+k] * B[k*SIZE+y];
-        }
-		C[x*SIZE+y] = tmp;
-    }*/
-
-	// we flip rows and columns 
-	unsigned int row = blockIdx.y;
-	unsigned int col = blockIdx.x;
-
-	// total number of output atoms (in C matrix) computed by a block
-	const unsigned totalResultsBlockTile = BM*BN;
-	// total number of output atoms calculated by each thread (in the block)
-	const unsigned numThreadsBlockTile = totalResultsBlockTile / (TM*TN);
-	assert( numThreadsBlockTile == blockDim.x );
+	// total number of output atoms (in C matrix) computed by a warp
+	const unsigned warpComputeCount = BM*BN;
+	// total number of output atoms calculated by each thread (in the warp)
+	const unsigned warpNumThreads = warpComputeCount / (TM*TN);
+	assert( warpNumThreads == blockDim.x );
 
 	// allocate local buffers for current invocation in shared mem
 	__shared__ TYPE As[BM*BK];
 	__shared__ TYPE Bs[BK*BN];
 
-	// we access individual threads in the block with these
+	// we access individual threads in the warp with these
 	// remember the threadIdx's are projected onto the same number line (of size BM*BN) to allow for grouping contiguous column accesses together ("memory coalescing")
 	// then the row index within the block will count every time BN entries has been complete (because their are BN entries in a row)
 	// tiles (TM*TN) break up the block into sections, thus we normalize by the number of those sections to get the iterator range for a given block-tile permutation
@@ -120,18 +102,18 @@ __global__ void __launch_bounds__((BM * BN) / (TM * TN), 1) GEMM(TYPE *A, TYPE *
 	unsigned int threadCol = threadIdx.x % (BN/TN);
 
 	// offset input/output working sets to the row/column squares that feed this kernel instance
-	A += row * BM*K;
-	B += col * BN;
-	C += row * BM*N+ col*BN; 
+	A += row*BM*K;
+	B += col*BN;
+	C += row*BM*N + col*BN; 
 
 	// calculate tile iterators
-	// each thread tile is on a small square of the block 
+	// each iterator is used to access shared memory for a given tile (i.e. load shared memory into register file, store intermediate products in register file)
 	const int innerRowA = threadIdx.x / BK; // row counter increments each time we complete a row in the tile (with BK entries)
 	const int innerColA = threadIdx.x % BK; // column counter increments each time and resets after completing a row (with BK entries)
-	const unsigned strideA = numThreadsBlockTile / BK; // stride skips over each tile - remember all threads are on the same number line - thus after completing a tile in A, we move onto the next
+	const unsigned strideA = warpNumThreads / BK; // stride skips over each tile - remember all threads are on the same number line - thus after completing a tile in A, we move onto the next
 	const int innerRowB = threadIdx.x / BN;
 	const int innerColB = threadIdx.x % BN;
-	const unsigned strideB = numThreadsBlockTile / BN; // stride skips over a completed tile - remember all threads are on the same number line - thus after completing a tile in B, we move to the next
+	const unsigned strideB = warpNumThreads / BN; // stride skips over a completed tile - remember all threads are on the same number line - thus after completing a tile in B, we move to the next
 
 	// these are partial sums calculated for each tile - at the end they are added to the applicable output pixel
 	TYPE threadSums[TM*TN] = {(TYPE)0};

@@ -1,0 +1,6 @@
+
+1. Naive: write the kernel like you would using 3 nested loops in C
+2. "Memory coalescing": group columns together so you can access each (partial) row of the group of columns together ("coalesce their accesses")
+3. Block memory accesses: load partial array inputs into shared memory and store their result, agglomerate results at the end
+4. Tile: assign small chunks within blocks to single threads
+5. 2DTile: tile along the columns as well as the rows 
