@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_B), sizeof(TYPE) * SIZE*SIZE));
     CUDA_CHECK(cudaMalloc(reinterpret_cast<void **>(&d_C), sizeof(TYPE) * SIZE*SIZE));
 
-	// BW 2024-05-09 No significant different in performance has been observed between Async transfers and Sync transfers (thus there seems to be a block of some sort for the Async case)
+	// BW 2024-05-09 No significant different in performance has been observed between Async transfers and Sync transfers
     CUDA_CHECK(cudaMemcpyAsync((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
     CUDA_CHECK(cudaMemcpyAsync((void*)d_B, B, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice, stream));
     //CUDA_CHECK(cudaMemcpy((void*)d_A, A, sizeof(TYPE) * SIZE*SIZE, cudaMemcpyHostToDevice));
@@ -128,17 +128,8 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	}
-	double num = 0.0;
-	double den = 0.0;
-	// the reference signal is the CPU result (D)
-	for( unsigned i = 0; i < SIZE; i++ ) {
-		for( unsigned j = 0; j < SIZE; j++ ) {
-			num +=  D[i*SIZE+j]*D[i*SIZE+j];
-			den += (D[i*SIZE+j]-C[i*SIZE+j])*(D[i*SIZE+j]-C[i*SIZE+j]);
-		}
-	}
-    if (den < 0.001) printf("Reference and test outputs matched exactly\n");
-    else 		     printf(" num: %g den: %g\n", num, den); printf("SNR: %.2fdb\n", 10.0*log10(num/den));
+    __TIMINGLIB_snr(D, C, sizeof(TYPE), SIZE*SIZE);
+	free(D);
 #endif
 
     // free resources
