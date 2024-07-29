@@ -14,6 +14,8 @@ GLD=ld
 # CUDA compiler
 NVCC?=nvcc
 CUPROF?=nvprof
+# Python interpreter
+PY?=python3
 # Polygeist stuff
 PC?=$(POLYGEIST_INSTALL)bin/cgeist
 #POLYMEROPT=$(POLYGEIST_INSTALL)bin/polygeist-opt
@@ -33,7 +35,7 @@ DEBUG?=-g3
 ## Source file configuration variables
 # name of the source file with main in it
 SOURCE?=test
-# suffix of the file with main in it (can be .c, .cpp, or .cu)
+# suffix of the file with main in it (can be .c, .cpp, .cu, or .py)
 SUFFIX?=.c
 # extra path to find this file (relative path from the relative Makefile)
 SOURCE_PATH?=
@@ -71,10 +73,13 @@ ifeq ($(SUFFIX),.c)
 else ifeq ($(SUFFIX),.cpp)
 	C=$(CXX)
 	GC=$(GXX)
-else
+else ifeq ($(SUFFIX),.cu)
 	C=$(NVCC)
 	GC=$(NVCC)
 	CFLAGS += -keep # dumps ptx from an nvcc compile pass
+else ifeq ($(SUFFIX),.py)
+	C=$(CXX) # cpp compiler will be used to compile the resulting bitcode from numba
+	GC=$(GXX)
 endif
 
 # TimingLib benchmarking parameters
@@ -150,6 +155,9 @@ $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_true_generated.bc $(SOUR
 else ifeq ($(HALIDE).$(HALIDE_AUTOSCHEDULE),1.0)
 $(SOURCE).bc : $(SOURCE)_run.cpp $(SOURCE)_autoschedule_false_generated.bc $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(HALIDE_INCLUDE) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $(^:%_generated=%_generated.bc) -o $@
+else ifeq ($(SUFFIX),.py)
+$(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
+	NUMBA_OPT=0 NUMBA_LOOP_VECTORIZE=0 NUMBA_DEBUG=3 NUMBA_ENABLE_AVX=0 NUMBA_SLP_VECTORIZE=0 NUMBA_DISABLE_INTEL_SVML=1 NUMBA_LLVM_REFPRUNE_PASS=0 $(PY) $^ -o $@
 else
 $(SOURCE).bc : $(SOURCE_PATH)$(SOURCE)$(SUFFIX) $(ADDSOURCE)
 	$(C) $(LDFLAGS) $(OPFLAG) $(DEBUG) $(INCLUDE) $(CFLAGS) $(CXXFLAGS) $^ $(LIBRARIES) $(ARCHIVE_FLAGS) $(LIBRARIES2) -o $@
