@@ -1,4 +1,5 @@
 // helpful resource: https://timdettmers.com/2023/01/30/which-gpu-for-deep-learning/
+// another: https://siboehm.com/articles/22/CUDA-MMM
 
 #include <stdio.h>
 #include <stdlib.h>
